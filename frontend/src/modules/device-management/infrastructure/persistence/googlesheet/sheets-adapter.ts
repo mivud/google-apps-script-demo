@@ -29,14 +29,17 @@ export interface SheetsAdapterConfig {
   getIdToken: () => string | null
   // Silent re-auth used once when the backend answers UNAUTHORIZED.
   refreshIdToken?: () => Promise<string | null>
+  // Injectable so tests and other hosts can swap the first-request policy; defaults to a fresh gate.
+  warmup?: WarmupGate
 }
 
 export class SheetsAdapter implements DataService {
   private readonly config: SheetsAdapterConfig
-  private readonly warmup = new WarmupGate()
+  private readonly warmup: WarmupGate
 
   constructor(config: SheetsAdapterConfig) {
     this.config = config
+    this.warmup = config.warmup ?? new WarmupGate()
   }
 
   async list(query: EquipmentQuery): Promise<Page<Equipment>> {

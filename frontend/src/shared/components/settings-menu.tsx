@@ -15,6 +15,10 @@ export function SettingsMenu({ trigger, footer }: { trigger?: ReactNode; footer?
   const rootRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const panelId = useId()
+  // A custom trigger (the current user) names the button through its own text; the plain icon needs a label.
+  const triggerProps = trigger
+    ? ({ size: 'default', className: 'settings-trigger' } as const)
+    : ({ size: 'icon', 'aria-label': t('settings.label') } as const)
 
   const dismiss = useCallback((reason: DismissReason) => {
     setOpen(false)
@@ -32,10 +36,8 @@ export function SettingsMenu({ trigger, footer }: { trigger?: ReactNode; footer?
     <div className="settings-menu" ref={rootRef}>
       <Button
         variant="ghost"
-        size={trigger ? 'default' : 'icon'}
-        className={trigger ? 'settings-trigger' : ''}
+        {...triggerProps}
         ref={triggerRef}
-        aria-label={trigger ? undefined : t('settings.label')}
         aria-haspopup="true"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
