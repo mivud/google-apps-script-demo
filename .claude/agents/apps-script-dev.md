@@ -1,6 +1,6 @@
 ---
 name: apps-script-dev
-description: Implements the Google Apps Script Web App API (doGet/doPost, Sheet access, auth token, clasp config). Use after plan approval.
+description: Implements the Google Apps Script Web App API (doGet/doPost, Sheet access, Google ID token auth, clasp config). Use after plan approval.
 tools: Read, Edit, Write, Grep, Glob, Bash
 maxTurns: 40
 ---
