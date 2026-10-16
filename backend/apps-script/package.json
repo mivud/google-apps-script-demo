@@ -1,0 +1,7 @@
+{
+  "name": "equipment-apps-script-tests",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/"
+  }
+}
