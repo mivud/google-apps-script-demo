@@ -1,0 +1,114 @@
+/* Form controls, buttons, segmented picker and badges. Heights come from --control-height (44px mobile, 36px >= 768px). */
+
+/* Shared focus ring: 2px ring at 50% plus a transparent outline that still shows in forced-colors mode. */
+.btn:focus-visible,
+input:focus-visible, select:focus-visible, textarea:focus-visible,
+.segmented-option:focus-visible {
+  outline: 2px solid transparent;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--ring) 50%, transparent);
+}
+
+/* Inputs */
+input, select, textarea {
+  width: 100%;
+  min-height: var(--control-height);
+  padding: 4px 12px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--foreground);
+  /* 16px on mobile stops iOS Safari from zooming on focus. */
+  font: inherit;
+  font-size: 1rem;
+  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+}
+textarea { padding-block: 8px; resize: vertical; }
+input::placeholder, textarea::placeholder { color: var(--muted-foreground); }
+/* A muted fill and text color (not opacity) keep disabled text above AA contrast. */
+input:disabled, select:disabled, textarea:disabled {
+  background: color-mix(in oklch, var(--input) 50%, transparent);
+  color: var(--muted-foreground);
+  cursor: not-allowed;
+}
+/* Invalid fields keep the red ring while focused so the error stays visible; focus is shown by the stronger ring. */
+input[aria-invalid='true']:focus-visible, select[aria-invalid='true']:focus-visible, textarea[aria-invalid='true']:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--destructive) 45%, transparent);
+}
+input[aria-invalid='true'], select[aria-invalid='true'], textarea[aria-invalid='true'] {
+  border-color: var(--destructive);
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--destructive) 20%, transparent);
+}
+:root[data-color-scheme='dark'] :is(input, select, textarea) { background: color-mix(in oklch, var(--input) 30%, transparent); }
+:root[data-color-scheme='dark'] :is(input, select, textarea):disabled { background: color-mix(in oklch, var(--input) 50%, transparent); }
+:root[data-color-scheme='dark'] :is(input, select, textarea)[aria-invalid='true'] { border-color: color-mix(in oklch, var(--destructive) 50%, transparent); box-shadow: 0 0 0 2px color-mix(in oklch, var(--destructive) 40%, transparent); }
+.language-switcher { width: auto; min-width: 120px; flex-shrink: 0; }
+
+.field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; font-size: 0.875rem; font-weight: 500; }
+.field-error, .form-error { color: var(--destructive); margin: 8px 0; font-weight: 400; }
+.field-error { margin: 0; }
+.search-input { position: relative; display: block; }
+.search-input .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted-foreground); pointer-events: none; }
+.search-input input { padding-left: 40px; }
+
+@media (min-width: 768px) {
+  input, select, textarea { font-size: 0.875rem; }
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--control-height);
+  padding: 4px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  background-clip: padding-box;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--duration-fast), border-color var(--duration-fast), box-shadow var(--duration-fast), transform var(--duration-fast);
+}
+.btn:active { transform: translateY(1px); }
+.btn-default { background: var(--primary); color: var(--primary-foreground); }
+.btn-default:hover { background: color-mix(in oklch, var(--primary) 80%, transparent); }
+.btn-outline { background: var(--background); color: var(--foreground); border-color: var(--border); }
+.btn-outline:hover { background: var(--muted); }
+.btn-secondary { background: var(--secondary); color: var(--secondary-foreground); }
+.btn-secondary:hover { background: color-mix(in oklch, var(--secondary), var(--foreground) 5%); }
+.btn-ghost { background: transparent; color: var(--foreground); }
+.btn-ghost:hover { background: var(--muted); }
+/* Text is mixed toward the foreground so it stays AA on its own 10% tint. */
+.btn-destructive { background: color-mix(in oklch, var(--destructive) 10%, transparent); color: color-mix(in oklch, var(--destructive) 85%, var(--foreground)); }
+.btn-destructive:hover { background: color-mix(in oklch, var(--destructive) 20%, transparent); }
+.btn-link { background: transparent; color: var(--primary-ink); }
+.btn-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+.btn-sm { min-height: var(--control-height-sm); padding-inline: 10px; font-size: 0.8rem; }
+.btn-icon { width: var(--control-height); padding: 0; }
+:root[data-color-scheme='dark'] .btn-outline { background: color-mix(in oklch, var(--input) 30%, transparent); border-color: var(--input); }
+:root[data-color-scheme='dark'] .btn-outline:hover { background: color-mix(in oklch, var(--input) 50%, transparent); }
+:root[data-color-scheme='dark'] .btn-ghost:hover { background: color-mix(in oklch, var(--muted) 50%, transparent); }
+:root[data-color-scheme='dark'] .btn-destructive { background: color-mix(in oklch, var(--destructive) 20%, transparent); }
+:root[data-color-scheme='dark'] .btn-destructive:hover { background: color-mix(in oklch, var(--destructive) 30%, transparent); }
+.btn:disabled { opacity: 0.5; pointer-events: none; }
+.btn[aria-busy='true']:disabled { opacity: 0.7; }
+
+/* Segmented radiogroup (color scheme): each option keeps a 44px target. */
+.segmented { display: flex; gap: 2px; padding: 2px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--muted); }
+.segmented-option { flex: 1; display: inline-flex; align-items: center; justify-content: center; min-height: var(--tap); padding: 0 8px; border: 1px solid transparent; border-radius: var(--radius-md); background: transparent; color: var(--muted-foreground); cursor: pointer; transition: background-color var(--duration-fast), color var(--duration-fast); }
+.segmented-option[aria-checked='true'] { background: var(--background); color: var(--foreground); box-shadow: var(--shadow-soft-sm); }
+
+/* Badges: fully rounded; tone text colors are AA on their own 12% tint. */
+.badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 500; white-space: nowrap; background: var(--secondary); color: var(--secondary-foreground); }
+.badge-success { background: color-mix(in oklch, var(--success) 12%, transparent); color: var(--success); }
+.badge-warning { background: color-mix(in oklch, var(--warning) 12%, transparent); color: var(--warning); }
+.badge-neutral { background: var(--secondary); color: var(--secondary-foreground); }
+.badge-danger { background: color-mix(in oklch, var(--destructive) 10%, transparent); color: color-mix(in oklch, var(--destructive) 85%, var(--foreground)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:active { transform: none; }
+}

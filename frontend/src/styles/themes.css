@@ -1,0 +1,29 @@
+/* Accent presets: each overrides only --primary (plus --primary-foreground / --primary-ink where contrast needs it).
+   The picker swatches reuse the light blocks through .theme-option[data-theme].
+   Light fills are AA with white text (>= 4.5:1): green-700, rose-700 and orange-700 are used instead of the 600
+   shades (green-600 ~3.3:1, orange-600 ~3.6:1, rose-600 ~4.5:1 borderline). Amber-600 takes dark text (~5.5:1) and
+   uses amber-700 as text color on white (--primary-ink). Dark fills take dark text (>= 4.5:1); violet uses 400 for that.
+   To add a theme: a light block, a dark block, its name in shared/theme/themes.ts (index.html is injected from it)
+   and `theme.<name>` keys in the i18n catalogs (missing keys fail tsc). */
+:root,
+:is(html, .theme-option)[data-theme='green'] { --primary: oklch(0.527 0.154 150.069); }
+:is(html, .theme-option)[data-theme='blue'] { --primary: oklch(0.546 0.245 262.881); }
+:is(html, .theme-option)[data-theme='violet'] { --primary: oklch(0.541 0.281 293.009); }
+:is(html, .theme-option)[data-theme='rose'] { --primary: oklch(0.514 0.222 16.935); }
+:is(html, .theme-option)[data-theme='orange'] { --primary: oklch(0.553 0.195 38.402); }
+:is(html, .theme-option)[data-theme='amber'] {
+  --primary: oklch(0.666 0.179 58.318);
+  --primary-foreground: oklch(0.145 0 0);
+  --primary-ink: oklch(0.555 0.163 48.4);
+}
+:is(html, .theme-option)[data-theme='black'] { --primary: oklch(0 0 0); }
+
+/* Dark blocks follow the light ones and are more specific, so they win on html. */
+html[data-color-scheme='dark'][data-theme='green'] { --primary: oklch(0.723 0.219 149.579); }
+html[data-color-scheme='dark'][data-theme='blue'] { --primary: oklch(0.623 0.214 259.815); }
+html[data-color-scheme='dark'][data-theme='violet'] { --primary: oklch(0.702 0.183 293.541); }
+html[data-color-scheme='dark'][data-theme='rose'] { --primary: oklch(0.645 0.246 16.439); }
+html[data-color-scheme='dark'][data-theme='orange'] { --primary: oklch(0.705 0.213 47.604); }
+html[data-color-scheme='dark'][data-theme='amber'] { --primary: oklch(0.769 0.188 70.08); --primary-ink: var(--primary); }
+/* Black has no shade scale, so it inverts instead of stepping lighter. */
+html[data-color-scheme='dark'][data-theme='black'] { --primary: oklch(1 0 0); }

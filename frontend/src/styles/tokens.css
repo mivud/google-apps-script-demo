@@ -1,0 +1,121 @@
+/* Design tokens (semantic names and oklch values follow the admin client theme).
+   The accent (--primary*) lives in themes.css; dark values apply when html has data-color-scheme="dark". */
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  /* Admin uses 0.556; slightly darker keeps AA on the --muted background too. */
+  --muted-foreground: oklch(0.5 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  /* Control borders need 3:1 on white (WCAG 1.4.11); --input stays the subtle fill/divider color. */
+  --control-border: oklch(0.62 0 0);
+  --ring: var(--primary);
+  /* Accent used as text on --background; presets whose fill is too light for text override it. */
+  --primary-ink: var(--primary);
+  /* Status text colors for badges: AA on their own 12% tint. */
+  --success: oklch(0.448 0.119 151.328);
+  --warning: oklch(0.473 0.137 46.201);
+  --scrollbar-thumb: oklch(0.556 0 0 / 0.7);
+  color-scheme: light;
+
+  --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+
+  --radius: 0.75rem;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-pill: 999px;
+
+  /* Soft elevation: no heavy drop shadows. */
+  --shadow-soft-sm: 0 1px 2px 0 oklch(0 0 0 / 0.04);
+  --shadow-soft-md: 0 4px 12px -2px oklch(0 0 0 / 0.06), 0 2px 4px -2px oklch(0 0 0 / 0.04);
+  --shadow-soft-lg: 0 12px 32px -8px oklch(0 0 0 / 0.1), 0 4px 8px -4px oklch(0 0 0 / 0.05);
+
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+
+  /* Named stacking order instead of ad hoc numbers (dialogs use the browser top layer). */
+  --z-index-header: 30;
+  --z-index-tabbar: 30;
+  --z-index-dropdown: 50;
+  --z-index-overlay: 80;
+
+  /* Touch targets: 44px everywhere on mobile; dense controls from 768px. */
+  --tap: 44px;
+  --control-height: 44px;
+  --control-height-sm: 44px;
+  --tabbar-height: 64px;
+
+  /* Blur is reserved for dialog, popover and the mobile tab bar. */
+  --glass-bg: color-mix(in oklch, var(--popover) 78%, transparent);
+  --glass-bg-strong: color-mix(in oklch, var(--popover) 95%, transparent);
+  --glass-border: color-mix(in oklch, var(--foreground) 10%, transparent);
+  --glass-blur: blur(20px) saturate(180%);
+  --glass-shadow: var(--shadow-soft-lg);
+}
+
+:root[data-color-scheme='dark'] {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.145 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --control-border: oklch(1 0 0 / 25%);
+  --success: oklch(0.792 0.209 151.711);
+  --warning: oklch(0.828 0.189 84.429);
+  --scrollbar-thumb: oklch(0.708 0 0 / 0.7);
+  color-scheme: dark;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --control-height: 36px;
+    --control-height-sm: 32px;
+  }
+}
+
+/* Opaque fallbacks: blur is unsupported, or the user asked for less transparency / more contrast. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --glass-bg: var(--popover);
+    --glass-bg-strong: var(--popover);
+    --glass-blur: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  :root {
+    --glass-bg: var(--popover);
+    --glass-bg-strong: var(--popover);
+    --glass-border: var(--border);
+    --glass-blur: none;
+    --glass-shadow: none;
+  }
+}
