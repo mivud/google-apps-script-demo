@@ -14,12 +14,13 @@
       {
         "userSymbol": "SharedKernelLibrary",
         "libraryId": "12hAsmyptsvJObLQiVumMQjG60XW7eGWAt-p9O_-O50vRA1wL7RNX5ijI",
-        "version": "4"
+        "version": "6"
       }
     ]
   },
   "oauthScopes": [
-    "https://www.googleapis.com/auth/spreadsheets"
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/script.external_request"
   ],
   "webapp": {
     "executeAs": "USER_DEPLOYING",

@@ -6,10 +6,12 @@ var Composition = {
     var repositories = Composition.createRepositories(core.source, core.rowCache);
     var ports = Composition.createCrossModulePorts(repositories);
     var deps = Composition.createModuleDeps(core, repositories, ports);
+    var readActions = [].concat(DeviceManagement.readActions(), SystemEndpoints.readActions());
     return {
-      tokenGuard: core.tokenGuard,
+      accessResolver: core.accessResolver,
+      currentUser: core.currentUser,
       lockGuard: core.lockGuard,
-      router: new Router(Composition.createEndpointRegistry(deps), DeviceManagement.readActions().concat(SystemEndpoints.readActions())),
+      router: new Router(Composition.createEndpointRegistry(deps), readActions),
       schemaInstaller: new SheetInstaller(core.source, Composition.createSchemaDefinitions(deps), {
         settings: core.settings,
         rowCache: core.rowCache
@@ -19,18 +21,31 @@ var Composition = {
 
   createCore: function () {
     var clock = new SystemClock();
-    var currentUser = new AnonymousCurrentUser();
-    // Host services are handed to the library: its own PropertiesService/CacheService/LockService are separate stores.
+    var currentUser = new RequestCurrentUser();
+    var cacheStore = CacheService.getScriptCache();
+    // Host services are handed to the library: its own PropertiesService/CacheService/LockService/UrlFetchApp scopes differ.
     var settings = ScriptSettings.fromProperties(PropertiesService.getScriptProperties());
     return {
       settings: settings,
       source: new SpreadsheetSource(settings),
       rowCache: new ScriptRowCache(CacheService.getScriptCache()),
       idGenerator: new UuidIdGenerator(),
+      currentUser: currentUser,
       audit: AuditStamper.create({ clock: clock, currentUser: currentUser }),
-      tokenGuard: new PropertiesTokenGuard(settings),
+      accessResolver: new IdentityClient({
+        settings: settings,
+        http: UrlFetchApp,
+        store: cacheStore,
+        hasher: new Sha256Hasher(),
+        clock: clock,
+        decodeBase64Url: Composition.decodeBase64Url
+      }),
       lockGuard: new ScriptLockGuard(LockService.getScriptLock())
     };
+  },
+
+  decodeBase64Url: function (text) {
+    return Utilities.newBlob(Utilities.base64DecodeWebSafe(text)).getDataAsString();
   },
 
   createRepositories: function (source, rowCache) {
