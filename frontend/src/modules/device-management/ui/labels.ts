@@ -1,7 +1,7 @@
 import type { EquipmentStatus } from '../domain/equipment'
 import type { MaintenanceType } from '../domain/maintenance'
 import { LOCALES, type Language, type MessageKey } from '../../../shared/i18n'
-import type { BadgeTone } from '../../../shared/components/Badge'
+import type { BadgeTone } from '../../../shared/components/badge'
 
 // Keys instead of strings so the active language is resolved at render time via t().
 export const STATUS_LABEL_KEYS: Record<EquipmentStatus, MessageKey> = {

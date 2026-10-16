@@ -18,7 +18,7 @@ Add a theme: add its light and dark blocks in `themes.css` (override only `--pri
 
 ## Color scheme
 
-Mode `light | dark | system` (default `system`), stored in `localStorage['app.color-scheme']`; the accent stays in `app.theme`. [ColorSchemeProvider](../src/shared/theme/ColorSchemeProvider.tsx) resolves the mode (system follows `prefers-color-scheme` live through `useSyncExternalStore`) and applies `data-color-scheme` + the `color-scheme` CSS property on `<html>` and the `theme-color` meta ([apply-color-scheme.ts](../src/shared/theme/apply-color-scheme.ts)). `ColorSchemePicker` (3-option radiogroup with sun/moon/laptop icons) lives in `SettingsMenu`. `AppearanceProvider` mounts both providers.
+Mode `light | dark | system` (default `system`), stored in `localStorage['app.color-scheme']`; the accent stays in `app.theme`. [ColorSchemeProvider](../src/shared/theme/color-scheme-provider.tsx) resolves the mode (system follows `prefers-color-scheme` live through `useSyncExternalStore`) and applies `data-color-scheme` + the `color-scheme` CSS property on `<html>` and the `theme-color` meta ([apply-color-scheme.ts](../src/shared/theme/apply-color-scheme.ts)). `ColorSchemePicker` (3-option radiogroup with sun/moon/laptop icons) lives in `SettingsMenu`. `AppearanceProvider` mounts both providers.
 
 ## No-flash mechanism
 
@@ -34,7 +34,7 @@ A synchronous inline script in `index.html` reads both storage keys (try/catch, 
 
 ## TreeList
 
-Generic WAI-ARIA tree ([TreeList](../src/shared/components/TreeList.tsx), [TreeItem](../src/shared/components/TreeItem.tsx), pure key model in [tree-navigation](../src/shared/components/tree-navigation.ts)). `role="tree"`, rows `treeitem` with `aria-level/setsize/posinset/selected`, `aria-expanded` on parents only, children in `role="group"`. jsTree look: guide lines under each parent chevron, rotating chevron, closed/open folder and file icons, hover and selected (primary tint + `--primary-ink`) highlight, animated collapse (grid rows; off under `prefers-reduced-motion`), rows `--control-height` (44px mobile, 36px desktop).
+Generic WAI-ARIA tree ([TreeList](../src/shared/components/tree-list.tsx), [TreeItem](../src/shared/components/tree-item.tsx), pure key model in [tree-navigation](../src/shared/components/tree-navigation.ts)). `role="tree"`, rows `treeitem` with `aria-level/setsize/posinset/selected`, `aria-expanded` on parents only, children in `role="group"`. jsTree look: guide lines under each parent chevron, rotating chevron, closed/open folder and file icons, hover and selected (primary tint + `--primary-ink`) highlight, animated collapse (grid rows; off under `prefers-reduced-motion`), rows `--control-height` (44px mobile, 36px desktop).
 
 Behavior: click selects, chevron only toggles, double-click or Enter toggles parents. Roving tabindex: Up/Down, Right (expand or first child), Left (collapse or parent), Home/End, Enter/Space, `*` expands siblings. Expansion and selection are controlled when `onExpandedChange` / `onSelectedChange` are passed. Built-in toolbar (expand/collapse all). `renderActions` controls sit outside the treeitem: always visible below the label on mobile and touch (`hover: none`), icon-only and shown on hover, selection or focus from 768px with a mouse. Not included: context menu, inline rename, drag and drop, typeahead.
 

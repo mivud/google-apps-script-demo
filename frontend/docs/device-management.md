@@ -7,7 +7,7 @@ Bounded context for equipment, maintenance logs and categories. It owns its mode
 Other code imports only from [index.ts](../src/modules/device-management/index.ts):
 - Types and services: `DataService`, `CategoryService`, `EquipmentService`, `MaintenanceService`.
 - Composition: `createDeviceManagementDataService(config)` (`DataServiceConfig` = sheets | supabase); adapter classes are internal.
-- Domain rules (equipment/maintenance validation, category cycle, selectable parents) live in `domain/`; services, UI and the `testing/InMemoryDataService` fake reuse them.
+- Domain rules (equipment/maintenance validation, category cycle, selectable parents) live in `domain/`; services, UI and the `testing/in-memory-data-service` fake reuse them.
 - UI: `ServicesProvider`, `Services`, `CategoriesProvider`, `CategoriesPage`, `EquipmentListPage`, `EquipmentDetailPage`.
 - Navigation: `CATEGORIES_PATH`, `navigate`, `parseEquipmentId`.
 
@@ -67,17 +67,17 @@ flowchart TD
 
 ## Testing
 
-- `npm test` runs the unit tests (domain rules, services, row mappers) against the in-memory fake [InMemoryDataService](../src/modules/device-management/testing/InMemoryDataService.ts); no network. The adapter tests (`googlesheet/*.test.ts`, `supabase/*.test.ts`) are excluded from it.
+- `npm test` runs the unit tests (domain rules, services, row mappers) against the in-memory fake [InMemoryDataService](../src/modules/device-management/testing/in-memory-data-service.ts); no network. The adapter tests (`googlesheet/*.test.ts`, `supabase/*.test.ts`) are excluded from it.
 - The [contract suite](../src/modules/device-management/infrastructure/persistence/contract/data-service.contract.ts) runs against the real providers and is opt-in: `npm run test:contract` (needs a `.env` with `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`, or `VITE_SHEETS_API_URL` + `VITE_SHEETS_API_TOKEN`; the in-memory contract run is part of `npm test`). It creates and deletes real rows, so use a dedicated test sheet/project, never production.
 
 ## UI
 
 - Hash routes (no host rewrites): `#/` list, `#/equipment/<id>` detail (remounted per id), `#/categories`. Use `navigate` from [navigation.ts](../src/modules/device-management/ui/navigation.ts), never `window.location`.
-- Contexts: [ServicesProvider](../src/modules/device-management/ui/ServicesProvider.tsx) (`useServices`), [CategoriesProvider](../src/modules/device-management/ui/CategoriesProvider.tsx) (`useCategories`: `data`, `flat`, `pathOf`, `loading`, `error`, `reload`; every mutation reloads).
-- List page: debounced search (300 ms), category (includes descendants) and status filters, any change resets to page 1; `EquipmentTable` (built on shared `DataTable`: table >= 768px, stacked labelled cards below), a "Showing X-Y of N" line (`common.showing`), skeleton, empty and error states, shared `Pager`, "Add" dialog. `EquipmentCategoryLine` / `EquipmentQuantityLine` in [EquipmentMeta](../src/modules/device-management/ui/components/EquipmentMeta.tsx) render the category path and quantity lines.
-- Detail page: equipment and maintenance logs load independently, each with skeleton and `ErrorState`. It shows name, category, status, description, quantity and [AuditInfo](../src/modules/device-management/ui/components/AuditInfo.tsx) (created/modified at and by; empty author shows "unknown"). Edit opens the form; delete is a two-step inline confirm; maintenance history is followed by `MaintenanceForm` (date defaults to today, sent as noon UTC).
+- Contexts: [ServicesProvider](../src/modules/device-management/ui/services-provider.tsx) (`useServices`), [CategoriesProvider](../src/modules/device-management/ui/categories-provider.tsx) (`useCategories`: `data`, `flat`, `pathOf`, `loading`, `error`, `reload`; every mutation reloads).
+- List page: debounced search (300 ms), category (includes descendants) and status filters, any change resets to page 1; `EquipmentTable` (built on shared `DataTable`: table >= 768px, stacked labelled cards below), a "Showing X-Y of N" line (`common.showing`), skeleton, empty and error states, shared `Pager`, "Add" dialog. `EquipmentCategoryLine` / `EquipmentQuantityLine` in [EquipmentMeta](../src/modules/device-management/ui/components/equipment-meta.tsx) render the category path and quantity lines.
+- Detail page: equipment and maintenance logs load independently, each with skeleton and `ErrorState`. It shows name, category, status, description, quantity and [AuditInfo](../src/modules/device-management/ui/components/audit-info.tsx) (created/modified at and by; empty author shows "unknown"). Edit opens the form; delete is a two-step inline confirm; maintenance history is followed by `MaintenanceForm` (date defaults to today, sent as noon UTC).
 - Categories page: two-level shared `TreeList` (WAI-ARIA tree, see [design-system](design-system.md)) with keyboard navigation and expand/collapse all (collapsed by default; creating a sub category expands its parent and selects it; row actions in `CategoryRowActions`), add sub category (hidden on child rows), edit (rename/move; parent choices are root categories only), two-step delete with translated errors.
-- Dialogs use [Modal](../src/shared/components/Modal.tsx) (native `<dialog>`: focus trap, Escape unless saving, bottom sheet below 768px). `CategorySelect` is a native select with full paths and a quick-add button.
+- Dialogs use [Modal](../src/shared/components/modal.tsx) (native `<dialog>`: focus trap, Escape unless saving, bottom sheet below 768px). `CategorySelect` is a native select with full paths and a quick-add button.
 - Async pattern (mandatory): `useAsyncData` for reads, `useAsyncAction` for writes, `LoadingButton`, `ErrorState` with Retry, in [shared](../src/shared). Every fetch has a loading and an error state.
 - Responsive: mobile-first CSS in [src/styles](../src/styles) for 360 / 768 / 1280 px; no horizontal scroll, 44px targets, `prefers-reduced-motion` respected.
 - Text is localized, see [i18n](i18n.md); user data is not translated.

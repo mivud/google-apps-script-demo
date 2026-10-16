@@ -3,7 +3,7 @@ import { NotFoundError } from '../../../shared/errors'
 import type { NewEquipment } from '../domain/equipment'
 import { CategoryService } from './category-service'
 import { DEFAULT_PAGE_SIZE, EquipmentService, MAX_PAGE_SIZE } from './equipment-service'
-import { InMemoryDataService } from '../testing/InMemoryDataService'
+import { InMemoryDataService } from '../testing/in-memory-data-service'
 
 const sample = (extra: Partial<NewEquipment> = {}): NewEquipment => ({
   categoryId: '', name: 'Drill', description: '', status: 'active', quantity: 1, ...extra,

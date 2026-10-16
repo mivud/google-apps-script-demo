@@ -1,4 +1,4 @@
-import type { IconName } from './Icon'
+import type { IconName } from './icon'
 
 export interface NavItemData {
   label: string

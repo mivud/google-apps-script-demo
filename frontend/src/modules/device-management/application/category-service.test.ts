@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { CategoryService } from './category-service'
-import { InMemoryDataService } from '../testing/InMemoryDataService'
+import { InMemoryDataService } from '../testing/in-memory-data-service'
 
 let service: CategoryService
 let store: InMemoryDataService

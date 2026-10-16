@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { NotFoundError } from '../../../shared/errors'
 import type { NewMaintenanceLog } from '../domain/maintenance'
 import { MaintenanceService } from './maintenance-service'
-import { InMemoryDataService } from '../testing/InMemoryDataService'
+import { InMemoryDataService } from '../testing/in-memory-data-service'
 
 let data: InMemoryDataService
 let service: MaintenanceService

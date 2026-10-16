@@ -21,3 +21,9 @@ Static Vite + React + TypeScript app (responsive, English and Vietnamese). Data 
 - Text is localized through a small in-house i18n layer (`en`, `vi`).
 
 Backend side: see [backend docs](../../backend/docs/README.md).
+
+## Naming
+
+- Every file and folder under `frontend/` is lowercase kebab-case, including React components (`app-shell.tsx`, `use-async-data.ts`, `in-memory-data-service.ts`). File names never use PascalCase or camelCase.
+- Identifiers inside the code keep the language convention: components, classes and types in PascalCase (`AppShell`), functions and variables in camelCase, constants in UPPER_SNAKE_CASE.
+- Backend Apps Script files are different: PascalCase `.gs` files (see Naming convention in CLAUDE.md).
