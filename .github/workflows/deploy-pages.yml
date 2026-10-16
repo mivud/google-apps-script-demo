@@ -31,12 +31,15 @@ jobs:
       - run: npm run build
         env:
           # Pages serves under /<repo>/; Cloudflare Pages will use '/' later.
+          # VITE_* values are public; set them as repository variables (VITE_DB_PROVIDER,
+          # VITE_SHEETS_API_URL, VITE_IDENTITY_API_URL, VITE_GOOGLE_CLIENT_ID).
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
           VITE_DB_PROVIDER: ${{ vars.VITE_DB_PROVIDER }}
           VITE_SHEETS_API_URL: ${{ vars.VITE_SHEETS_API_URL }}
+          VITE_IDENTITY_API_URL: ${{ vars.VITE_IDENTITY_API_URL }}
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
-          VITE_SHEETS_API_TOKEN: ${{ vars.VITE_SHEETS_API_TOKEN }}
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: frontend/dist
