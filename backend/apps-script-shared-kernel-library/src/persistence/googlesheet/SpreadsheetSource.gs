@@ -33,7 +33,7 @@ SpreadsheetSource.prototype.readValues = function (schema) {
   } catch (err) {
     // E.g. the Sheets API is not enabled yet for the app's Cloud project: keep serving through SpreadsheetApp.
     this.sheetsApiFailed = true;
-    console.warn('Sheets API read failed, using SpreadsheetApp: ' + err.message);
+    console.warn('Sheets API read failed, using SpreadsheetApp: ' + LogSafeText.of(err.message));
     return this.readWithSpreadsheetApp(schema);
   }
 };

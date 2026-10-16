@@ -20,7 +20,7 @@ test('failure hides the message of an unexpected error and logs only its name an
   const original = console.error;
   console.error = (...args) => logged.push(args.join(' '));
   try {
-    const body = failureBody(new TypeError('secret sheet id 123'));
+    const body = failureBody(new TypeError('secret sheet id 123 in 1AbCdEfGhIjKlMnOpQrStUvWxYz'));
     assert.deepEqual(body, { ok: false, error: { code: 'INTERNAL', message: 'Internal error' } });
   } finally {
     console.error = original;
@@ -28,4 +28,12 @@ test('failure hides the message of an unexpected error and logs only its name an
   assert.equal(logged.length, 1);
   assert.match(logged[0], /TypeError/);
   assert.match(logged[0], /secret sheet id 123/);
+  assert.doesNotMatch(logged[0], /1AbCdEfGhIjKlMnOpQrStUvWxYz/);
+});
+
+test('log text masks long id-like strings and is bounded', () => {
+  const { context } = createWorld();
+  const { LogSafeText } = context.SharedKernelLibrary;
+  assert.equal(LogSafeText.of('Not found: 1AbCdEfGhIjKlMnOpQrStUvWxYz range A1'), 'Not found: [id] range A1');
+  assert.equal(LogSafeText.of('ab '.repeat(200)).length, 200);
 });

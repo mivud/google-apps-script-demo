@@ -6,6 +6,7 @@
     "src/domain/ApiError.gs",
     "src/domain/Values.gs",
     "src/domain/IdRules.gs",
+    "src/infrastructure/LogSafeText.gs",
     "src/domain/AuditRules.gs",
     "src/application/Ports.gs",
     "src/application/AuditStamper.gs",
