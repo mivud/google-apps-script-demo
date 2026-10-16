@@ -16,6 +16,10 @@ export class InMemoryDataService implements DataService {
   private counter = 0
   private lastTime = 0
 
+  async getBackendVersion(): Promise<string | null> {
+    return null
+  }
+
   // Strictly increasing so "modifiedAt DESC" is deterministic even within one millisecond.
   private now(): string {
     this.lastTime = Math.max(Date.now(), this.lastTime + 1)

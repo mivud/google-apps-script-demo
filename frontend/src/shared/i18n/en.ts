@@ -16,6 +16,9 @@ export const en = {
   'language.vi': 'Tiếng Việt',
 
   'settings.label': 'Settings',
+  'version.label': 'Versions',
+  'version.frontend': 'Frontend',
+  'version.backend': 'Backend',
   'theme.label': 'Color theme',
   'theme.green': 'Green',
   'theme.blue': 'Blue',

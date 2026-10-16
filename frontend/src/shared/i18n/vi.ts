@@ -12,6 +12,9 @@ export const vi: Messages = {
   'language.vi': 'Tiếng Việt',
 
   'settings.label': 'Cài đặt',
+  'version.label': 'Phiên bản',
+  'version.frontend': 'Frontend',
+  'version.backend': 'Backend',
   'theme.label': 'Màu giao diện',
   'theme.green': 'Xanh lá',
   'theme.blue': 'Xanh dương',

@@ -63,6 +63,11 @@ export class SupabaseAdapter implements DataService {
     this.client = client
   }
 
+  // Supabase is called straight from the browser, so there is no separate backend version.
+  async getBackendVersion(): Promise<string | null> {
+    return null
+  }
+
   async list(query: EquipmentQuery): Promise<Page<Equipment>> {
     const from = (query.page - 1) * query.pageSize
     let request = this.client

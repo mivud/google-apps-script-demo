@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { useI18n } from '../i18n'
 import { useDismiss, type DismissReason } from '../hooks/use-dismiss'
 import { Button } from './button'
@@ -7,7 +7,8 @@ import { LanguageSwitcher } from './language-switcher'
 import { ColorSchemePicker } from './color-scheme-picker'
 import { ThemePicker } from './theme-picker'
 
-export function SettingsMenu() {
+// footer: extra content (e.g. version info) the app layer places at the end of the popover.
+export function SettingsMenu({ footer }: { footer?: ReactNode }) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -53,6 +54,7 @@ export function SettingsMenu() {
             <span>{t('theme.label')}</span>
             <ThemePicker />
           </div>
+          {footer}
         </div>
       )}
     </div>

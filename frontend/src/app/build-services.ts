@@ -5,5 +5,10 @@ import { readEnv } from './env'
 export function buildServices(): Services {
   const dataService = createDataService(readEnv(import.meta.env))
   const categories = new CategoryService(dataService)
-  return { equipment: new EquipmentService(dataService, categories), maintenance: new MaintenanceService(dataService), categories }
+  return {
+    equipment: new EquipmentService(dataService, categories),
+    maintenance: new MaintenanceService(dataService),
+    categories,
+    systemInfo: dataService,
+  }
 }

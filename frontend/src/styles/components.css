@@ -43,6 +43,9 @@
 }
 .popover .field { margin-bottom: 16px; }
 .popover .field:last-child { margin-bottom: 0; }
+.version-info { display: grid; gap: 4px; margin: 16px 0 0; padding-top: 12px; border-top: 1px solid var(--glass-border); font-size: var(--text-sm, 0.875rem); color: var(--muted-foreground); }
+.version-info > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 24px; }
+.version-info dd { margin: 0; display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; color: var(--popover-foreground); }
 .theme-picker { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0; border: 0; }
 /* The option carries its own data-theme, so --primary / --primary-foreground resolve to that preset's light values. */
 .theme-option { display: inline-flex; align-items: center; justify-content: center; width: var(--tap); height: var(--tap); padding: 0; min-height: var(--tap); background: transparent; border: 0; border-radius: 50%; cursor: pointer; color: var(--primary-foreground); }

@@ -116,6 +116,10 @@ export class SheetsAdapter implements DataService {
     return rowToMaintenanceLog(await this.call<MaintenanceLogRow>(API_ACTIONS.maintenance.add, maintenanceInputToRow(input)))
   }
 
+  async getBackendVersion(): Promise<string | null> {
+    return (await this.call<{ version: string }>(API_ACTIONS.system.version, {})).version
+  }
+
   private async call<T>(action: string, payload: unknown): Promise<T> {
     let body: ApiSuccess<T> | ApiFailure
     try {
