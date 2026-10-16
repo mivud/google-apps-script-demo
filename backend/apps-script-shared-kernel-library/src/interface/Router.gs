@@ -7,7 +7,7 @@ function Router(handlers, readActions) {
 
 Router.prototype.resolve = function (action) {
   if (!Object.prototype.hasOwnProperty.call(this.handlers, action)) {
-    throw ApiError.validation('Unknown action: ' + action);
+    throw ApiError.validation('Unknown action');
   }
   return this.handlers[action];
 };

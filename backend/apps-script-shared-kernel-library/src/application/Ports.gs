@@ -4,8 +4,10 @@
  *
  * Clock                 { now(): Date }
  * IdGenerator           { newId(): string }                 lowercase uuid
- * CurrentUser           { id(): string }                    '' until login exists
- * TokenGuard            { assertValid(token): void }        throws ApiError UNAUTHORIZED
+ * CurrentUser           { id(): string }                    email of the signed-in user, '' before sign-in
+ * TokenVerifier         (used by identity-api only) { verify(idToken): { email, nonce } } nonce is "" when the token has none; throws UNAUTHORIZED (same error for every failure)
+ * AccessResolver        { resolve(idToken): { email, role } } role is "admin" or "viewer" (API contract literals); throws UNAUTHORIZED / FORBIDDEN / INTERNAL. Implemented by IdentityClient (apps-script), which calls identity-api
+ * Hasher              { hex(text): string }               lowercase SHA-256 hex
  * LockGuard             { runExclusive(work): any }         serializes work; releases the lock on any outcome
  * SpreadsheetSource     { open(): Spreadsheet }
  * TableGateway (one sheet, rows are plain objects keyed by header)

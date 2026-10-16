@@ -1,6 +1,6 @@
 // Secrets and ids live in Script Properties, never in code.
 var ScriptSettings = {
-  API_TOKEN_KEY: 'API_TOKEN',
+  GOOGLE_CLIENT_ID_KEY: 'GOOGLE_CLIENT_ID',
   SPREADSHEET_ID_KEY: 'SPREADSHEET_ID',
   SCHEMA_SIGNATURE_KEY: 'SCHEMA_SIGNATURE',
 
