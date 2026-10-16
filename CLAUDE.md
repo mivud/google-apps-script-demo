@@ -44,12 +44,42 @@ frontend/
     config/      # provider factory, env parsing
   docs/          # frontend docs, one file per module
 backend/
-  apps-script/   # Code.gs, appsscript.json (clasp)
+  apps-script/   # .clasp.json + src/ (Main.gs, composition/, shared/, modules/<module>/{domain,application,interface,infrastructure}); pushed with clasp
   supabase/      # SQL migrations, RLS policies
   docs/          # backend docs, one file per module
 ```
 
 Frontend and backend are fully separated: code, docs, and dependencies never mix. They communicate only through the documented API contract.
+
+### Feature modules
+
+Code is organized by **feature module** (today: `equipment`, `maintenance`, `category`) so new modules can be added later without touching existing ones. Each module owns its slice end to end:
+
+- **Frontend:** model types, repository interface, service, adapter parts (sheets + supabase), UI pages/components, i18n messages, and a short doc `frontend/docs/<module>.md`. Expose a small public API (`index.ts`); other modules import only that, never deep paths.
+- **Backend:** Apps Script actions namespaced `<module>.<action>` (e.g. `category.list`), one SQL migration per module (`NNN_<module>.sql`), and `backend/docs/<module>.md`.
+- **Dependencies:** a module may depend on `core/` shared pieces (errors, `Page`, async hooks, `Modal`) and, when truly needed, on another module's public API or service interface. No circular module dependencies; cross-module rules go in the depending module's service, not in the other module's internals.
+- **Shared composition only:** `DataService` is composed from per-module repository interfaces; the factory and `ServicesProvider` are the only places that know all modules.
+- New module = follow the `add-module` skill. Do not grow a module by dumping unrelated logic into it.
+- Migration status: Apps Script is being split into `src/modules/<module>/{domain,application,interface,infrastructure}`; the frontend (still laid out by layer: `core/`, `adapters/`, `services/`, `ui/`) follows afterwards into `modules/<module>/{domain,application,infrastructure,ui}` with `app/` (composition) and `shared/`.
+
+### Clean architecture inside each module
+
+Dependencies point inward only: `interface` and `infrastructure` -> `application` -> `domain`.
+
+- **domain:** entities and pure business rules (e.g. category tree, cycle check, name rules). No `SpreadsheetApp`, `fetch`, React or any framework.
+- **application:** use cases (`CreateCategory`, `RemoveCategory`...) depending only on domain and **ports** (interfaces) such as `CategoryRepository`, `Clock`, `IdGenerator`. Time and ids always come through the `Clock` / `IdGenerator` ports so they are replaceable.
+- **interface (backend) / ui (frontend):** handlers or pages that translate requests to use-case input and errors to codes; row <-> entity mappers.
+- **infrastructure:** port implementations (Sheets, Supabase, locks, token guard, system clock, uuid).
+- **Composition root** is the only place that wires implementations to ports. Modules reach each other only through public ports/`index.ts`, never through internals.
+- Apps Script has one global scope and no imports: each module exposes one namespace object (e.g. `CategoryModule`), registration of handlers happens inside functions (never at file load), and file load order is fixed by `filePushOrder` in `.clasp.json`.
+
+## Clean Code Rules
+
+- Small functions that do one thing at one level of abstraction (about <= 20 lines, <= 3 parameters; group more into an object).
+- Intention-revealing names; no cryptic abbreviations; no magic numbers or strings (named constants).
+- Guard clauses instead of deep nesting; no boolean flag parameters; no dead code; no duplication.
+- Errors are explicit (`ApiError` / typed errors with stable codes), not ambiguous `null`/`undefined` when failure is meaningful.
+- Comments explain *why*, briefly, in English.
 
 ## SOLID Checklist
 
