@@ -16,6 +16,7 @@ Data can live in **Google Sheets (via Apps Script Web App)** or **Supabase**; sw
    - **Claude config goes through `core/agents` first.** Commit changes to the basic Claude files (`CLAUDE.md`, `.claude/`) on branch `core/agents`, then merge `core/agents` into the working branches (`dev`, feature branches such as `devices-mgt`). Never commit Claude files directly on a feature branch. Branch names must not collide with an existing branch used as a prefix (e.g. `dev/x` is impossible while `dev` exists).
 5. **SOLID always.** See the SOLID checklist below.
 6. **Responsive always.** Every frontend screen must work well on both desktop and mobile: mobile-first CSS, fluid layouts, touch-friendly targets (>= 44px), no horizontal scroll, and verified at common breakpoints (~360px, ~768px, ~1280px).
+   - Every interactive element must show `cursor: pointer` (disabled: `not-allowed`) through the global rule in `frontend/src/styles/base.css`; custom clickable elements need a matching ARIA role.
 7. **Visible feedback on every async operation.** Any UI action that calls an API must disable its control while pending and show a loading effect (spinner/skeleton), then restore on success or error. This also covers data loading (lists, detail pages, initial fetch, refresh): always show a loading state (skeleton/spinner) and an error state with retry. Use the shared `LoadingButton` / `useAsyncAction` / `useAsyncData` pattern, never ad-hoc handling.
 8. **Delegate complex work.** Give complex or multi-area parts to the agents in `.claude/agents/`, run independent ones in parallel, and keep only short summaries in the main thread to save context and tokens. Agents read only their scope and report in <= 10 lines; before a big task check context size and ask the user before any compact (see `plan-feature` step 0). Do trivial edits directly.
 9. **English only for artifacts.** Code comments, docs, and diagrams (Mermaid) are written in English. All identifiers must be English too: variables, functions, classes, files, folders, DB tables/columns, and branch names (no Vietnamese or unaccented-Vietnamese names). Chat with the user may be in Vietnamese.
@@ -86,10 +87,10 @@ src/modules/<module>/
 - **domain:** entities and pure business rules (e.g. category tree, cycle check, name rules). No `SpreadsheetApp`, `fetch`, React or any framework.
 - **application:** the feature is the entity area (`equipment`, `category`, `maintenance`); each use case is one file under `commands/` (changes state) or `queries/` (reads). Depends only on domain and **ports** (`Clock`, `IdGenerator`, repositories). Time and ids always come through ports so they are replaceable.
 - **endpoints (backend) / ui (frontend):** endpoints or pages that translate requests to use-case input and errors to codes; row <-> entity mappers.
-- **infrastructure:** non-database port implementations (locks, token guard, system clock, uuid).
+- **infrastructure:** non-database port implementations (locks, access resolver, system clock, uuid).
 - **persistence/<provider>:** all database access code of one provider in its own folder: `persistence/googlesheet` (Apps Script) and `persistence/supabase`. Shared pieces live in `shared/persistence/<provider>`, module-specific ones in `modules/<module>/persistence/<provider>`. A new provider means a new `persistence/<provider>` folder, never edits to another provider's folder.
 - **Composition root** is the only place that wires implementations to ports. Modules reach each other only through public ports/`index.ts`, never through internals.
-- Keep files short (about <= 100 lines; split by responsibility past ~300). Shared technical pieces (clock, id generator, sheet table, token guard...) live in `shared/`, one file per class so reviews stay easy.
+- Keep files short (about <= 100 lines; split by responsibility past ~300). Shared technical pieces (clock, id generator, sheet table, access resolver...) live in `shared/`, one file per class so reviews stay easy.
 
 Naming rules:
 - **Models** (entities, value objects) have no suffix: `Equipment`, `EquipmentCriteria`.
