@@ -62,13 +62,13 @@ flowchart TD
 
 - [SheetsAdapter](../src/modules/device-management/infrastructure/persistence/googlesheet/sheets-adapter.ts) calls the Apps Script Web App with actions `device-management.<entity>.<action>` (see `backend/docs/apps-script.md`). [SupabaseAdapter](../src/modules/device-management/infrastructure/persistence/supabase/supabase-adapter.ts) uses the Supabase client.
 - [row-mappers](../src/modules/device-management/infrastructure/persistence/row-mappers.ts) map snake_case rows to domain types for both; datetimes go through [toUtcOffsetIso](../src/shared/utc-iso.ts) so providers return identical strings; audit fields are read, never written.
-- Same semantics in both (substitutable): 1-based pagination, `get` returns null when missing, `update`/`remove`/`add` on unknown ids throw `NotFoundError`, invalid input throws `ValidationError` with a code, transport failures throw `NetworkError`. Supabase maps 23505/23503 and trigger messages to the category codes; Sheets maps backend messages. Supabase converts `""` refs to NULL on write.
+- Same semantics in both (substitutable): 1-based pagination, `get` returns null when missing, `update`/`remove`/`add` on unknown ids throw `NotFoundError`, invalid input throws `ValidationError` with a code, transport failures throw `NetworkError`. Supabase maps 23505/23503 and trigger messages to the category codes; Sheets maps backend messages in [sheets-error-mapper](../src/modules/device-management/infrastructure/persistence/googlesheet/sheets-error-mapper.ts) (shared codes `UNAUTHORIZED`, `FORBIDDEN` and the rest go through `toSharedApiError` in [apps-script-api](../src/shared/api/apps-script-api.ts), which also applies a 45 s request timeout and fixed `NetworkError` text). Supabase converts `""` refs to NULL on write.
 - Maintenance `listByEquipment` temporarily sends both `equipment_id` and `equipmentId` to the backend while the payload key is being unified; remove one when the backend settles.
 
 ## Testing
 
-- `npm test` runs the unit tests (domain rules, services, row mappers) against the in-memory fake [InMemoryDataService](../src/modules/device-management/testing/in-memory-data-service.ts); no network. The adapter tests (`googlesheet/*.test.ts`, `supabase/*.test.ts`) are excluded from it.
-- The [contract suite](../src/modules/device-management/infrastructure/persistence/contract/data-service.contract.ts) runs against the real providers and is opt-in: `npm run test:contract` (needs a `.env` with `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`, or `VITE_SHEETS_API_URL` + `VITE_SHEETS_API_TOKEN`; the in-memory contract run is part of `npm test`). It creates and deletes real rows, so use a dedicated test sheet/project, never production.
+- `npm test` (Vitest, run from `frontend/`) runs all unit tests, including the auth module and the warmup gate (about 117 tests; the exact count changes): domain rules, services, row mappers against the in-memory fake [InMemoryDataService](../src/modules/device-management/testing/in-memory-data-service.ts); no network. The adapter tests (`googlesheet/*.test.ts`, `supabase/*.test.ts`) are excluded from it.
+- The [contract suite](../src/modules/device-management/infrastructure/persistence/contract/data-service.contract.ts) runs against the real providers and is opt-in: `npm run test:contract` (needs a `.env` with `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`, or `VITE_SHEETS_API_URL` + `TEST_GOOGLE_ID_TOKEN`; the in-memory contract run is part of `npm test`). It creates and deletes real rows, so use a dedicated test sheet/project, never production.
 
 ## UI
 
@@ -80,6 +80,7 @@ flowchart TD
 - Dialogs use [Modal](../src/shared/components/modal.tsx) (native `<dialog>`: focus trap, Escape unless saving, bottom sheet below 768px). `CategorySelect` is a native select with full paths and a quick-add button.
 - `SystemInfoRepository.getBackendVersion()` is part of `DataService`: the Sheets adapter calls `system.version.get`; Supabase returns `null` (shown as a dash) because the browser talks to Supabase directly. The frontend version is injected at build time from `package.json` as `__APP_VERSION__`.
 - Async pattern (mandatory): `useAsyncData` for reads, `useAsyncAction` for writes, `LoadingButton`, `ErrorState` with Retry, in [shared](../src/shared). Every fetch has a loading and an error state.
+- Pointer cursor: one global rule in [base.css](../src/styles/base.css) gives every interactive element (links, buttons, selects, checkboxes, ARIA roles such as tab or option) `cursor: pointer` and disabled ones `not-allowed`. A custom clickable element needs a matching `role`; do not add per-component cursor rules.
 - Responsive: mobile-first CSS in [src/styles](../src/styles) for 360 / 768 / 1280 px; no horizontal scroll, 44px targets, `prefers-reduced-motion` respected.
 - Text is localized, see [i18n](i18n.md); user data is not translated.
 

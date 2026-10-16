@@ -2,7 +2,7 @@
 
 **Purpose:** Postgres storage for equipment and maintenance logs.
 
-**Files:** [001_init.sql](../supabase/migrations/001_init.sql), [002_rls_policies.sql](../supabase/migrations/002_rls_policies.sql)
+**Files:** [001_init.sql](../supabase/migrations/001_init.sql), [002_rls_policies.sql](../supabase/migrations/002_rls_policies.sql), [003_auth.sql](../supabase/migrations/003_auth.sql) (Google login, `users` allowlist, role policies)
 
 **Schema**
 - `categories`: id, parent_id (nullable self FK, `on delete restrict`; NULL = root), name (non-blank), plus audit columns.
@@ -26,5 +26,6 @@
 **Rules**
 - Column names are identical to the Google Sheet headers.
 - Apply the migrations in order in the Supabase SQL editor.
-- v1 policies give the `anon` role full access because there is no login. The anon key ships in the frontend bundle, so anyone with the app link can read and write. Tighten the policies when auth is added.
+- The v1 policies in `002` gave `anon` full access; the anon key ships in the frontend bundle. Apply `003_auth.sql` so access requires a Google login and an allowlisted role (see the next point).
+- `003_auth.sql` only trusts Google logins: `current_app_role()` and the `users` policy require `app_metadata.provider = 'google'` and a verified email in the JWT. Still disable every other Supabase auth provider and email signup (Authentication > Providers), so nobody can register with an allowlisted email.
 - Never put the `service_role` key in the frontend.

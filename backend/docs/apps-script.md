@@ -3,8 +3,8 @@
 **Purpose:** JSON API over a Google Sheet. It is only an API layer and does not host the UI.
 
 **Contract**
-- `POST` with `Content-Type: text/plain` (avoids a CORS preflight). Body: `{ token, action, payload }`.
-- Response: `{ ok: true, data }` or `{ ok: false, error: { code, message } }`. Codes: `NOT_FOUND`, `VALIDATION`, `UNAUTHORIZED`, `INTERNAL`.
+- `POST` with `Content-Type: text/plain` (avoids a CORS preflight). Body: `{ idToken, action, payload }`. Users and roles come from [identity-api](identity-api.md).
+- Response: `{ ok: true, data }` or `{ ok: false, error: { code, message } }`. Codes: `NOT_FOUND`, `VALIDATION`, `UNAUTHORIZED`, `FORBIDDEN`, `INTERNAL`.
 - Actions are `<module>.<entity>.<action>` (e.g. `device-management.equipment.list`); see [device-management](device-management.md).
 - `system.version.get` (cross-cutting, no module) returns `{ version }`; `doGet` reports the same version. Source: [SystemEndpoints.gs](../apps-script/src/composition/SystemEndpoints.gs), see Versioning in the [README](README.md).
 - Payloads use snake_case rows (as in `row-mappers.ts`). A bad or missing body, bad JSON, an unknown action or wrong field types return `VALIDATION`.
@@ -32,7 +32,7 @@ flowchart LR
 - **domain:** pure rules and constants (`ApiError`, `AuditRules`, `IdRules`, module entities and values). No Google API.
 - **application:** use cases and port contracts ([Ports.gs](../apps-script-shared-kernel-library/src/application/Ports.gs)). Time and ids come from the `Clock` / `IdGenerator` ports.
 - **endpoints:** classes that turn payloads into use-case input; `RequestParser`, `Router` and `ResponseWriter`.
-- **infrastructure:** generic port implementations (`ScriptSettings`, `ScriptLockGuard`, `ScriptRowCache`, `PropertiesTokenGuard`, `SystemClock`, `UuidIdGenerator`, `AnonymousCurrentUser`).
+- **infrastructure:** generic port implementations (`ScriptSettings`, `ScriptLockGuard`, `ScriptRowCache`, `SystemClock`, `UuidIdGenerator`, `RequestCurrentUser`) plus `IdentityClient` (the access resolver that calls identity-api). `GoogleIdTokenVerifier` and `CacheVerifiedTokens` live in the shared library and are used by identity-api only.
 - **persistence/googlesheet:** everything that touches the spreadsheet: shared `SpreadsheetSource`, `SheetLayout`, `SpreadsheetTable`, `SheetUpgrade`, `SheetInstaller`, and per-module `*Service` classes in `modules/<m>/persistence/googlesheet`. A future Supabase backend would add a sibling `persistence/<provider>` folder.
 - **composition:** [Composition.gs](../apps-script/src/composition/Composition.gs) is the only place that wires adapters to ports and builds the handler registry, all inside functions at request time.
 - Modules talk only through ports implemented in persistence (for example category removal asks `EquipmentCategoryUsage`). No code reads another entity's sheet directly.
@@ -58,7 +58,7 @@ The shared building blocks (domain, application ports, infrastructure, `persiste
 
 `package.json` has `npm test`.
 
-Shared code stays one file per class. Today the only module is [device-management](device-management.md).
+Shared code stays one file per class. Modules: [device-management](device-management.md). Identity (the `auth` module) lives in the separate [identity-api](identity-api.md) Web App; this app reaches it through `IdentityClient` and `AccessControl`.
 
 **Add a module**
 1. Create `src/modules/<name>/{domain,application,endpoints,persistence/googlesheet}` and a `<Name>Module.gs` namespace root that loads first in the module.
@@ -70,7 +70,7 @@ Shared code stays one file per class. Today the only module is [device-managemen
 **Audit columns** (all sheets): `created_at`, `modified_at`, `created_by`, `last_modified_by`.
 - Filled by the server only; audit fields in payloads or patches are ignored.
 - Create: `created_at = modified_at = now`. Update: `modified_at = now`, `created_*` untouched. Logs get `modified_at = created_at` on insert.
-- `created_by` / `last_modified_by` are `''` until login exists. Later hook: return the user from [AnonymousCurrentUser](../apps-script-shared-kernel-library/src/infrastructure/AnonymousCurrentUser.gs).
+- `created_by` / `last_modified_by` hold the signed-in user's email, set per request by [RequestCurrentUser](../apps-script-shared-kernel-library/src/infrastructure/RequestCurrentUser.gs) (resolved by identity-api, see [auth](auth.md)).
 - Datetimes are UTC, millisecond precision, `+00:00` instead of `Z` (e.g. `2026-10-16T08:00:00.123+00:00`), so string ordering is chronological. `performed_at` uses the same format.
 
 **Sheets**
@@ -83,16 +83,16 @@ Shared code stays one file per class. Today the only module is [device-managemen
 2. Set up the shared library first: see [shared-library](shared-library.md) (create it, push it, create a version, put its script id and version in `backend/apps-script/src/appsscript.json`).
 2b. Install and log in yourself (the login is interactive and never scripted): `npm i -g @google/clasp`, then `clasp login`.
 3. `cd backend/apps-script`, then `clasp push` (uploads `src/` in `filePushOrder`; the script id is in `.clasp.json`).
-4. In the Apps Script editor: Project Settings > Script properties: set `API_TOKEN` (any long random string) and `SPREADSHEET_ID` (the id from the sheet URL; optional when the script is bound to the sheet).
+4. In the Apps Script editor: Project Settings > Script properties: set `GOOGLE_CLIENT_ID` (the Google OAuth web client id the frontend signs in with) `IDENTITY_API_URL` (the identity-api `/exec` URL, see [identity-api](identity-api.md)) and `SPREADSHEET_ID` (the id from the sheet URL; optional when the script is bound to the sheet).
 5. Deploy > Manage deployments > New version (first time: Deploy > New deployment > Web app, execute as `Me`, access `Anyone`; authorize when prompted). `clasp push` alone does not change the live Web App; a new version is required after each change.
-6. Copy the Web App URL into `VITE_SHEETS_API_URL` and the same token into `VITE_SHEETS_API_TOKEN` (see the frontend config docs).
+6. Copy the Web App URL into `VITE_SHEETS_API_URL` (see the frontend config docs). Users are managed in the identity-api spreadsheet (see [identity-api](identity-api.md)).
 
 **Testing**
-- Zero dependencies: `node:test` and `node:vm`. Run `npm test` in `backend/apps-script` (60 cases).
+- Zero dependencies: `node:test` and `node:vm`. Run `npm test` (runs `node --test tests/`) in `backend/apps-script` (about 111 cases; the number changes as tests are added).
 - [loadAppsScript.js](../apps-script/tests/harness/loadAppsScript.js) loads the files listed in `filePushOrder` into one vm context (like Apps Script's global scope) and checks that the files on disk equal `filePushOrder`.
 - [fakes.js](../apps-script/tests/harness/fakes.js) provides in-memory tables, a settable clock, sequential ids and the real `AuditStamper`.
-- Suites: `tests/domain`, `tests/application` (use cases with fakes), `tests/endpoints`.
-- Not covered (verify with a real `clasp push` and a run on Google): `doGet`/`doPost`, `RequestParser`, `ResponseWriter`, token and lock guards, `SpreadsheetTable`, `SheetInstaller`/`SheetUpgrade`, legacy migration.
+- Suites: `tests/domain`, `tests/application` (use cases with fakes), `tests/endpoints`, `tests/composition` (`IdentityClient`, system), `tests/identity` (identity-api domain, use cases, `UserRepository`), `tests/library` (`GoogleIdTokenVerifier`, `ResponseWriter`, kernel version).
+- Not covered (verify with a real `clasp push` and a run on Google): `doGet`/`doPost`, `RequestParser`, lock guards, `SpreadsheetTable`, `SheetInstaller`/`SheetUpgrade`, legacy migration.
 - `tests/` is outside the clasp `rootDir` (`src`), so it is never pushed.
 
-**Limits:** the token is visible in the frontend bundle, so it only deters casual access. Quotas and latency are higher than Postgres.
+**Limits:** access depends on identity-api being reachable (fails closed); revoking a user takes a few minutes to apply (see [auth](auth.md)). Quotas and latency are higher than Postgres.

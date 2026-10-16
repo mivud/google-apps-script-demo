@@ -39,8 +39,8 @@ Snapshot of what is unfinished. Branch: `feature/devices-management`. Done items
   - Fix review findings on the Supabase adapter: PostgREST 416 for out-of-range pages, 22P02 for malformed ids (`get` must return null, `update` / `remove` must be `NotFoundError`), search normalization parity, empty-patch `update`.
   - Verify the Postgres error to `category_*` code mapping (cycle trigger message must contain `category_cycle`) and the `+00:00` datetime format.
   - No automatic migration exists for an already-created Postgres schema.
-- [ ] **Deployment:** enable Pages with source "GitHub Actions", set repo Variables (`VITE_DB_PROVIDER`, `VITE_SHEETS_API_URL`, `VITE_SHEETS_API_TOKEN`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`), merge to `main` (the workflow only runs on `main`). Later: move to Cloudflare Pages (`VITE_BASE_PATH=/`) and attach the custom domain.
-- [ ] **Authentication:** none in v1. `created_by` / `last_modified_by` stay empty; the Apps Script token and Supabase anon key are public in the bundle. Add login, fill `AnonymousCurrentUser` / the trigger user, and tighten RLS.
+- [ ] **Deployment:** enable Pages with source "GitHub Actions", set repo Variables (`VITE_DB_PROVIDER`, `VITE_SHEETS_API_URL`, `VITE_IDENTITY_API_URL`, `VITE_GOOGLE_CLIENT_ID`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`), merge to `main` (the workflow only runs on `main`). Later: move to Cloudflare Pages (`VITE_BASE_PATH=/`) and attach the custom domain.
+- [x] **Authentication:** done. Google sign-in with an email allowlist and `admin` / `viewer` roles; `created_by` / `last_modified_by` hold the resolved email. See `backend/docs/auth.md` and `backend/docs/identity-api.md`. Supabase RLS follows `003_auth.sql`.
 
 ## Nice to have
 

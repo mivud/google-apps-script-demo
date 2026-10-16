@@ -37,7 +37,9 @@ CLAUDE.md              project rules
 | Variable | Purpose |
 |---|---|
 | `VITE_DB_PROVIDER` | `sheets` or `supabase` |
-| `VITE_SHEETS_API_URL`, `VITE_SHEETS_API_TOKEN` | Sheets provider |
+| `VITE_SHEETS_API_URL` | Sheets provider: data API URL (requests carry a Google ID token, see [auth](frontend/docs/auth.md)) |
+| `VITE_IDENTITY_API_URL` | Sheets provider: [identity-api](backend/docs/identity-api.md) URL |
+| `VITE_GOOGLE_CLIENT_ID` | Google login (all providers); public value |
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | Supabase provider |
 | `VITE_BASE_PATH` | Vite base path (default `/`) |
 
@@ -48,9 +50,9 @@ Other scripts: `npm run build`, `npm run lint`, `npm test`.
 **Google Sheets (Apps Script)**
 1. `npm i -g @google/clasp`, then `clasp login`.
 2. In `backend/apps-script`, run `clasp push`.
-3. In the Apps Script editor set script properties `API_TOKEN` and `SPREADSHEET_ID`.
+3. Set up [identity-api](backend/docs/identity-api.md) first (own spreadsheet, `GOOGLE_CLIENT_ID`, `SPREADSHEET_ID`, first admin by hand). Then in the Apps Script editor of `backend/apps-script` set script properties `GOOGLE_CLIENT_ID`, `IDENTITY_API_URL` and `SPREADSHEET_ID`.
 4. Deploy as a Web App: execute as `Me`, access `Anyone`. Create a new version after each push.
-5. Put the Web App URL and token in the frontend `.env`.
+5. Put the Web App URL in the frontend `.env`.
 
 Details: [backend/docs/apps-script.md](backend/docs/apps-script.md).
 
