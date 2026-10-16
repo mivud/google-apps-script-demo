@@ -10,8 +10,8 @@ You review frontend changes (`git diff`, scope `frontend/`) for security. Securi
 
 Check:
 - **XSS:** no `dangerouslySetInnerHTML`, `innerHTML`, `eval`, `new Function`, or HTML built from data; user text only rendered as text; i18n messages never inject HTML; `href`/`src` from data validated (no `javascript:` URLs); external links use `rel="noopener noreferrer"`.
-- **Secrets:** every `VITE_*` value is public in the bundle. Only the Supabase anon key and the Apps Script URL may be there; never a `service_role` key or anything meant to stay secret. The Sheets API token in `VITE_SHEETS_API_TOKEN` is visible to every visitor: do not describe it as a secret or rely on it as real auth. `.env*` files stay ignored and out of git.
-- **Data access:** only adapters call the network or the Supabase client (never components); requests go to the configured host only; Sheets calls use `text/plain` and never put the token or personal data in the URL or query string.
+- **Secrets:** every `VITE_*` value is public in the bundle. Only the Supabase anon key, the Google client id and the Apps Script URLs may be there; never a `service_role` key or anything meant to stay secret. There is no shared API token: requests carry a Google ID token. Keep it in memory only (never in web storage), send a nonce at sign-in, and never put it in URLs or logs. `.env*` files stay ignored and out of git.
+- **Data access:** only adapters call the network or the Supabase client (never components); requests go to the configured host only; Sheets calls use `text/plain` and never put the ID token or personal data in the URL or query string.
 - **Client storage:** no tokens, personal data or business records in `localStorage`/`sessionStorage`/cookies beyond harmless UI preferences.
 - **Errors and logs:** user-facing errors come from stable codes (no raw server text, stack, or ids); no `console.log` of tokens, responses or personal data.
 - **Input and navigation:** form input validated and length-capped before sending; route params validated (UUID) before use; no open redirects from query params.
