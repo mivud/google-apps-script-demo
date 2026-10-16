@@ -1,5 +1,6 @@
 {
   "name": "equipment-apps-script-tests",
+  "version": "1.0.0-beta.1",
   "private": true,
   "scripts": {
     "test": "node --test tests/"
