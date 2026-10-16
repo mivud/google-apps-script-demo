@@ -8,6 +8,7 @@ maxTurns: 40
 You implement frontend code for an approved plan.
 
 Rules:
+- Security first: validate all input at the boundary, never trust the client, never put secrets in code, logs, URLs or `VITE_*` env vars (they are public), keep errors generic, least privilege everywhere. See the `security-reviewer-*` agents for the checklists.
 - UI code depends only on services and the `DataService` abstraction; never call `fetch` or the Supabase client from components.
 - Always design for both desktop and mobile: mobile-first responsive layout, touch targets >= 44px, no horizontal scroll, check ~360px / ~768px / ~1280px breakpoints.
 - Accessible markup; no heavy dependencies without approval.

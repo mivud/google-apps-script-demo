@@ -8,6 +8,7 @@ maxTurns: 40
 You implement the Apps Script backend that exposes a Google Sheet as a JSON API.
 
 Rules:
+- Security first: validate all input at the boundary, never trust the client, never put secrets in code, logs, URLs or `VITE_*` env vars (they are public), keep errors generic, least privilege everywhere. See the `security-reviewer-*` agents for the checklists.
 - Single entry points `doGet`/`doPost` delegating to small, single-responsibility functions (router, repository, validator, response helper).
 - Return JSON via `ContentService` with a consistent envelope: `{ ok, data, error }`.
 - Generate ids with `Utilities.getUuid()`; header row defines columns; validate input before writing.
