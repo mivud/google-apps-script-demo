@@ -25,7 +25,7 @@
 .skeleton-inline { display: inline-block; width: 8em; height: 1em; vertical-align: middle; }
 
 /* Settings popover and theme picker */
-.settings-menu { position: relative; flex-shrink: 0; }
+.settings-menu { position: relative; flex-shrink: 0; margin-left: auto; }
 .popover {
   position: absolute;
   right: 0;
@@ -189,3 +189,28 @@
 @media (prefers-reduced-motion: reduce) {
   .tree-collapse, .tree-collapse.is-open, .tree-toggle .icon, .tree-line { transition: none; }
 }
+
+/* Login / auth */
+.login-page { min-height: 100dvh; display: grid; place-items: center; padding: 16px; }
+.login-card { width: 100%; max-width: 24rem; display: flex; flex-direction: column; gap: 12px; }
+.login-card h1 { margin: 0; }
+/* The Google button iframe is 44px tall with a focus ring; the padding leaves room so the ring is not clipped. */
+.login-button { min-height: 48px; padding: 2px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; max-width: 100%; overflow-x: auto; }
+/* display:flex above would otherwise override the [hidden] attribute while a sign-in is pending. */
+.login-button[hidden] { display: none; }
+.login-status { display: flex; align-items: center; gap: 8px; margin: 0; }
+.settings-trigger { padding-inline: 6px; max-width: 100%; }
+.settings-trigger > span { display: inline-flex; min-width: 0; }
+.current-user { display: flex; align-items: center; gap: 8px; min-width: 0; text-align: left; }
+.current-user-avatar { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--glass-border); font-weight: 700; }
+.current-user-text { display: none; flex-direction: column; min-width: 0; line-height: 1.2; }
+.current-user-email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; font-size: 0.875rem; font-weight: 600; }
+.current-user-role { font-size: 0.75rem; opacity: 0.75; }
+@media (min-width: 768px) {
+  .settings-menu { margin-left: 0; }
+  .current-user-text { display: flex; }
+}
+.user-menu { display: grid; gap: 4px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--glass-border); }
+.user-menu p { margin: 0; }
+.user-menu .btn { margin-top: 8px; }
+.user-menu-email { overflow-wrap: anywhere; font-weight: 600; }

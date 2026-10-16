@@ -4,7 +4,7 @@ import type { DataService } from '../../../application/data-service'
 import type { EquipmentQuery } from '../../../application/equipment-repository'
 import type { Category, NewCategory } from '../../../domain/category'
 import type { Equipment, NewEquipment } from '../../../domain/equipment'
-import { NetworkError, NotFoundError, ValidationError, type ValidationCode } from '../../../../../shared/errors'
+import { AuthError, ForbiddenError, NetworkError, NotFoundError, ValidationError, type ValidationCode } from '../../../../../shared/errors'
 import type { MaintenanceLog, NewMaintenanceLog } from '../../../domain/maintenance'
 import {
   categoryInputToRow,
@@ -37,6 +37,9 @@ const RAISED_CATEGORY_CODES: ValidationCode[] = [
 function toDomainError(error: SupabaseError): Error {
   const raised = RAISED_CATEGORY_CODES.find((code) => error.message.includes(code))
   if (raised) return new ValidationError(error.message, raised)
+  // 42501 = RLS/privilege denial; PGRST301 = missing or expired JWT.
+  if (error.code === '42501') return new ForbiddenError(error.message)
+  if (error.code === 'PGRST301') return new AuthError(error.message)
   if (error.code === 'PGRST116') return new NotFoundError(error.message)
   if (error.code === '23505') return new ValidationError(error.message, 'category_name_duplicate')
   if (error.code === '23503') {
@@ -48,7 +51,7 @@ function toDomainError(error: SupabaseError): Error {
     return new NotFoundError(error.message)
   }
   if (error.code && VALIDATION_CODES.has(error.code)) return new ValidationError(error.message)
-  return new NetworkError(error.message)
+  return new NetworkError()
 }
 
 // Commas and parentheses would break the PostgREST `or` filter syntax; % and _ are ilike wildcards.

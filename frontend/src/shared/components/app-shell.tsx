@@ -10,11 +10,12 @@ interface AppShellProps {
   navItems: NavItemData[]
   mainRef: Ref<HTMLElement>
   onSkipToContent: MouseEventHandler<HTMLAnchorElement>
+  settingsTrigger?: ReactNode
   settingsFooter?: ReactNode
   children: ReactNode
 }
 
-export function AppShell({ title, navItems, mainRef, onSkipToContent, settingsFooter, children }: AppShellProps) {
+export function AppShell({ title, navItems, mainRef, onSkipToContent, settingsTrigger, settingsFooter, children }: AppShellProps) {
   const { t } = useI18n()
   return (
     <>
@@ -25,7 +26,7 @@ export function AppShell({ title, navItems, mainRef, onSkipToContent, settingsFo
           <nav className="app-nav" aria-label={t('nav.main')}>
             {navItems.map((item) => <NavItem key={item.href} {...item} />)}
           </nav>
-          <SettingsMenu footer={settingsFooter} />
+          <SettingsMenu trigger={settingsTrigger} footer={settingsFooter} />
         </div>
       </header>
       <main className="container app-main" id="main" tabIndex={-1} ref={mainRef}>{children}</main>

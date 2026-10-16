@@ -1,4 +1,4 @@
-import { AuthError, NetworkError, NotFoundError, ValidationError, type ValidationCode } from '../errors'
+import { AuthError, ForbiddenError, NetworkError, NotFoundError, ValidationError, type ValidationCode } from '../errors'
 import type { MessageKey } from './en'
 import type { TranslateFn } from './i18n-context'
 
@@ -22,6 +22,7 @@ export function translateError(error: Error, t: TranslateFn): string {
   if (error instanceof ValidationError) return t(VALIDATION_CODE_KEYS[error.code])
   if (error instanceof NotFoundError) return t('error.notFound')
   if (error instanceof AuthError) return t('error.unauthorized')
+  if (error instanceof ForbiddenError) return t('error.forbidden')
   if (error instanceof NetworkError) return t('error.network')
   return t('error.unknown')
 }

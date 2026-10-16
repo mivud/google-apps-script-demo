@@ -39,6 +39,15 @@ export class AuthError extends Error {
   }
 }
 
+// Signed in but not allowed (not on the allowlist or role too low), unlike AuthError (no valid login).
+export class ForbiddenError extends Error {
+  readonly code = 'forbidden'
+  constructor(message = 'Forbidden') {
+    super(message)
+    this.name = 'ForbiddenError'
+  }
+}
+
 export class NetworkError extends Error {
   readonly code = 'network'
   constructor(message = 'Network request failed') {

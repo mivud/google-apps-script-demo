@@ -4,7 +4,9 @@ export type DbProvider = (typeof DB_PROVIDERS)[number]
 export interface AppEnv {
   provider: DbProvider
   sheetsApiUrl: string
-  sheetsApiToken: string
+  // Apps Script web app that verifies Google sign-in (auth.session.get); ignored by the supabase provider.
+  identityApiUrl: string
+  googleClientId: string
   supabaseUrl: string
   supabaseAnonKey: string
 }
@@ -25,7 +27,8 @@ export function readEnv(raw: Record<string, string | undefined>): AppEnv {
   return {
     provider: provider as DbProvider,
     sheetsApiUrl: raw.VITE_SHEETS_API_URL ?? '',
-    sheetsApiToken: raw.VITE_SHEETS_API_TOKEN ?? '',
+    identityApiUrl: raw.VITE_IDENTITY_API_URL ?? '',
+    googleClientId: raw.VITE_GOOGLE_CLIENT_ID ?? '',
     supabaseUrl: raw.VITE_SUPABASE_URL ?? '',
     supabaseAnonKey: raw.VITE_SUPABASE_ANON_KEY ?? '',
   }

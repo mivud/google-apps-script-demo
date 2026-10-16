@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import { AppShell } from '../shared/components/app-shell'
 import type { NavItemData } from '../shared/components/nav-types'
 import { useI18n } from '../shared/i18n'
+import { CurrentUserBadge, UserMenu } from '../modules/auth'
 import { VersionInfo } from './version-info'
 import {
   CATEGORIES_PATH,
@@ -53,7 +54,7 @@ export default function App() {
   ]
 
   return (
-    <AppShell title={t('app.title')} navItems={navItems} mainRef={mainRef} onSkipToContent={skipToContent} settingsFooter={<VersionInfo />}>
+    <AppShell title={t('app.title')} navItems={navItems} mainRef={mainRef} onSkipToContent={skipToContent} settingsTrigger={<CurrentUserBadge />} settingsFooter={<><UserMenu /><VersionInfo /></>}>
       {equipmentId ? (
         <EquipmentDetailPage key={equipmentId} id={equipmentId} onDeleted={() => navigate('/')} />
       ) : onCategories ? (

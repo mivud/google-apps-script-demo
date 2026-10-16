@@ -7,8 +7,9 @@ import { LanguageSwitcher } from './language-switcher'
 import { ColorSchemePicker } from './color-scheme-picker'
 import { ThemePicker } from './theme-picker'
 
+// trigger: content of the opening button (e.g. the current user); defaults to a settings icon.
 // footer: extra content (e.g. version info) the app layer places at the end of the popover.
-export function SettingsMenu({ footer }: { footer?: ReactNode }) {
+export function SettingsMenu({ trigger, footer }: { trigger?: ReactNode; footer?: ReactNode }) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -31,14 +32,16 @@ export function SettingsMenu({ footer }: { footer?: ReactNode }) {
     <div className="settings-menu" ref={rootRef}>
       <Button
         variant="ghost"
-        size="icon"
+        size={trigger ? 'default' : 'icon'}
+        className={trigger ? 'settings-trigger' : ''}
         ref={triggerRef}
-        aria-label={t('settings.label')}
+        aria-label={trigger ? undefined : t('settings.label')}
+        aria-haspopup="true"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         onClick={() => setOpen((value) => !value)}
       >
-        <Icon name="settings" />
+        {trigger ?? <Icon name="settings" />}
       </Button>
       {open && (
         <div className="popover" id={panelId} role="group" aria-label={t('settings.label')}>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { Category } from '../../domain/category'
 import { buildTree, MAX_CATEGORY_DEPTH, type CategoryNode } from '../../domain/category-tree'
+import { useCanWrite } from '../../../auth'
 import { translateError, useI18n } from '../../../../shared/i18n'
 import { useCategories } from '../categories-context'
 import { EmptyState } from '../../../../shared/components/empty-state'
@@ -31,6 +32,7 @@ function toTreeNodes(nodes: CategoryNode[]): CategoryTreeNode[] {
 export function CategoriesPage() {
   const { categories } = useServices()
   const { t } = useI18n()
+  const canWrite = useCanWrite()
   const { data, flat, loading, error, reload } = useCategories()
   const [dialog, setDialog] = useState<DialogState | undefined>(undefined)
   const [confirmingId, setConfirmingId] = useState<string | undefined>(undefined)
@@ -45,6 +47,7 @@ export function CategoriesPage() {
   })
 
   function renderActions({ category }: CategoryTreeNode, depth: number) {
+    if (!canWrite) return null
     return (
       <CategoryRowActions
         category={category}
@@ -66,7 +69,7 @@ export function CategoriesPage() {
       <PageHeader
         title={t('category.title')}
         back={{ href: '#/', label: t('equipment.backToList') }}
-        actions={<LoadingButton onClick={() => setDialog({ kind: 'create', parentId: '' })} disabled={remove.pending}>{t('category.add')}</LoadingButton>}
+        actions={canWrite ? <LoadingButton onClick={() => setDialog({ kind: 'create', parentId: '' })} disabled={remove.pending}>{t('category.add')}</LoadingButton> : undefined}
       />
 
       {remove.error && <FormError message={translateError(remove.error, t)} />}

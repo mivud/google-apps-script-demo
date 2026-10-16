@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { EquipmentStatus } from '../../domain/equipment'
 import { EQUIPMENT_STATUSES } from '../../domain/equipment'
+import { useCanWrite } from '../../../auth'
 import { CategorySelect } from '../components/category-select'
 import { EquipmentFormDialog } from '../components/equipment-form-dialog'
 import { EquipmentTable } from '../components/equipment-table'
@@ -23,6 +24,7 @@ import { useServices } from '../services-context'
 export function EquipmentListPage() {
   const { equipment } = useServices()
   const { t } = useI18n()
+  const canWrite = useCanWrite()
   const [search, setSearch] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [status, setStatus] = useState<EquipmentStatus | ''>('')
@@ -61,7 +63,7 @@ export function EquipmentListPage() {
     <section>
       <PageHeader
         title={t('equipment.title')}
-        actions={<LoadingButton onClick={() => setAdding(true)}>{t('equipment.add')}</LoadingButton>}
+        actions={canWrite ? <LoadingButton onClick={() => setAdding(true)}>{t('equipment.add')}</LoadingButton> : undefined}
       />
 
       <FilterBar>

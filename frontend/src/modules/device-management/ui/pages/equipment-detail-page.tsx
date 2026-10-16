@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useCanWrite } from '../../../auth'
 import { EquipmentFormDialog } from '../components/equipment-form-dialog'
 import { AuditInfo } from '../components/audit-info'
 import { EquipmentCategoryLine, EquipmentQuantityLine } from '../components/equipment-meta'
@@ -27,6 +28,7 @@ interface EquipmentDetailPageProps {
 export function EquipmentDetailPage({ id, onDeleted }: EquipmentDetailPageProps) {
   const { equipment, maintenance } = useServices()
   const { t, language } = useI18n()
+  const canWrite = useCanWrite()
   const detail = useAsyncData(() => equipment.get(id), [equipment, id])
   const logs = useAsyncData(() => maintenance.listByEquipment(id), [maintenance, id])
   const [editing, setEditing] = useState(false)
@@ -70,7 +72,7 @@ export function EquipmentDetailPage({ id, onDeleted }: EquipmentDetailPageProps)
             lastModifiedBy={detail.data.lastModifiedBy}
           />
 
-          <ButtonRow>
+          {canWrite && <ButtonRow>
             <LoadingButton variant="outline" onClick={() => setEditing(true)} disabled={remove.pending}>{t('common.edit')}</LoadingButton>
             {confirmingDelete ? (
               <>
@@ -80,7 +82,7 @@ export function EquipmentDetailPage({ id, onDeleted }: EquipmentDetailPageProps)
             ) : (
               <LoadingButton variant="destructive" onClick={() => setConfirmingDelete(true)}>{t('common.delete')}</LoadingButton>
             )}
-          </ButtonRow>
+          </ButtonRow>}
           {remove.error && <FormError message={translateError(remove.error, t)} />}
 
           <h2>{t('maintenance.history')}</h2>
@@ -103,11 +105,13 @@ export function EquipmentDetailPage({ id, onDeleted }: EquipmentDetailPageProps)
             </SurfaceList>
           )}
 
-          <MaintenanceForm
-            equipmentId={id}
-            onSubmit={(input) => maintenance.add(input)}
-            onSaved={logs.reload}
-          />
+          {canWrite && (
+            <MaintenanceForm
+              equipmentId={id}
+              onSubmit={(input) => maintenance.add(input)}
+              onSaved={logs.reload}
+            />
+          )}
 
         </div>
           {editing && (

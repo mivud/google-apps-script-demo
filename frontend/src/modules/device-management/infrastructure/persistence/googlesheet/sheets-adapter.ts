@@ -3,7 +3,8 @@ import type { DataService } from '../../../application/data-service'
 import type { EquipmentQuery } from '../../../application/equipment-repository'
 import type { Category, NewCategory } from '../../../domain/category'
 import type { Equipment, NewEquipment } from '../../../domain/equipment'
-import { AuthError, NetworkError, NotFoundError, ValidationError, type ValidationCode } from '../../../../../shared/errors'
+import { postToAppsScript, type ApiResponse } from '../../../../../shared/api/apps-script-api'
+import { WarmupGate } from '../../../../../shared/api/warmup-gate'
 import type { MaintenanceLog, NewMaintenanceLog } from '../../../domain/maintenance'
 import {
   categoryInputToRow,
@@ -15,29 +16,7 @@ import {
 } from '../row-mappers'
 import type { CategoryRow, EquipmentRow, MaintenanceLogRow } from '../row-types'
 import { API_ACTIONS } from './api-actions'
-
-interface ApiSuccess<T> {
-  ok: true
-  data: T
-}
-interface ApiFailure {
-  ok: false
-  error: { code: string; message: string }
-}
-
-// The backend sends lowercase English messages; mapping them here keeps the same codes as the services.
-const BACKEND_VALIDATION_CODES: Record<string, ValidationCode> = {
-  'name is required': 'name_required',
-  'quantity must be an integer >= 0': 'quantity_invalid',
-  'invalid status': 'status_invalid',
-  'invalid maintenance type': 'maintenance_type_invalid',
-  'invalid date': 'date_invalid',
-  'category_name_required': 'category_name_required',
-  'category_name_duplicate': 'category_name_duplicate',
-  'category_cycle': 'category_cycle',
-  'category_in_use': 'category_in_use',
-  'category_has_children': 'category_has_children',
-}
+import { toDataError } from './sheets-error-mapper'
 
 // An empty id list means "no category filter" in every adapter.
 function toListPayload(query: EquipmentQuery) {
@@ -47,11 +26,14 @@ function toListPayload(query: EquipmentQuery) {
 
 export interface SheetsAdapterConfig {
   apiUrl: string
-  token: string
+  getIdToken: () => string | null
+  // Silent re-auth used once when the backend answers UNAUTHORIZED.
+  refreshIdToken?: () => Promise<string | null>
 }
 
 export class SheetsAdapter implements DataService {
   private readonly config: SheetsAdapterConfig
+  private readonly warmup = new WarmupGate()
 
   constructor(config: SheetsAdapterConfig) {
     this.config = config
@@ -120,35 +102,23 @@ export class SheetsAdapter implements DataService {
     return (await this.call<{ version: string }>(API_ACTIONS.system.version, {})).version
   }
 
-  private async call<T>(action: string, payload: unknown): Promise<T> {
-    let body: ApiSuccess<T> | ApiFailure
-    try {
-      // text/plain keeps this a "simple" request; Apps Script cannot answer CORS preflights.
-      const response = await fetch(this.config.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ token: this.config.token, action, payload }),
-      })
-      if (!response.ok) throw new NetworkError(`HTTP ${response.status}`)
-      body = (await response.json()) as ApiSuccess<T> | ApiFailure
-    } catch (error) {
-      if (error instanceof NetworkError) throw error
-      throw new NetworkError(error instanceof Error ? error.message : 'Network request failed')
-    }
+  // The first call after sign-in runs alone: it fills the backend's access cache for this token.
+  private call<T>(action: string, payload: unknown): Promise<T> {
+    return this.warmup.run(this.config.getIdToken(), () => this.send<T>(action, payload))
+  }
 
-    if (body.ok) return body.data
-    switch (body.error.code) {
-      case 'NOT_FOUND':
-        throw new NotFoundError(body.error.message)
-      case 'VALIDATION':
-        throw new ValidationError(
-          body.error.message,
-          BACKEND_VALIDATION_CODES[body.error.message.trim().toLowerCase()] ?? 'unknown',
-        )
-      case 'UNAUTHORIZED':
-        throw new AuthError(body.error.message)
-      default:
-        throw new NetworkError(body.error.message)
+  private async send<T>(action: string, payload: unknown): Promise<T> {
+    let body = await this.post<T>(action, payload, this.config.getIdToken())
+    if (!body.ok && body.error.code === 'UNAUTHORIZED' && this.config.refreshIdToken) {
+      // The backend answers one generic UNAUTHORIZED on purpose, so any of them gets one silent re-auth and a single retry.
+      const freshToken = await this.config.refreshIdToken()
+      if (freshToken) body = await this.post<T>(action, payload, freshToken)
     }
+    if (body.ok) return body.data
+    throw toDataError(body)
+  }
+
+  private post<T>(action: string, payload: unknown, idToken: string | null): Promise<ApiResponse<T>> {
+    return postToAppsScript<T>(this.config.apiUrl, { action, idToken, payload })
   }
 }

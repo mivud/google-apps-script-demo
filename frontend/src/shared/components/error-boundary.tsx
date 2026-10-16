@@ -19,7 +19,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBound
   }
 
   render() {
-    if (this.state.failed) return <FatalError titleKey="app.error" error={this.state.error} />
+    if (this.state.failed) return <FatalError titleKey="app.error" />
     return this.props.children
   }
 }
