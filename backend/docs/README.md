@@ -24,4 +24,5 @@ Frontend side: see [frontend docs](../../frontend/docs/README.md).
 - The backend version lives in [package.json](../apps-script/package.json), format `1.0.x-beta.N` (SemVer pre-release), currently `1.0.0-beta.1`.
 - While in beta, only the beta number goes up (`beta.2`, `beta.3`, ...), once per release, in a `chore(release): bump backend to <version>` commit. `x` and the `-beta` suffix change only when the user announces the official version.
 - The API reports this version (`system.version.get` and `doGet`); keep `API_VERSION` in [SystemEndpoints.gs](../apps-script/src/composition/SystemEndpoints.gs) equal to it (a test checks this).
-- Apps Script deployment and library versions are plain integers managed by Google; they are separate from this version.
+- The shared kernel library has its own `1.0.x-beta.N` version, see [shared-library](shared-library.md).
+- Apps Script deployment and library versions are plain integers managed by Google; they are separate from these versions. Put the project version in their description (`clasp deploy -d "v<version>"`, `clasp create-version "v<version>"`).

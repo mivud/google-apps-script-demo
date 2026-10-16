@@ -22,4 +22,6 @@
 4. Put that number in the app's `appsscript.json` and `clasp push` the app. Share the library with the account that deploys the Web App (at least Viewer).
 5. After each library change, repeat steps 2 to 4; the app keeps running the pinned version until you bump it.
 
+**Versioning:** the library has its own version in [package.json](../apps-script-shared-kernel-library/package.json), format `1.0.x-beta.N` (same beta rules as the backend, see [README](README.md)), mirrored by `KERNEL_VERSION` in [KernelVersion.gs](../apps-script-shared-kernel-library/src/infrastructure/KernelVersion.gs) (a test keeps them equal). Each release runs `clasp create-version "v<version>"`, so the Apps Script version integer (what apps pin) carries this version in its description. Bump the beta number once per release.
+
 **Tests:** the app's harness loads the library into its own vm context and exposes it as `SharedKernelLibrary`, like the real boundary (see [loadAppsScript.js](../apps-script/tests/harness/loadAppsScript.js)).
