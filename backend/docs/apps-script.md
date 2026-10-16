@@ -8,7 +8,11 @@
 - Actions are `<module>.<entity>.<action>` (e.g. `device-management.equipment.list`); see [device-management](device-management.md).
 - Payloads use snake_case rows (as in `row-mappers.ts`). A bad or missing body, bad JSON, an unknown action or wrong field types return `VALIDATION`.
 - `UNAUTHORIZED` maps to `AuthError` in the Sheets adapter (message `error.unauthorized`).
-- Every call takes the script lock (20 s wait), so writes are serialized. Sheets are created or upgraded after the lock is held.
+- Write actions take the script lock (20 s wait), so writes are serialized. Read actions (listed per endpoint in `readActions()`, passed to the `Router`) skip the lock.
+- Sheets are created or upgraded under the lock, only when the stored `SCHEMA_SIGNATURE` script property differs from the current headers. After you change a schema the first request upgrades the tabs and stores the new signature; deleting a tab by hand needs that property cleared to be recreated.
+- Parsed table rows are cached for 60 s in `CacheService` (`ScriptRowCache`) and cleared by every write through the app. Edits made directly in the Google Sheet can show up to 60 s late. Tables too large for one cache entry (about 100 KB) are read from the sheet each time.
+- The spreadsheet is opened once per request.
+- Table reads use the Sheets advanced service (`Sheets`, v4, enabled in `appsscript.json`): one `values.get` per read, no spreadsheet open. Pending `SpreadsheetApp` writes are flushed before such a read. Without the service the code falls back to `SpreadsheetApp`. The Sheets API must also be enabled in the Google Cloud project linked to the script.
 - Ids are lowercase UUIDs, compared case-insensitively. Ordering, pagination and validation mirror the Supabase adapter.
 
 **Architecture** (dependencies point inward: `endpoints`/`infrastructure`/`persistence` -> `application` -> `domain`)
@@ -25,9 +29,9 @@ flowchart LR
 ```
 
 - **domain:** pure rules and constants (`ApiError`, `AuditRules`, `IdRules`, module entities and values). No Google API.
-- **application:** use cases and port contracts ([Ports.gs](../apps-script/src/shared/application/Ports.gs)). Time and ids come from the `Clock` / `IdGenerator` ports.
+- **application:** use cases and port contracts ([Ports.gs](../apps-script-shared-kernel-library/src/application/Ports.gs)). Time and ids come from the `Clock` / `IdGenerator` ports.
 - **endpoints:** classes that turn payloads into use-case input; `RequestParser`, `Router` and `ResponseWriter`.
-- **infrastructure:** generic port implementations (`ScriptSettings`, `ScriptLockGuard`, `PropertiesTokenGuard`, `SystemClock`, `UuidIdGenerator`, `AnonymousCurrentUser`).
+- **infrastructure:** generic port implementations (`ScriptSettings`, `ScriptLockGuard`, `ScriptRowCache`, `PropertiesTokenGuard`, `SystemClock`, `UuidIdGenerator`, `AnonymousCurrentUser`).
 - **persistence/googlesheet:** everything that touches the spreadsheet: shared `SpreadsheetSource`, `SheetLayout`, `SpreadsheetTable`, `SheetUpgrade`, `SheetInstaller`, and per-module `*Service` classes in `modules/<m>/persistence/googlesheet`. A future Supabase backend would add a sibling `persistence/<provider>` folder.
 - **composition:** [Composition.gs](../apps-script/src/composition/Composition.gs) is the only place that wires adapters to ports and builds the handler registry, all inside functions at request time.
 - Modules talk only through ports implemented in persistence (for example category removal asks `EquipmentCategoryUsage`). No code reads another entity's sheet directly.
@@ -40,20 +44,18 @@ flowchart LR
 src/
   appsscript.json
   Main.gs                      entry points only
+  SharedLibrary.gs             aliases for the SharedKernelLibrary library (loads first)
   composition/Composition.gs
-  shared/
-    domain/                    ErrorCode, ApiError, Values, IdRules, AuditRules
-    application/               Ports (contracts), AuditStamper, PatchSupport
-    infrastructure/            settings, clock, uuid, current user, token and lock guards
-    persistence/googlesheet/   SpreadsheetSource, SheetLayout, SpreadsheetTable, SheetUpgrade, SheetInstaller
-    interface/                 RequestParser, Router, ResponseWriter
   modules/<module>/
     domain/{entities,values}/  application/<feature>/{commands,queries}/
     endpoints/  persistence/googlesheet/
     <Module>Module.gs          namespace root (e.g. DeviceManagement)
 tests/                         harness/, domain/, application/, endpoints/ (not pushed)
-package.json                   `npm test`
 ```
+
+The shared building blocks (domain, application ports, infrastructure, `persistence/googlesheet`, `interface`) live in a separate Apps Script project used as a library: see [shared-library](shared-library.md). The app reaches it through the `SharedKernelLibrary` identifier.
+
+`package.json` has `npm test`.
 
 Shared code stays one file per class. Today the only module is [device-management](device-management.md).
 
@@ -67,17 +69,18 @@ Shared code stays one file per class. Today the only module is [device-managemen
 **Audit columns** (all sheets): `created_at`, `modified_at`, `created_by`, `last_modified_by`.
 - Filled by the server only; audit fields in payloads or patches are ignored.
 - Create: `created_at = modified_at = now`. Update: `modified_at = now`, `created_*` untouched. Logs get `modified_at = created_at` on insert.
-- `created_by` / `last_modified_by` are `''` until login exists. Later hook: return the user from [AnonymousCurrentUser](../apps-script/src/shared/infrastructure/AnonymousCurrentUser.gs).
+- `created_by` / `last_modified_by` are `''` until login exists. Later hook: return the user from [AnonymousCurrentUser](../apps-script-shared-kernel-library/src/infrastructure/AnonymousCurrentUser.gs).
 - Datetimes are UTC, millisecond precision, `+00:00` instead of `Z` (e.g. `2026-10-16T08:00:00.123+00:00`), so string ordering is chronological. `performed_at` uses the same format.
 
 **Sheets**
 - `categories`, `equipment` and `maintenance_logs` are created on first call; headers match the Postgres columns. All cells use the plain text format and the grid grows when needed.
-- [SheetUpgrade](../apps-script/src/shared/persistence/googlesheet/SheetUpgrade.gs) upgrades an older tab: adds missing columns, renames `updated_at` to `modified_at`, backfills `modified_at` from `created_at` and `*_by` with `''`. Existing values written with `Z` are kept as is.
+- [SheetUpgrade](../apps-script-shared-kernel-library/src/persistence/googlesheet/SheetUpgrade.gs) upgrades an older tab: adds missing columns, renames `updated_at` to `modified_at`, backfills `modified_at` from `created_at` and `*_by` with `''`. Existing values written with `Z` are kept as is.
 - Legacy migration (equipment): see [device-management](device-management.md).
 
 **Setup and clasp workflow**
 1. Create a Google Sheet (empty; the tabs are created on the first call).
-2. Install and log in yourself (the login is interactive and never scripted): `npm i -g @google/clasp`, then `clasp login`.
+2. Set up the shared library first: see [shared-library](shared-library.md) (create it, push it, create a version, put its script id and version in `backend/apps-script/src/appsscript.json`).
+2b. Install and log in yourself (the login is interactive and never scripted): `npm i -g @google/clasp`, then `clasp login`.
 3. `cd backend/apps-script`, then `clasp push` (uploads `src/` in `filePushOrder`; the script id is in `.clasp.json`).
 4. In the Apps Script editor: Project Settings > Script properties: set `API_TOKEN` (any long random string) and `SPREADSHEET_ID` (the id from the sheet URL; optional when the script is bound to the sheet).
 5. Deploy > Manage deployments > New version (first time: Deploy > New deployment > Web app, execute as `Me`, access `Anyone`; authorize when prompted). `clasp push` alone does not change the live Web App; a new version is required after each change.

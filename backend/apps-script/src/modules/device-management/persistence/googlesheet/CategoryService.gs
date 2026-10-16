@@ -6,8 +6,8 @@ DeviceManagement.Persistence.GoogleSheet.CategoryService = {
     numericColumns: []
   },
 
-  createRepository: function (source) {
-    return new SpreadsheetTable(source, DeviceManagement.Persistence.GoogleSheet.CategoryService.SCHEMA);
+  createRepository: function (source, cache) {
+    return new SpreadsheetTable(source, DeviceManagement.Persistence.GoogleSheet.CategoryService.SCHEMA, cache);
   },
 
   // CategoryLookup port, provided to the equipment module.

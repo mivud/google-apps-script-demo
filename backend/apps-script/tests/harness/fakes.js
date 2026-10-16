@@ -1,5 +1,5 @@
 'use strict';
-// In-memory implementations of the ports declared in src/shared/application/Ports.gs.
+// In-memory implementations of the ports declared in apps-script-shared-kernel-library/src/application/Ports.gs.
 const { loadAppsScript } = require('./loadAppsScript');
 
 const FIXED_NOW = '2026-01-02T03:04:05.678Z';

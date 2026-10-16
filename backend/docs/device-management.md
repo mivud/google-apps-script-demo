@@ -80,6 +80,6 @@ Ports are implemented in `persistence/googlesheet` and passed to use cases as `d
 | `MaintenanceLogCascade` | `MaintenanceLogService` | equipment remove |
 | `RootCategoryResolver` | `CategoryService` | legacy migration |
 
-All use cases also receive `Clock`, `IdGenerator` and `CurrentUser` from [shared](../apps-script/src/shared). Wiring is in [Composition.gs](../apps-script/src/composition/Composition.gs).
+All use cases also receive `Clock`, `IdGenerator` and `CurrentUser` from the [SharedKernelLibrary library](../apps-script-shared-kernel-library/src). Wiring is in [Composition.gs](../apps-script/src/composition/Composition.gs).
 
 **Limits:** the whole module ships and deploys as one unit; a future split would follow the entity boundaries above. Sheet quotas and latency are higher than Postgres.

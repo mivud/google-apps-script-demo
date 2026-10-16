@@ -5,6 +5,12 @@ DeviceManagement.Endpoints.MaintenanceLogEndpoints = {
     ADD: 'device-management.maintenance.add'
   },
 
+  // Actions that never change data; the router runs them without the write lock.
+  readActions: function () {
+    var action = DeviceManagement.Endpoints.MaintenanceLogEndpoints.ACTION;
+    return [action.LIST_BY_EQUIPMENT];
+  },
+
   build: function (deps) {
     var action = DeviceManagement.Endpoints.MaintenanceLogEndpoints.ACTION;
     var app = DeviceManagement.Application;

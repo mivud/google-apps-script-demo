@@ -1,6 +1,6 @@
 /**
  * Port contracts shared by all modules. Apps Script has no interfaces, so they are documented here;
- * implementations live in shared/infrastructure, shared/persistence/googlesheet and modules/<m>/persistence/googlesheet and are wired in composition/Composition.gs.
+ * implementations live in this library (infrastructure, persistence/googlesheet) and modules/<m>/persistence/googlesheet and are wired in composition/Composition.gs.
  *
  * Clock                 { now(): Date }
  * IdGenerator           { newId(): string }                 lowercase uuid

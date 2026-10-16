@@ -7,8 +7,8 @@ DeviceManagement.Persistence.GoogleSheet.MaintenanceLogService = {
     numericColumns: []
   },
 
-  createRepository: function (source) {
-    return new SpreadsheetTable(source, DeviceManagement.Persistence.GoogleSheet.MaintenanceLogService.SCHEMA);
+  createRepository: function (source, cache) {
+    return new SpreadsheetTable(source, DeviceManagement.Persistence.GoogleSheet.MaintenanceLogService.SCHEMA, cache);
   },
 
   // MaintenanceLogCascade port, provided to the equipment module (mirrors ON DELETE CASCADE).

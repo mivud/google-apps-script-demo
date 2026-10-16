@@ -1,7 +1,9 @@
 // Generic TableGateway over one sheet. schema: { sheetName, headers, numericColumns }.
-function SpreadsheetTable(source, schema) {
+// cache (optional port): { get(name), put(name, rows), remove(name) } holding parsed rows for readAll.
+function SpreadsheetTable(source, schema, cache) {
   this.source = source;
   this.schema = schema;
+  this.cache = cache || null;
 }
 
 SpreadsheetTable.prototype.sheet = function () {
@@ -9,11 +11,7 @@ SpreadsheetTable.prototype.sheet = function () {
 };
 
 SpreadsheetTable.prototype.readCells = function () {
-  var sheet = this.sheet();
-  var lastRow = sheet.getLastRow();
-  if (lastRow < SheetLayout.FIRST_DATA_ROW) return [];
-  var rowCount = lastRow - SheetLayout.HEADER_ROW;
-  return sheet.getRange(SheetLayout.FIRST_DATA_ROW, SheetLayout.FIRST_COLUMN, rowCount, this.schema.headers.length).getValues();
+  return this.source.readValues(this.schema);
 };
 
 SpreadsheetTable.prototype.toRow = function (cells) {
@@ -27,8 +25,25 @@ SpreadsheetTable.prototype.toRow = function (cells) {
   return row;
 };
 
-SpreadsheetTable.prototype.readAll = function () {
+// Always hits the sheet; write paths use it because they delete by row position.
+SpreadsheetTable.prototype.loadRows = function () {
   return this.readCells().map(this.toRow, this);
+};
+
+// May serve rows up to the cache TTL old; every write through this class clears the entry.
+SpreadsheetTable.prototype.readAll = function () {
+  if (!this.cache) return this.loadRows();
+  var cached = this.cache.get(this.schema.sheetName);
+  if (cached) return cached;
+  var rows = this.loadRows();
+  this.cache.put(this.schema.sheetName, rows);
+  return rows;
+};
+
+// Called after every write: drops cached rows and tells the source a flush is needed before the next API read.
+SpreadsheetTable.prototype.invalidate = function () {
+  this.source.noteWrite();
+  if (this.cache) this.cache.remove(this.schema.sheetName);
 };
 
 SpreadsheetTable.prototype.findById = function (id) {
@@ -59,16 +74,19 @@ SpreadsheetTable.prototype.update = function (index, row) {
     .getRange(index, SheetLayout.FIRST_COLUMN, SheetLayout.SINGLE, headers.length)
     .setNumberFormat(SheetLayout.PLAIN_TEXT_FORMAT)
     .setValues([cells]);
+  this.invalidate();
 };
 
 SpreadsheetTable.prototype.deleteAt = function (index) {
   this.sheet().deleteRow(index);
+  this.invalidate();
 };
 
 SpreadsheetTable.prototype.deleteWhere = function (predicate) {
   var sheet = this.sheet();
-  var rows = this.readAll();
+  var rows = this.loadRows();
   for (var i = rows.length - 1; i >= 0; i--) {
     if (predicate(rows[i])) sheet.deleteRow(i + SheetLayout.FIRST_DATA_ROW);
   }
+  this.invalidate();
 };

@@ -8,6 +8,12 @@ DeviceManagement.Endpoints.EquipmentEndpoints = {
     REMOVE: 'device-management.equipment.remove'
   },
 
+  // Actions that never change data; the router runs them without the write lock.
+  readActions: function () {
+    var action = DeviceManagement.Endpoints.EquipmentEndpoints.ACTION;
+    return [action.LIST, action.GET];
+  },
+
   build: function (deps) {
     var action = DeviceManagement.Endpoints.EquipmentEndpoints.ACTION;
     var app = DeviceManagement.Application;

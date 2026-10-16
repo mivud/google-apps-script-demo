@@ -8,16 +8,16 @@ var DeviceManagement = {
   Endpoints: {},
   Persistence: { GoogleSheet: {} },
 
-  createCategoryRepository: function (source) {
-    return DeviceManagement.Persistence.GoogleSheet.CategoryService.createRepository(source);
+  createCategoryRepository: function (source, cache) {
+    return DeviceManagement.Persistence.GoogleSheet.CategoryService.createRepository(source, cache);
   },
 
   createCategoryLookup: function (repository) {
     return DeviceManagement.Persistence.GoogleSheet.CategoryService.createLookup(repository);
   },
 
-  createEquipmentRepository: function (source) {
-    return DeviceManagement.Persistence.GoogleSheet.EquipmentService.createRepository(source);
+  createEquipmentRepository: function (source, cache) {
+    return DeviceManagement.Persistence.GoogleSheet.EquipmentService.createRepository(source, cache);
   },
 
   createCategoryUsage: function (repository) {
@@ -28,8 +28,8 @@ var DeviceManagement = {
     return DeviceManagement.Persistence.GoogleSheet.EquipmentService.createLookup(repository);
   },
 
-  createMaintenanceRepository: function (source) {
-    return DeviceManagement.Persistence.GoogleSheet.MaintenanceLogService.createRepository(source);
+  createMaintenanceRepository: function (source, cache) {
+    return DeviceManagement.Persistence.GoogleSheet.MaintenanceLogService.createRepository(source, cache);
   },
 
   createLogCascade: function (repository) {
@@ -44,6 +44,15 @@ var DeviceManagement = {
       handlers.CategoryEndpoints.build(deps.category),
       handlers.EquipmentEndpoints.build(deps.equipment),
       handlers.MaintenanceLogEndpoints.build(deps.maintenance)
+    );
+  },
+
+  readActions: function () {
+    var handlers = DeviceManagement.Endpoints;
+    return [].concat(
+      handlers.CategoryEndpoints.readActions(),
+      handlers.EquipmentEndpoints.readActions(),
+      handlers.MaintenanceLogEndpoints.readActions()
     );
   },
 

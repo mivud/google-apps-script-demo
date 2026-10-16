@@ -7,8 +7,8 @@ DeviceManagement.Persistence.GoogleSheet.EquipmentService = {
     numericColumns: ['quantity']
   },
 
-  createRepository: function (source) {
-    return new SpreadsheetTable(source, DeviceManagement.Persistence.GoogleSheet.EquipmentService.SCHEMA);
+  createRepository: function (source, cache) {
+    return new SpreadsheetTable(source, DeviceManagement.Persistence.GoogleSheet.EquipmentService.SCHEMA, cache);
   },
 
   // EquipmentCategoryUsage port, provided to the category module.

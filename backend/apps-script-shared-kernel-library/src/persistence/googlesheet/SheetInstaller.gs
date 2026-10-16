@@ -1,15 +1,41 @@
 // Creates missing tabs and upgrades old ones.
 // definitions: ordered [{ schema, beforeUpgrade?(sheet) }]; order matters when a migration writes into an earlier tab.
-function SheetInstaller(source, definitions) {
+// state: { settings: { read(key), write(key, value) }, rowCache?: { remove(name) } }.
+// The applied schema signature is remembered, so requests skip the sheet checks until the headers change.
+function SheetInstaller(source, definitions, state) {
   this.source = source;
   this.definitions = definitions;
+  this.settings = state.settings;
+  this.rowCache = state.rowCache || null;
 }
 
+SheetInstaller.prototype.signature = function () {
+  return this.definitions.map(function (definition) {
+    return definition.schema.sheetName + ':' + definition.schema.headers.join(',');
+  }).join(';');
+};
+
+SheetInstaller.prototype.isCurrent = function () {
+  return this.settings.read(ScriptSettings.SCHEMA_SIGNATURE_KEY) === this.signature();
+};
+
+// Call under the script lock. The signature is stored last, so a failed run is retried.
 SheetInstaller.prototype.ensureSchema = function () {
+  if (this.isCurrent()) return;
   var spreadsheet = this.source.open();
   this.definitions.forEach(function (definition) {
     SheetInstaller.ensureSheet(spreadsheet, definition);
   });
+  this.source.noteWrite();
+  this.clearRowCache();
+  this.settings.write(ScriptSettings.SCHEMA_SIGNATURE_KEY, this.signature());
+};
+
+// An upgrade rewrites whole tabs, so cached rows may no longer match.
+SheetInstaller.prototype.clearRowCache = function () {
+  if (!this.rowCache) return;
+  var cache = this.rowCache;
+  this.definitions.forEach(function (definition) { cache.remove(definition.schema.sheetName); });
 };
 
 SheetInstaller.ensureSheet = function (spreadsheet, definition) {

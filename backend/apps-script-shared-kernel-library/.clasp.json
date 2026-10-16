@@ -1,0 +1,29 @@
+{
+  "scriptId": "12hAsmyptsvJObLQiVumMQjG60XW7eGWAt-p9O_-O50vRA1wL7RNX5ijI",
+  "rootDir": "src",
+  "filePushOrder": [
+    "src/domain/ErrorCode.gs",
+    "src/domain/ApiError.gs",
+    "src/domain/Values.gs",
+    "src/domain/IdRules.gs",
+    "src/domain/AuditRules.gs",
+    "src/application/Ports.gs",
+    "src/application/AuditStamper.gs",
+    "src/application/PatchSupport.gs",
+    "src/infrastructure/ScriptSettings.gs",
+    "src/persistence/googlesheet/SheetLayout.gs",
+    "src/infrastructure/SystemClock.gs",
+    "src/infrastructure/UuidIdGenerator.gs",
+    "src/infrastructure/AnonymousCurrentUser.gs",
+    "src/infrastructure/PropertiesTokenGuard.gs",
+    "src/infrastructure/ScriptLockGuard.gs",
+    "src/infrastructure/ScriptRowCache.gs",
+    "src/persistence/googlesheet/SpreadsheetSource.gs",
+    "src/persistence/googlesheet/SpreadsheetTable.gs",
+    "src/persistence/googlesheet/SheetUpgrade.gs",
+    "src/persistence/googlesheet/SheetInstaller.gs",
+    "src/interface/ResponseWriter.gs",
+    "src/interface/RequestParser.gs",
+    "src/interface/Router.gs"
+  ]
+}

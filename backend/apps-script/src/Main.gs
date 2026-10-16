@@ -22,10 +22,15 @@ function doPost(event) {
     var app = Composition.createApp();
     app.tokenGuard.assertValid(request.token);
     var handler = app.router.resolve(request.action);
-    var data = app.lockGuard.runExclusive(function () {
-      app.schemaInstaller.ensureSchema();
-      return handler(request.payload || {});
-    });
+    var payload = request.payload || {};
+    // The schema is checked under the lock only when its signature changed; normally this is one property read.
+    if (!app.schemaInstaller.isCurrent()) {
+      app.lockGuard.runExclusive(function () { app.schemaInstaller.ensureSchema(); });
+    }
+    // Reads skip the lock so they never queue behind each other or behind a write.
+    var data = app.router.isReadOnly(request.action)
+      ? handler(payload)
+      : app.lockGuard.runExclusive(function () { return handler(payload); });
     return ResponseWriter.success(data);
   } catch (err) {
     return ResponseWriter.failure(err);

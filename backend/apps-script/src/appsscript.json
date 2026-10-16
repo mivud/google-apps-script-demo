@@ -2,6 +2,22 @@
   "timeZone": "UTC",
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8",
+  "dependencies": {
+    "enabledAdvancedServices": [
+      {
+        "userSymbol": "Sheets",
+        "serviceId": "sheets",
+        "version": "v4"
+      }
+    ],
+    "libraries": [
+      {
+        "userSymbol": "SharedKernelLibrary",
+        "libraryId": "12hAsmyptsvJObLQiVumMQjG60XW7eGWAt-p9O_-O50vRA1wL7RNX5ijI",
+        "version": "3"
+      }
+    ]
+  },
   "oauthScopes": [
     "https://www.googleapis.com/auth/spreadsheets"
   ],

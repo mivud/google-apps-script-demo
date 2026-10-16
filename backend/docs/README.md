@@ -12,7 +12,7 @@ Two interchangeable storage backends behind one API contract: a Google Apps Scri
 
 ## Architecture
 
-- Apps Script code lives in [backend/apps-script/src](../apps-script/src): `Main.gs` entry points, `composition/` wiring, `shared/` building blocks (one file per class) and `modules/device-management`.
+- Apps Script code lives in [backend/apps-script/src](../apps-script/src): `Main.gs` entry points, `composition/` wiring, `modules/device-management`. The `shared/` building blocks (one file per class) are a separate library project in [backend/apps-script-shared-kernel-library](../apps-script-shared-kernel-library), see [shared-library](shared-library.md).
 - Each module has `domain`, `application`, `endpoints` and `persistence/googlesheet` layers; dependencies point inward and parts talk only through ports.
 - Supabase SQL lives in [backend/supabase/migrations](../supabase/migrations): `001_init.sql` (schema, triggers) and `002_rls_policies.sql`.
 - Both backends give the same ordering, pagination, validation codes and server-filled audit fields.
