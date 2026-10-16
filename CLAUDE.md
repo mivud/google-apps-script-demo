@@ -19,6 +19,7 @@ Data can live in **Google Sheets (via Apps Script Web App)** or **Supabase**; sw
 7. **Visible feedback on every async operation.** Any UI action that calls an API must disable its control while pending and show a loading effect (spinner/skeleton), then restore on success or error. This also covers data loading (lists, detail pages, initial fetch, refresh): always show a loading state (skeleton/spinner) and an error state with retry. Use the shared `LoadingButton` / `useAsyncAction` / `useAsyncData` pattern, never ad-hoc handling.
 8. **Delegate complex work.** Give complex or multi-area parts to the agents in `.claude/agents/`, run independent ones in parallel, and keep only short summaries in the main thread to save context and tokens. Agents read only their scope and report in <= 10 lines; before a big task check context size and ask the user before any compact (see `plan-feature` step 0). Do trivial edits directly.
 9. **English only for artifacts.** Code comments, docs, and diagrams (Mermaid) are written in English. All identifiers must be English too: variables, functions, classes, files, folders, DB tables/columns, and branch names (no Vietnamese or unaccented-Vietnamese names). Chat with the user may be in Vietnamese.
+10. **Security first (highest priority).** Check security while coding, not only afterwards: validate all input at the boundary, never trust the client, no secrets in code, logs, URLs or `VITE_*` env vars (they are public in the bundle), generic error messages, least privilege (OAuth scopes, RLS, tokens). Dev agents follow this checklist; after coding run `review-security-backend` / `review-security-frontend` (agents `security-reviewer-backend` / `security-reviewer-frontend`) together with `review-solid`, fix critical and high findings before handing over for review. Security findings outrank style and speed.
 
 ## Architecture
 
@@ -62,7 +63,7 @@ Frontend and backend are fully separated: code, docs, and dependencies never mix
 - **Dependencies:** a module may depend on `core/` shared pieces (errors, `Page`, async hooks, `Modal`) and, when truly needed, on another module's public API or service interface. No circular module dependencies; cross-module rules go in the depending module's service, not in the other module's internals.
 - **Shared composition only:** `DataService` is composed from per-module repository interfaces; the factory and `ServicesProvider` are the only places that know all modules.
 - New module = follow the `add-module` skill. Do not grow a module by dumping unrelated logic into it.
-- Migration status: Apps Script is organized as `src/modules/device-management/` (see below); the frontend (still laid out by layer: `core/`, `adapters/`, `services/`, `ui/`) follows afterwards into `modules/<module>/{domain,application,infrastructure/persistence/{googlesheet,supabase},ui}` with `app/` (composition) and `shared/`.
+- Migration status: Apps Script is organized as `src/modules/device-management/` (see below), and the shared building blocks (domain, ports, infrastructure, `persistence/googlesheet`, `interface`) are a separate library project `backend/apps-script-shared-kernel-library` imported as `SharedKernelLibrary` (see `backend/docs/shared-library.md`); the frontend (still laid out by layer: `core/`, `adapters/`, `services/`, `ui/`) follows afterwards into `modules/<module>/{domain,application,infrastructure/persistence/{googlesheet,supabase},ui}` with `app/` (composition) and `shared/`.
 
 ### Clean architecture inside each module
 
@@ -137,10 +138,20 @@ Applied on top of the clean architecture layers; they guide how the `domain` and
 - Update the module doc in the same change that alters the module.
 - Secrets (Supabase keys, Apps Script URLs) go in env files, never committed.
 
+### Naming convention
+
+- **Apps Script project names:** kebab-case (e.g. `shared-kernel-library`).
+- **Shared library identifiers:** PascalCase, like C# namespaces (e.g. `SharedKernel`; this repo uses `SharedKernelLibrary`). Project names and identifiers are independent: a consumer picks a meaningful PascalCase identifier when importing a library.
+- **Script IDs:** always the real Google Apps Script Script ID (used to link libraries).
+- **Source files:** PascalCase with the right extension (e.g. `UserService.gs`).
+- **Functions and variables:** camelCase. **Constants:** UPPER_SNAKE_CASE.
+- **Folders and Git repositories:** kebab-case.
+- Keep naming consistent across all projects.
+
 ## Claude Config in This Repo
 
-- Agents: `.claude/agents/` (architect, frontend-dev, data-adapter-dev, apps-script-dev, solid-reviewer, docs-writer)
-- Skills: `.claude/skills/` (plan-feature, add-module, add-data-adapter, review-solid, write-docs, run-tests)
+- Agents: `.claude/agents/` (architect, frontend-dev, data-adapter-dev, apps-script-dev, solid-reviewer, security-reviewer-backend, security-reviewer-frontend, docs-writer)
+- Skills: `.claude/skills/` (plan-feature, add-module, add-data-adapter, review-solid, review-security-backend, review-security-frontend, write-docs, run-tests)
 - Commands: `.claude/commands/` (`/start-session frontend|backend|full`, `/sync-docs`)
 - Settings: `.claude/settings.json` (push/test commands require confirmation, attribution disabled)
 - Guide: [docs/claude-workflow.md](docs/claude-workflow.md)
