@@ -46,7 +46,7 @@ frontend/
     config/      # provider factory, env parsing
   docs/          # frontend docs, one file per module
 backend/
-  apps-script/   # .clasp.json + src/ (Main.gs, composition/, shared/, modules/<module>/{domain,application,interface,persistence/googlesheet}); pushed with clasp
+  apps-script/   # .clasp.json + src/ (Main.gs, composition/, shared/, modules/device-management/...); pushed with clasp
   supabase/      # SQL migrations, RLS policies
   docs/          # backend docs, one file per module
 ```
@@ -55,28 +55,46 @@ Frontend and backend are fully separated: code, docs, and dependencies never mix
 
 ### Modules (the primary unit)
 
-**The module is the main unit of organization** (today: `equipment`, `maintenance`, `category`). Always decide the module first, then apply the clean architecture layers *inside* it. Do not slice by feature or use case below the module: no folder, namespace or file per use case/handler/screen action, which would fragment a module into tiny pieces. New modules can then be added without touching existing ones. Each module owns its slice end to end:
+**The module is the main unit of organization** (today: the backend module `device-management` groups the entities `equipment`, `maintenance_log` and `category`). Always decide the module first (a bounded context that owns several related entities), then apply the clean architecture layers *inside* it. Do not create sub-modules. New modules can be added without touching existing ones. Each module owns its slice end to end:
 
 - **Frontend:** model types, repository interface, service, adapter parts (sheets + supabase), UI pages/components, i18n messages, and a short doc `frontend/docs/<module>.md`. Expose a small public API (`index.ts`); other modules import only that, never deep paths.
-- **Backend:** Apps Script actions namespaced `<module>.<action>` (e.g. `category.list`), one SQL migration per module (`NNN_<module>.sql`), and `backend/docs/<module>.md`.
+- **Backend:** Apps Script actions namespaced `<module>.<entity>.<action>` (e.g. `device-management.category.list`), one SQL migration per module (`NNN_<module>.sql`), and `backend/docs/<module>.md`.
 - **Dependencies:** a module may depend on `core/` shared pieces (errors, `Page`, async hooks, `Modal`) and, when truly needed, on another module's public API or service interface. No circular module dependencies; cross-module rules go in the depending module's service, not in the other module's internals.
 - **Shared composition only:** `DataService` is composed from per-module repository interfaces; the factory and `ServicesProvider` are the only places that know all modules.
 - New module = follow the `add-module` skill. Do not grow a module by dumping unrelated logic into it.
-- Migration status: Apps Script is split into `src/modules/<module>/{domain,application,interface,persistence/googlesheet}`; the frontend (still laid out by layer: `core/`, `adapters/`, `services/`, `ui/`) follows afterwards into `modules/<module>/{domain,application,infrastructure/persistence/{googlesheet,supabase},ui}` with `app/` (composition) and `shared/`.
+- Migration status: Apps Script is organized as `src/modules/device-management/` (see below); the frontend (still laid out by layer: `core/`, `adapters/`, `services/`, `ui/`) follows afterwards into `modules/<module>/{domain,application,infrastructure/persistence/{googlesheet,supabase},ui}` with `app/` (composition) and `shared/`.
 
-### Clean architecture inside each module (layers per module, not per feature)
+### Clean architecture inside each module
 
-Layering happens once per module. Default granularity: **one file (or one small folder) per layer per module**, e.g. `CategoryDomain`, `CategoryUseCases` (all category use cases together), `CategoryHandlers`, `CategoryInfrastructure`. Split a layer file only when it grows past ~300 lines or mixes two responsibilities, and then split by responsibility inside the same layer. Shared technical pieces (clock, id generator, sheet table, token guard...) live in `shared/`, grouped by concern in a few files, not one file per tiny class. Never create "feature" sub-modules inside a module; if a part truly deserves its own life cycle, make it a new module.
+Dependencies point inward only: `interface` and `persistence`/`infrastructure` -> `application` -> `domain`.
 
-Dependencies point inward only: `interface` and `infrastructure` -> `application` -> `domain`.
+Backend (Apps Script) layout of a module:
+
+```
+src/modules/<module>/
+  <Module>Module.gs        # namespace root + public surface for the composition root
+  domain/entities/         # models: Equipment, Category, MaintenanceLog
+  domain/values/           # value objects: EquipmentCriteria
+  application/<feature>/commands/   # one file per write use case: CreateEquipment
+  application/<feature>/queries/    # one file per read use case: ListEquipment
+  application/<feature>/            # <Feature>SupportService (rules shared by the feature's use cases)
+  interface/               # <Entity>Handler: request <-> use case input, errors -> codes
+  persistence/googlesheet/ # <Entity>Service: repository/lookup implementations, migrations
+```
 
 - **domain:** entities and pure business rules (e.g. category tree, cycle check, name rules). No `SpreadsheetApp`, `fetch`, React or any framework.
-- **application:** use cases (`CreateCategory`, `RemoveCategory`...) depending only on domain and **ports** (interfaces) such as `CategoryRepository`, `Clock`, `IdGenerator`. Time and ids always come through the `Clock` / `IdGenerator` ports so they are replaceable.
+- **application:** the feature is the entity area (`equipment`, `category`, `maintenance`); each use case is one file under `commands/` (changes state) or `queries/` (reads). Depends only on domain and **ports** (`Clock`, `IdGenerator`, repositories). Time and ids always come through ports so they are replaceable.
 - **interface (backend) / ui (frontend):** handlers or pages that translate requests to use-case input and errors to codes; row <-> entity mappers.
 - **infrastructure:** non-database port implementations (locks, token guard, system clock, uuid).
-- **persistence/<provider>:** all database access code of one provider in its own folder: `persistence/googlesheet` (Apps Script: sheet table, schema upgrade, repositories, row mappers) and `persistence/supabase` (Supabase adapters and SQL). Shared pieces live in `shared/persistence/<provider>`, module-specific repositories in `modules/<module>/persistence/<provider>`. A new provider means a new `persistence/<provider>` folder, never edits to another provider's folder. Same inward dependency rule as infrastructure.
+- **persistence/<provider>:** all database access code of one provider in its own folder: `persistence/googlesheet` (Apps Script) and `persistence/supabase`. Shared pieces live in `shared/persistence/<provider>`, module-specific ones in `modules/<module>/persistence/<provider>`. A new provider means a new `persistence/<provider>` folder, never edits to another provider's folder.
 - **Composition root** is the only place that wires implementations to ports. Modules reach each other only through public ports/`index.ts`, never through internals.
-- Apps Script has one global scope and no imports: each module exposes one namespace object (e.g. `CategoryModule`), registration of handlers happens inside functions (never at file load), and file load order is fixed by `filePushOrder` in `.clasp.json`.
+- Keep files short (about <= 100 lines; split by responsibility past ~300). Shared technical pieces (clock, id generator, sheet table, token guard...) live in `shared/`, one file per class so reviews stay easy.
+
+Naming rules:
+- **Models** (entities, value objects) have no suffix: `Equipment`, `EquipmentCriteria`.
+- **Use cases** that bundle the command/query with its handling logic in one file are named after the use case, no suffix: `CreateEquipment`, `ListEquipment`.
+- **Every other class has a role suffix**: `EquipmentHandler`, `EquipmentService` (persistence), `EquipmentSupportService`, `Router`... File name equals the class name.
+- Apps Script has one global scope and no imports: each module exposes one root namespace `<Module>` (e.g. `DeviceManagement`) with layer sub-namespaces (`DeviceManagement.Domain.Equipment`, `DeviceManagement.Application.CreateEquipment`, `DeviceManagement.Persistence.GoogleSheet.EquipmentService`, `DeviceManagement.Interface.EquipmentHandler`). Registration of handlers happens inside functions (never at file load), and file load order is fixed by `filePushOrder` in `.clasp.json` (the module root file loads first).
 
 ## Clean Code Rules
 
