@@ -18,3 +18,4 @@ Two interchangeable storage backends behind one API contract: a Google Apps Scri
 - Both backends give the same ordering, pagination, validation codes and server-filled audit fields.
 
 Frontend side: see [frontend docs](../../frontend/docs/README.md).
+- Setup errors and fixes (login, permissions, library, deploy): [apps-script-troubleshooting](apps-script-troubleshooting.md).
