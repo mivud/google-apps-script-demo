@@ -12,6 +12,7 @@ Data can live in **Google Sheets (via Apps Script Web App)** or **Supabase**; sw
    - When committing, follow the GitHub commit convention (Conventional Commits): `<type>(<optional scope>): <imperative summary>`, e.g. `feat(adapters): add Supabase adapter`.
    - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`. Summary in English, lowercase, no trailing period, max ~72 chars; add a body for the "why" when needed; use `!` or a `BREAKING CHANGE:` footer for breaking changes.
    - One logical change per commit.
+   - **Always re-read these commit rules right before every commit.** Commits of Claude files on `core/agents` use no `(claude)` scope.
    - **Claude config goes through `core/agents` first.** Commit changes to the basic Claude files (`CLAUDE.md`, `.claude/`) on branch `core/agents`, then merge `core/agents` into the working branches (`dev`, feature branches such as `devices-mgt`). Never commit Claude files directly on a feature branch. Branch names must not collide with an existing branch used as a prefix (e.g. `dev/x` is impossible while `dev` exists).
 5. **SOLID always.** See the SOLID checklist below.
 6. **Responsive always.** Every frontend screen must work well on both desktop and mobile: mobile-first CSS, fluid layouts, touch-friendly targets (>= 44px), no horizontal scroll, and verified at common breakpoints (~360px, ~768px, ~1280px).
