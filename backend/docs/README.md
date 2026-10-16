@@ -19,3 +19,9 @@ Two interchangeable storage backends behind one API contract: a Google Apps Scri
 
 Frontend side: see [frontend docs](../../frontend/docs/README.md).
 - Setup errors and fixes (login, permissions, library, deploy): [apps-script-troubleshooting](apps-script-troubleshooting.md).
+## Versioning
+
+- The backend version lives in [package.json](../apps-script/package.json), format `1.0.x-beta.N` (SemVer pre-release), currently `1.0.0-beta.1`.
+- While in beta, only the beta number goes up (`beta.2`, `beta.3`, ...), once per release, in a `chore(release): bump backend to <version>` commit. `x` and the `-beta` suffix change only when the user announces the official version.
+- The API reports this version (`system.version.get` and `doGet`); keep `API_VERSION` in [SystemEndpoints.gs](../apps-script/src/composition/SystemEndpoints.gs) equal to it (a test checks this).
+- Apps Script deployment and library versions are plain integers managed by Google; they are separate from this version.

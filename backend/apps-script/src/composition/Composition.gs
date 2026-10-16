@@ -9,7 +9,7 @@ var Composition = {
     return {
       tokenGuard: core.tokenGuard,
       lockGuard: core.lockGuard,
-      router: new Router(Composition.createEndpointRegistry(deps), DeviceManagement.readActions()),
+      router: new Router(Composition.createEndpointRegistry(deps), DeviceManagement.readActions().concat(SystemEndpoints.readActions())),
       schemaInstaller: new SheetInstaller(core.source, Composition.createSchemaDefinitions(deps), {
         settings: core.settings,
         rowCache: core.rowCache
@@ -76,7 +76,7 @@ var Composition = {
   },
 
   createEndpointRegistry: function (deps) {
-    return DeviceManagement.createEndpoints(deps);
+    return Object.assign({}, DeviceManagement.createEndpoints(deps), SystemEndpoints.build());
   },
 
   createSchemaDefinitions: function (deps) {

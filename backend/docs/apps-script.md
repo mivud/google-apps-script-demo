@@ -6,6 +6,7 @@
 - `POST` with `Content-Type: text/plain` (avoids a CORS preflight). Body: `{ token, action, payload }`.
 - Response: `{ ok: true, data }` or `{ ok: false, error: { code, message } }`. Codes: `NOT_FOUND`, `VALIDATION`, `UNAUTHORIZED`, `INTERNAL`.
 - Actions are `<module>.<entity>.<action>` (e.g. `device-management.equipment.list`); see [device-management](device-management.md).
+- `system.version.get` (cross-cutting, no module) returns `{ version }`; `doGet` reports the same version. Source: [SystemEndpoints.gs](../apps-script/src/composition/SystemEndpoints.gs), see Versioning in the [README](README.md).
 - Payloads use snake_case rows (as in `row-mappers.ts`). A bad or missing body, bad JSON, an unknown action or wrong field types return `VALIDATION`.
 - `UNAUTHORIZED` maps to `AuthError` in the Sheets adapter (message `error.unauthorized`).
 - Write actions take the script lock (20 s wait), so writes are serialized. Read actions (listed per endpoint in `readActions()`, passed to the `Router`) skip the lock.

@@ -4,6 +4,7 @@
  * Contract: POST (Content-Type text/plain to avoid a CORS preflight) with
  *   { "token": "...", "action": "device-management.equipment.list", "payload": { ... } }
  * Response: { "ok": true, "data": ... } or { "ok": false, "error": { "code": "...", "message": "..." } }
+ * Version: { "action": "system.version.get" } returns { "version": "1.0.0-beta.N" }; doGet returns it too.
  * Error codes: NOT_FOUND, VALIDATION, UNAUTHORIZED, INTERNAL.
  *
  * Script properties: API_TOKEN (shared secret), SPREADSHEET_ID (optional if the script is bound to the sheet).
@@ -13,7 +14,7 @@
 var API_SERVICE_NAME = 'equipment-api';
 
 function doGet() {
-  return ResponseWriter.success({ service: API_SERVICE_NAME });
+  return ResponseWriter.success({ service: API_SERVICE_NAME, version: SystemEndpoints.API_VERSION });
 }
 
 function doPost(event) {

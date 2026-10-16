@@ -29,6 +29,7 @@
     "src/modules/device-management/endpoints/CategoryEndpoints.gs",
     "src/modules/device-management/endpoints/EquipmentEndpoints.gs",
     "src/modules/device-management/endpoints/MaintenanceLogEndpoints.gs",
+    "src/composition/SystemEndpoints.gs",
     "src/composition/Composition.gs",
     "src/Main.gs"
   ]
