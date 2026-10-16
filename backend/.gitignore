@@ -1,0 +1,7 @@
+# clasp credentials and local overrides must never be committed
+.clasprc.json
+credentials.json
+*.local
+.env
+.env.*
+!.env.example
