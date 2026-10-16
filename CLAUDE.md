@@ -46,7 +46,7 @@ frontend/
     config/      # provider factory, env parsing
   docs/          # frontend docs, one file per module
 backend/
-  apps-script/   # .clasp.json + src/ (Main.gs, composition/, shared/, modules/<module>/{domain,application,interface,infrastructure}); pushed with clasp
+  apps-script/   # .clasp.json + src/ (Main.gs, composition/, shared/, modules/<module>/{domain,application,interface,persistence/googlesheet}); pushed with clasp
   supabase/      # SQL migrations, RLS policies
   docs/          # backend docs, one file per module
 ```
@@ -62,7 +62,7 @@ Frontend and backend are fully separated: code, docs, and dependencies never mix
 - **Dependencies:** a module may depend on `core/` shared pieces (errors, `Page`, async hooks, `Modal`) and, when truly needed, on another module's public API or service interface. No circular module dependencies; cross-module rules go in the depending module's service, not in the other module's internals.
 - **Shared composition only:** `DataService` is composed from per-module repository interfaces; the factory and `ServicesProvider` are the only places that know all modules.
 - New module = follow the `add-module` skill. Do not grow a module by dumping unrelated logic into it.
-- Migration status: Apps Script is being split into `src/modules/<module>/{domain,application,interface,infrastructure}`; the frontend (still laid out by layer: `core/`, `adapters/`, `services/`, `ui/`) follows afterwards into `modules/<module>/{domain,application,infrastructure,ui}` with `app/` (composition) and `shared/`.
+- Migration status: Apps Script is split into `src/modules/<module>/{domain,application,interface,persistence/googlesheet}`; the frontend (still laid out by layer: `core/`, `adapters/`, `services/`, `ui/`) follows afterwards into `modules/<module>/{domain,application,infrastructure/persistence/{googlesheet,supabase},ui}` with `app/` (composition) and `shared/`.
 
 ### Clean architecture inside each module (layers per module, not per feature)
 
@@ -73,7 +73,8 @@ Dependencies point inward only: `interface` and `infrastructure` -> `application
 - **domain:** entities and pure business rules (e.g. category tree, cycle check, name rules). No `SpreadsheetApp`, `fetch`, React or any framework.
 - **application:** use cases (`CreateCategory`, `RemoveCategory`...) depending only on domain and **ports** (interfaces) such as `CategoryRepository`, `Clock`, `IdGenerator`. Time and ids always come through the `Clock` / `IdGenerator` ports so they are replaceable.
 - **interface (backend) / ui (frontend):** handlers or pages that translate requests to use-case input and errors to codes; row <-> entity mappers.
-- **infrastructure:** port implementations (Sheets, Supabase, locks, token guard, system clock, uuid).
+- **infrastructure:** non-database port implementations (locks, token guard, system clock, uuid).
+- **persistence/<provider>:** all database access code of one provider in its own folder: `persistence/googlesheet` (Apps Script: sheet table, schema upgrade, repositories, row mappers) and `persistence/supabase` (Supabase adapters and SQL). Shared pieces live in `shared/persistence/<provider>`, module-specific repositories in `modules/<module>/persistence/<provider>`. A new provider means a new `persistence/<provider>` folder, never edits to another provider's folder. Same inward dependency rule as infrastructure.
 - **Composition root** is the only place that wires implementations to ports. Modules reach each other only through public ports/`index.ts`, never through internals.
 - Apps Script has one global scope and no imports: each module exposes one namespace object (e.g. `CategoryModule`), registration of handlers happens inside functions (never at file load), and file load order is fixed by `filePushOrder` in `.clasp.json`.
 
