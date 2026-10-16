@@ -63,7 +63,7 @@ Frontend and backend are fully separated: code, docs, and dependencies never mix
 - **Dependencies:** a module may depend on `core/` shared pieces (errors, `Page`, async hooks, `Modal`) and, when truly needed, on another module's public API or service interface. No circular module dependencies; cross-module rules go in the depending module's service, not in the other module's internals.
 - **Shared composition only:** `DataService` is composed from per-module repository interfaces; the factory and `ServicesProvider` are the only places that know all modules.
 - New module = follow the `add-module` skill. Do not grow a module by dumping unrelated logic into it.
-- Migration status: Apps Script is organized as `src/modules/device-management/` (see below); the frontend (still laid out by layer: `core/`, `adapters/`, `services/`, `ui/`) follows afterwards into `modules/<module>/{domain,application,infrastructure/persistence/{googlesheet,supabase},ui}` with `app/` (composition) and `shared/`.
+- Migration status: Apps Script is organized as `src/modules/device-management/` (see below), and the shared building blocks (domain, ports, infrastructure, `persistence/googlesheet`, `interface`) are a separate library project `backend/apps-script-shared-kernel-library` imported as `SharedKernelLibrary` (see `backend/docs/shared-library.md`); the frontend (still laid out by layer: `core/`, `adapters/`, `services/`, `ui/`) follows afterwards into `modules/<module>/{domain,application,infrastructure/persistence/{googlesheet,supabase},ui}` with `app/` (composition) and `shared/`.
 
 ### Clean architecture inside each module
 
@@ -137,6 +137,16 @@ Applied on top of the clean architecture layers; they guide how the `domain` and
 - Link to the code with relative paths when it helps (e.g. `[EquipmentService](../src/services/equipment-service.ts)`); do not copy code into docs.
 - Update the module doc in the same change that alters the module.
 - Secrets (Supabase keys, Apps Script URLs) go in env files, never committed.
+
+### Naming convention
+
+- **Apps Script project names:** kebab-case (e.g. `shared-kernel-library`).
+- **Shared library identifiers:** PascalCase, like C# namespaces (e.g. `SharedKernel`; this repo uses `SharedKernelLibrary`). Project names and identifiers are independent: a consumer picks a meaningful PascalCase identifier when importing a library.
+- **Script IDs:** always the real Google Apps Script Script ID (used to link libraries).
+- **Source files:** PascalCase with the right extension (e.g. `UserService.gs`).
+- **Functions and variables:** camelCase. **Constants:** UPPER_SNAKE_CASE.
+- **Folders and Git repositories:** kebab-case.
+- Keep naming consistent across all projects.
 
 ## Claude Config in This Repo
 
