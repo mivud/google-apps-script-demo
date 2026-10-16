@@ -1,0 +1,20 @@
+# Deploy
+
+## GitHub Pages (current)
+
+Workflow: [deploy-pages.yml](../../.github/workflows/deploy-pages.yml). Runs on push to `main` and manual dispatch: `npm ci`, `npm run build` in `frontend/`, then publishes `frontend/dist`.
+
+Setup:
+1. Repo Settings > Pages > Source: **GitHub Actions**.
+2. Repo Settings > Secrets and variables > Actions > **Variables**: `VITE_DB_PROVIDER`, and the ones for your provider: `VITE_SHEETS_API_URL`, `VITE_SHEETS_API_TOKEN` or `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
+3. Merge to `main`.
+
+The workflow sets `VITE_BASE_PATH=/<repo>/` automatically.
+
+## Cloudflare Pages (planned)
+
+Build command `npm run build`, root `frontend`, output `dist`, with `VITE_BASE_PATH=/` and the same `VITE_*` vars. Hash routing needs no rewrite rules.
+
+## Security
+
+All `VITE_*` values are embedded in the public bundle. Treat them as public: use only the Supabase anon key (protected by RLS) and a low-privilege Sheets token. Never put service-role keys or real secrets here. See [config](config.md).
