@@ -6,11 +6,11 @@ disable-model-invocation: true
 
 # Add a feature module
 
-Read CLAUDE.md ("Feature modules") first. A module must be addable without editing other modules' internals.
+Read CLAUDE.md ("Modules (the primary unit)") first. A module must be addable without editing other modules' internals.
 
-1. **Ask and plan.** Clarify fields, relations to other modules, delete rules, filters, and who may edit. Use the `plan-feature` skill; wait for approval before coding.
+1. **Ask and plan.** Do the context check from `plan-feature` step 0 first (a new module is always a large task). Clarify fields, relations to other modules, delete rules, filters, and who may edit. Use the `plan-feature` skill; wait for approval before coding.
 2. **Plan the slice** in the plan, one section per clean-architecture layer (see CLAUDE.md "Clean architecture inside each module"): domain (entity + audit fields + pure rules), application (use cases, repository port, uses `Clock`/`IdGenerator` ports), interface/ui (handlers, mappers, pages and components, i18n keys en + vi), infrastructure (Sheets and Supabase implementations, migration `NNN_<module>.sql`), backend action names `<module>.<action>`, docs. Follow the Clean Code Rules. The module is the main unit: keep one file (or small folder) per layer per module and do not fragment it into per-feature or per-use-case files, folders or namespaces.
-3. **Delegate in parallel** (keep the main context small), with disjoint file scopes:
+3. **Delegate in parallel** (keep the main context small), with disjoint file scopes. Give each agent only its file scope and the approved plan section, and ask for a summary of at most 10 lines:
    - `apps-script-dev`: `src/modules/<module>/{domain,application,interface,infrastructure}` plus `<Name>Module.gs`, registration in `src/composition/Composition.gs` and `filePushOrder` in `.clasp.json`, sheet tab and upgrade path, `backend/docs/<module>.md`, SQL migration and RLS entry.
    - `frontend-dev`: model, repository interface, service, adapters, mappers, contract tests, UI, i18n, `frontend/docs/<module>.md`. If the slice is large, run `data-adapter-dev` for model/adapters/services first and `frontend-dev` for UI after.
 4. **Wire up** only in the shared composition points: `DataService` composition, provider factory, `ServicesProvider`, app routes/header links.

@@ -6,7 +6,7 @@ description: Write or update English documentation and Mermaid diagrams under do
 # Write docs
 
 1. Read the relevant source first; document only real behavior.
-2. Delegate to the `docs-writer` agent or write directly in `frontend/docs/<module>.md` or `backend/docs/<module>.md` (one file per module, never mixed).
+2. Delegate to the `docs-writer` agent (it owns the docs rules) or write directly in `frontend/docs/<module>.md` or `backend/docs/<module>.md` (one file per module, never mixed).
 3. English only, concise, with relative links to the referenced code. Use Mermaid for diagrams only when helpful:
    - architecture: `flowchart`
    - request flow: `sequenceDiagram`
