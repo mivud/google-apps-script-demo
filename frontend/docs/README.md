@@ -21,6 +21,11 @@ Static Vite + React + TypeScript app (responsive, English and Vietnamese). Data 
 - Text is localized through a small in-house i18n layer (`en`, `vi`).
 
 Backend side: see [backend docs](../../backend/docs/README.md).
+## Versioning
+
+- The frontend version lives in [package.json](../package.json) (keep `package-lock.json` in sync), format `1.0.x-beta.N` (SemVer pre-release), currently `1.0.0-beta.1`.
+- While in beta, only the beta number goes up (`beta.2`, `beta.3`, ...), once per release, in a `chore(release): bump frontend to <version>` commit. `x` and the `-beta` suffix change only when the user announces the official version.
+- The app reads it at build time and shows it, with the backend version, at the bottom of the settings menu.
 
 ## Naming
 
