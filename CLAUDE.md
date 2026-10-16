@@ -66,7 +66,7 @@ Frontend and backend are fully separated: code, docs, and dependencies never mix
 
 ### Clean architecture inside each module
 
-Dependencies point inward only: `interface` and `persistence`/`infrastructure` -> `application` -> `domain`.
+Dependencies point inward only: `endpoints` (backend) / `ui` (frontend) and `persistence`/`infrastructure` -> `application` -> `domain`.
 
 Backend (Apps Script) layout of a module:
 
@@ -78,13 +78,13 @@ src/modules/<module>/
   application/<feature>/commands/   # one file per write use case: CreateEquipment
   application/<feature>/queries/    # one file per read use case: ListEquipment
   application/<feature>/            # <Feature>SupportService (rules shared by the feature's use cases)
-  interface/               # <Entity>Handler: request <-> use case input, errors -> codes
+  endpoints/               # <Entity>Endpoints: request <-> use case input, errors -> codes
   persistence/googlesheet/ # <Entity>Service: repository/lookup implementations, migrations
 ```
 
 - **domain:** entities and pure business rules (e.g. category tree, cycle check, name rules). No `SpreadsheetApp`, `fetch`, React or any framework.
 - **application:** the feature is the entity area (`equipment`, `category`, `maintenance`); each use case is one file under `commands/` (changes state) or `queries/` (reads). Depends only on domain and **ports** (`Clock`, `IdGenerator`, repositories). Time and ids always come through ports so they are replaceable.
-- **interface (backend) / ui (frontend):** handlers or pages that translate requests to use-case input and errors to codes; row <-> entity mappers.
+- **endpoints (backend) / ui (frontend):** endpoints or pages that translate requests to use-case input and errors to codes; row <-> entity mappers.
 - **infrastructure:** non-database port implementations (locks, token guard, system clock, uuid).
 - **persistence/<provider>:** all database access code of one provider in its own folder: `persistence/googlesheet` (Apps Script) and `persistence/supabase`. Shared pieces live in `shared/persistence/<provider>`, module-specific ones in `modules/<module>/persistence/<provider>`. A new provider means a new `persistence/<provider>` folder, never edits to another provider's folder.
 - **Composition root** is the only place that wires implementations to ports. Modules reach each other only through public ports/`index.ts`, never through internals.
@@ -93,8 +93,24 @@ src/modules/<module>/
 Naming rules:
 - **Models** (entities, value objects) have no suffix: `Equipment`, `EquipmentCriteria`.
 - **Use cases** that bundle the command/query with its handling logic in one file are named after the use case, no suffix: `CreateEquipment`, `ListEquipment`.
-- **Every other class has a role suffix**: `EquipmentHandler`, `EquipmentService` (persistence), `EquipmentSupportService`, `Router`... File name equals the class name.
-- Apps Script has one global scope and no imports: each module exposes one root namespace `<Module>` (e.g. `DeviceManagement`) with layer sub-namespaces (`DeviceManagement.Domain.Equipment`, `DeviceManagement.Application.CreateEquipment`, `DeviceManagement.Persistence.GoogleSheet.EquipmentService`, `DeviceManagement.Interface.EquipmentHandler`). Registration of handlers happens inside functions (never at file load), and file load order is fixed by `filePushOrder` in `.clasp.json` (the module root file loads first).
+- **Every other class has a role suffix**: `EquipmentEndpoints`, `EquipmentService` (persistence), `EquipmentSupportService`, `Router`... File name equals the class name.
+- Apps Script has one global scope and no imports: each module exposes one root namespace `<Module>` (e.g. `DeviceManagement`) with layer sub-namespaces (`DeviceManagement.Domain.Equipment`, `DeviceManagement.Application.CreateEquipment`, `DeviceManagement.Persistence.GoogleSheet.EquipmentService`, `DeviceManagement.Endpoints.EquipmentEndpoints`). Registration of handlers happens inside functions (never at file load), and file load order is fixed by `filePushOrder` in `.clasp.json` (the module root file loads first).
+
+## Domain-Driven Design Rules
+
+Applied on top of the clean architecture layers; they guide how the `domain` and `application` layers are modeled.
+
+- **Ubiquitous language:** use the business terms of the domain for every name (`Equipment`, `MaintenanceLog`, `Category`, `retire`, `repair`), the same word in code, API actions, UI labels and docs. No technical synonyms (`Item`, `Record`, `Manager`).
+- **Bounded context = module:** a module owns one consistent model. A term may mean different things in two modules; do not share entities between modules, share only ids and public ports.
+- **Entities:** identified by id (UUID), carry audit fields, and protect their own invariants through domain functions (validate, change status). Business rules live in `domain`, never in endpoints, use cases or persistence.
+- **Value objects:** immutable, compared by value, validated on creation (`EquipmentCriteria`, status, quantity, maintenance type). Prefer a value object over a loose primitive that has rules.
+- **Aggregates:** one aggregate root per consistency boundary; code outside refers to it by id and changes it only through the root. Equipment owns its maintenance logs (a log cannot exist without equipment; deleting equipment cascades). `Category` is its own aggregate; equipment references it by id only. One transaction/lock changes one aggregate.
+- **Repositories:** one port per aggregate root, in `application` (interface) with the implementation in `persistence/<provider>`. They load and save whole aggregates and return domain entities, never storage rows or sheet ranges.
+- **Domain services:** logic that spans several entities or does not fit one entity (e.g. category tree cycle check) is a pure function in `domain`, with no I/O.
+- **Use cases orchestrate, not decide:** load the aggregate, call domain behavior, save, return. No business rule inline in a use case.
+- **Domain errors:** domain rules fail with explicit typed errors and stable codes (`category_cycle`), translated to the API only in `endpoints`.
+- **Anti-corruption at the edges:** payload and row mapping (snake_case, sheet columns, UTC strings) stays in `endpoints` and `persistence`; the domain only sees domain types.
+- **Domain events:** not used yet. Add them only when another module must react to a change, and decide then with a plan.
 
 ## Clean Code Rules
 
@@ -115,7 +131,7 @@ Naming rules:
 ## Conventions
 
 - Comments explain *why*, not *what*; keep them sparse and in English.
-- Docs are split per side and per module: `frontend/docs/<module>.md` and `backend/docs/<module>.md` (e.g. `equipment.md`, `auth.md`); no single monolithic doc.
+- Docs are split per side and per module: `frontend/docs/<module>.md` and `backend/docs/<module>.md` (e.g. `device-management.md`, `auth.md`); no single monolithic doc.
 - Each module doc is short and in English: purpose, public API/behavior, key rules, limits. Add a Mermaid diagram only when it clarifies.
 - Link to the code with relative paths when it helps (e.g. `[EquipmentService](../src/services/equipment-service.ts)`); do not copy code into docs.
 - Update the module doc in the same change that alters the module.
