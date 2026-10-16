@@ -8,6 +8,7 @@ const vm = require('node:vm');
 const APP_ROOT = path.resolve(__dirname, '..', '..');
 // The SharedKernelLibrary library is a separate Apps Script project with its own global scope.
 const SHARED_ROOT = path.resolve(APP_ROOT, '..', 'apps-script-shared-kernel-library');
+const IDENTITY_ROOT = path.resolve(APP_ROOT, '..', 'apps-script-identity-api');
 const SOURCE_DIR = 'src';
 
 function listScriptFiles(projectRoot, directory) {
@@ -50,6 +51,8 @@ function createContentServiceStub() {
 function createSandbox(extraGlobals = {}) {
   return {
     ...extraGlobals,
+    // Apps Script provides `console`; tests may replace console.error to capture server-side logs.
+    console,
     SpreadsheetApp: unstubbedService('SpreadsheetApp'),
     LockService: unstubbedService('LockService'),
     PropertiesService: unstubbedService('PropertiesService'),
@@ -77,9 +80,15 @@ function loadAppsScript() {
   return loadProject(APP_ROOT, { SharedKernelLibrary: shared });
 }
 
+// identity-api is a third project with its own global scope; it also imports the library.
+function loadIdentityApi() {
+  const shared = loadProject(SHARED_ROOT);
+  return loadProject(IDENTITY_ROOT, { SharedKernelLibrary: shared });
+}
+
 // Objects built inside the vm have another Object prototype; round-trip them before deep comparisons.
 function plain(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-module.exports = { loadAppsScript, plain };
+module.exports = { loadAppsScript, loadIdentityApi, plain };
