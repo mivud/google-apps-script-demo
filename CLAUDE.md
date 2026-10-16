@@ -16,7 +16,7 @@ Data can live in **Google Sheets (via Apps Script Web App)** or **Supabase**; sw
 5. **SOLID always.** See the SOLID checklist below.
 6. **Responsive always.** Every frontend screen must work well on both desktop and mobile: mobile-first CSS, fluid layouts, touch-friendly targets (>= 44px), no horizontal scroll, and verified at common breakpoints (~360px, ~768px, ~1280px).
 7. **Visible feedback on every async operation.** Any UI action that calls an API must disable its control while pending and show a loading effect (spinner/skeleton), then restore on success or error. This also covers data loading (lists, detail pages, initial fetch, refresh): always show a loading state (skeleton/spinner) and an error state with retry. Use the shared `LoadingButton` / `useAsyncAction` / `useAsyncData` pattern, never ad-hoc handling.
-8. **Delegate complex work.** Give complex or multi-area parts to the agents in `.claude/agents/`, run independent ones in parallel, and keep only short summaries in the main thread to save context and tokens. Do trivial edits directly.
+8. **Delegate complex work.** Give complex or multi-area parts to the agents in `.claude/agents/`, run independent ones in parallel, and keep only short summaries in the main thread to save context and tokens. Agents read only their scope and report in <= 10 lines; before a big task check context size and ask the user before any compact (see `plan-feature` step 0). Do trivial edits directly.
 9. **English only for artifacts.** Code comments, docs, and diagrams (Mermaid) are written in English. All identifiers must be English too: variables, functions, classes, files, folders, DB tables/columns, and branch names (no Vietnamese or unaccented-Vietnamese names). Chat with the user may be in Vietnamese.
 
 ## Architecture
@@ -104,5 +104,7 @@ Dependencies point inward only: `interface` and `infrastructure` -> `application
 ## Claude Config in This Repo
 
 - Agents: `.claude/agents/` (architect, frontend-dev, data-adapter-dev, apps-script-dev, solid-reviewer, docs-writer)
-- Skills: `.claude/skills/` (plan-feature, add-data-adapter, review-solid, write-docs, run-tests)
-- Settings: `.claude/settings.json` (commit/push/test commands require confirmation, attribution disabled)
+- Skills: `.claude/skills/` (plan-feature, add-module, add-data-adapter, review-solid, write-docs, run-tests)
+- Commands: `.claude/commands/` (`/start-session frontend|backend|full`, `/sync-docs`)
+- Settings: `.claude/settings.json` (push/test commands require confirmation, attribution disabled)
+- Guide: [docs/claude-workflow.md](docs/claude-workflow.md)
