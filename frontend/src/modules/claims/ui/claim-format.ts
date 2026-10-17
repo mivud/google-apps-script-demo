@@ -20,9 +20,3 @@ function compareClaims(a: Claim, b: Claim): number {
 export function sortClaims(claims: readonly Claim[]): Claim[] {
   return [...claims].sort(compareClaims)
 }
-
-// Claims that exist but are not yet assigned, for the "add" picker.
-export function unassignedClaims(all: readonly Claim[], assigned: readonly Claim[]): Claim[] {
-  const taken = new Set(assigned.map(claimLabel))
-  return sortClaims(all.filter((claim) => !taken.has(claimLabel(claim))))
-}

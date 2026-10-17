@@ -1,10 +1,8 @@
 import { useState } from 'react'
-import { ActionError } from '../../../../shared/components/action-error'
 import { AuditDetails } from '../../../../shared/components/audit-details'
-import { DeleteControl } from '../../../../shared/components/delete-control'
 import { ROLES_PATH } from '../../../../shared/identity-routes'
 import { ClaimAssignment, type ClaimService } from '../../../claims'
-import { useAsyncAction } from '../../../../shared/hooks/use-async-action'
+import { useDeleteAction } from '../../../../shared/hooks/use-delete-action'
 import { useAsyncData } from '../../../../shared/hooks/use-async-data'
 import { useI18n } from '../../../../shared/i18n'
 import { Badge } from '../../../../shared/components/badge'
@@ -29,9 +27,10 @@ export function RoleDetailPage({ id, roles, claims, onDeleted }: RoleDetailPageP
   const { t } = useI18n()
   const detail = useAsyncData(() => roles.get(id), [roles, id])
   const [editing, setEditing] = useState(false)
-  const remove = useAsyncAction(async () => {
-    await roles.remove(id)
-    onDeleted()
+  const remove = useDeleteAction({
+    getName: (name: string) => name,
+    remove: () => roles.remove(id),
+    onDeleted,
   })
   const back = { href: `#${ROLES_PATH}`, label: t('identity.roles.back') }
   const role = detail.data
@@ -52,20 +51,21 @@ export function RoleDetailPage({ id, roles, claims, onDeleted }: RoleDetailPageP
 
         <ButtonRow>
           <LoadingButton variant="outline" disabled={remove.pending} onClick={() => setEditing(true)}>{t('common.edit')}</LoadingButton>
-          {!builtIn && <DeleteControl pending={remove.pending} onConfirm={() => remove.run()} label={t('common.delete')} />}
+          {!builtIn && <LoadingButton variant="destructive" disabled={remove.pending} onClick={() => remove.ask(role.name)}>{t('common.delete')}</LoadingButton>}
         </ButtonRow>
-        <ActionError error={remove.error} />
 
         <h2>{t('identity.roles.claims')}</h2>
         <ClaimAssignment
           claimService={claims}
           assigned={role.claims}
-          onAdd={async (claim) => { await roles.addClaim(id, claim); detail.reload() }}
-          onRemove={async (claim) => { await roles.removeClaim(id, claim); detail.reload() }}
+          onAdd={(claim) => roles.addClaim(id, claim)}
+          onRemove={(claim) => roles.removeClaim(id, claim)}
+          onChanged={detail.reload}
           onRefresh={detail.reload}
         />
       </div>
 
+      {remove.dialog}
       {editing && (
         <RoleFormDialog
           initial={role}

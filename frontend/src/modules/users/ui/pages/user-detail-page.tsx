@@ -1,15 +1,16 @@
 import { useState, type ReactNode } from 'react'
 import { ActionError } from '../../../../shared/components/action-error'
 import { AuditDetails } from '../../../../shared/components/audit-details'
-import { DeleteControl } from '../../../../shared/components/delete-control'
 import { USERS_PATH } from '../../../../shared/identity-routes'
 import { ClaimAssignment, type ClaimService } from '../../../claims'
 import type { RoleService } from '../../../roles'
 import { useAsyncAction } from '../../../../shared/hooks/use-async-action'
+import { useDeleteAction } from '../../../../shared/hooks/use-delete-action'
 import { useAsyncData } from '../../../../shared/hooks/use-async-data'
 import { useI18n } from '../../../../shared/i18n'
 import { Badge } from '../../../../shared/components/badge'
 import { ErrorState } from '../../../../shared/components/error-state'
+import { GlassSurface } from '../../../../shared/components/glass-surface'
 import { ButtonRow } from '../../../../shared/components/layout'
 import { LoadingButton } from '../../../../shared/components/loading-button'
 import { PageHeader } from '../../../../shared/components/page-header'
@@ -39,9 +40,10 @@ export function UserDetailPage({ id, users, roles, claims, renderAccess, onDelet
   const user = detail.data
 
   const changed = () => { setVersion((v) => v + 1); detail.reload() }
-  const remove = useAsyncAction(async () => {
-    await users.remove(id)
-    onDeleted()
+  const remove = useDeleteAction({
+    getName: (target: string) => target,
+    remove: () => users.remove(id),
+    onDeleted,
   })
   const toggleActive = useAsyncAction(async () => {
     if (!user) return
@@ -65,46 +67,56 @@ export function UserDetailPage({ id, users, roles, claims, renderAccess, onDelet
           back={back}
           actions={<Badge tone={user.active ? 'success' : 'neutral'}>{t(user.active ? 'identity.active' : 'identity.inactive')}</Badge>}
         />
-        <AuditDetails audit={user} />
+        <GlassSurface className="detail-card">
+          <AuditDetails audit={user} />
 
-        <ButtonRow>
-          <LoadingButton variant="outline" disabled={busy} onClick={() => setEditing(true)}>{t('common.edit')}</LoadingButton>
-          <LoadingButton variant="outline" loading={toggleActive.pending} disabled={remove.pending} onClick={() => toggleActive.run()}>
-            {t(user.active ? 'identity.deactivate' : 'identity.activate')}
-          </LoadingButton>
-          <DeleteControl pending={remove.pending} onConfirm={() => remove.run()} label={t('common.delete')} />
-        </ButtonRow>
-        <ActionError error={toggleActive.error ?? remove.error} onRefresh={toggleActive.error ? detail.reload : undefined} />
+          <ButtonRow>
+            <LoadingButton variant="outline" disabled={busy} onClick={() => setEditing(true)}>{t('common.edit')}</LoadingButton>
+            <LoadingButton variant="outline" loading={toggleActive.pending} disabled={remove.pending} onClick={() => toggleActive.run()}>
+              {t(user.active ? 'identity.deactivate' : 'identity.activate')}
+            </LoadingButton>
+            <LoadingButton variant="destructive" disabled={busy} onClick={() => remove.ask(user.email)}>{t('common.delete')}</LoadingButton>
+          </ButtonRow>
+          <ActionError error={toggleActive.error} onRefresh={detail.reload} />
 
-        <h2>{t('identity.users.roles')}</h2>
-        {roleList.error ? (
-          <ErrorState error={roleList.error} onRetry={roleList.reload} retrying={roleList.loading} />
-        ) : !roleList.data ? (
-          <ListSkeleton count={2} />
-        ) : (
-          <UserRolesPanel
-            user={user}
-            roles={roleList.data}
-            onAssign={async (roleId) => { await users.assignRole(id, roleId); changed() }}
-            onUnassign={async (roleId) => { await users.unassignRole(id, roleId); changed() }}
+          <hr className="card-divider" />
+          <h2>{t('identity.access.title')}</h2>
+          {renderAccess(version)}
+        </GlassSurface>
+
+        <GlassSurface className="detail-card">
+          <h2>{t('identity.users.roles')}</h2>
+          {roleList.error ? (
+            <ErrorState error={roleList.error} onRetry={roleList.reload} retrying={roleList.loading} />
+          ) : !roleList.data ? (
+            <ListSkeleton count={2} />
+          ) : (
+            <UserRolesPanel
+              user={user}
+              roles={roleList.data}
+              onAssign={(roleId) => users.assignRole(id, roleId)}
+              onUnassign={(roleId) => users.unassignRole(id, roleId)}
+              onChanged={changed}
+              onRefresh={detail.reload}
+            />
+          )}
+        </GlassSurface>
+
+        <GlassSurface className="detail-card">
+          <h2>{t('identity.users.claims')}</h2>
+          <p className="muted">{t('identity.users.claimsHint')}</p>
+          <ClaimAssignment
+            claimService={claims}
+            assigned={user.claims}
+            onAdd={(claim) => users.addClaim(id, claim)}
+            onRemove={(claim) => users.removeClaim(id, claim)}
+            onChanged={changed}
             onRefresh={detail.reload}
           />
-        )}
-
-        <h2>{t('identity.users.claims')}</h2>
-        <p className="muted">{t('identity.users.claimsHint')}</p>
-        <ClaimAssignment
-          claimService={claims}
-          assigned={user.claims}
-          onAdd={async (claim) => { await users.addClaim(id, claim); changed() }}
-          onRemove={async (claim) => { await users.removeClaim(id, claim); changed() }}
-          onRefresh={detail.reload}
-        />
-
-        <h2>{t('identity.access.title')}</h2>
-        {renderAccess(version)}
+        </GlassSurface>
       </div>
 
+      {remove.dialog}
       {editing && (
         <UserFormDialog
           initial={user}

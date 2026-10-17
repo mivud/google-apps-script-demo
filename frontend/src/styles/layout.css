@@ -41,13 +41,12 @@
 .pager { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 16px; }
 .button-row { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin: 16px 0; }
 .field-row { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
-/* Picker + add button: the button keeps its natural width instead of stretching. */
-.assign-row { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
-.assign-row .field { margin-bottom: 0; flex: 1; min-width: 0; }
-@media (min-width: 768px) {
-  .assign-row { flex-direction: row; align-items: flex-end; }
-  .assign-row > button { flex: none; }
-}
+/* Checklist of assignable roles/claims with one Save button below. */
+.detail-card { margin-bottom: 16px; }
+.card-divider { height: 0; margin: 16px 0; border: 0; border-top: 1px solid var(--border); }
+.checkbox-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); gap: 4px 16px; margin: 0 0 12px; padding: 0; border: 0; min-width: 0; }
+.checkbox-item { display: flex; align-items: center; gap: 12px; min-height: var(--tap); cursor: pointer; overflow-wrap: anywhere; }
+.checkbox-item input { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--primary); }
 
 /* >= 768px: top navigation replaces the tab bar */
 @media (min-width: 768px) {

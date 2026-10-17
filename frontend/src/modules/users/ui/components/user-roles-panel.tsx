@@ -8,22 +8,30 @@ interface UserRolesPanelProps {
   roles: Role[]
   onAssign: (roleId: string) => Promise<unknown>
   onUnassign: (roleId: string) => Promise<unknown>
+  // Called after a save, also when it stopped half way, so the page shows the real state.
+  onChanged: () => void
   onRefresh: () => void
 }
 
-export function UserRolesPanel({ user, roles, onAssign, onUnassign, onRefresh }: UserRolesPanelProps) {
+export function UserRolesPanel({ user, roles, onAssign, onUnassign, onChanged, onRefresh }: UserRolesPanelProps) {
   const { t } = useI18n()
-  const assigned = new Set(user.roleIds)
-  const byName = (a: Role, b: Role) => a.name.localeCompare(b.name)
-  const toItem = (role: Role) => ({ id: role.id, label: role.name })
+  const options = [...roles].sort((a, b) => a.name.localeCompare(b.name)).map((role) => ({ id: role.id, label: role.name }))
+  // Assign first: swapping the only admin role for another must not pass through a lockout state.
+  async function save({ added, removed }: { added: string[]; removed: string[] }) {
+    try {
+      for (const id of added) await onAssign(id)
+      for (const id of removed) await onUnassign(id)
+    } finally {
+      onChanged()
+    }
+  }
   return (
     <AssignmentPanel
-      items={roles.filter((role) => assigned.has(role.id)).sort(byName).map(toItem)}
-      options={roles.filter((role) => !assigned.has(role.id)).sort(byName).map(toItem)}
-      emptyMessage={t('identity.users.rolesEmpty')}
-      selectLabel={t('identity.users.rolesChoose')}
-      onAdd={onAssign}
-      onRemove={onUnassign}
+      options={options}
+      assignedIds={user.roleIds}
+      emptyMessage={t('identity.users.rolesNone')}
+      legend={t('identity.users.roles')}
+      onSave={save}
       onRefresh={onRefresh}
     />
   )
