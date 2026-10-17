@@ -1,0 +1,224 @@
+/* Surfaces: flat card (background + 1px foreground-10% border, soft shadow).
+   Blur is reserved for the popover, dialog and mobile tab bar. */
+.surface {
+  background: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid color-mix(in oklch, var(--foreground) 10%, transparent);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft-sm);
+}
+.surface-pad { padding: 16px; }
+.surface-pad-sm { padding: 12px; }
+.surface-interactive { transition: border-color var(--duration-fast); }
+.surface-interactive:hover, .surface-interactive:focus-visible { border-color: var(--primary); }
+
+/* Description list, empty and status states */
+.description-list { display: grid; grid-template-columns: 1fr; gap: 8px 16px; margin: 16px 0; font-size: 0.875rem; }
+.description-list div { min-width: 0; overflow-wrap: anywhere; }
+.description-list dt { color: var(--muted-foreground); }
+.description-list dd { margin: 0; }
+@media (min-width: 600px) { .description-list { grid-template-columns: 1fr 1fr; } }
+.state { padding: 24px 16px; text-align: center; color: var(--muted-foreground); }
+.state-error { color: var(--destructive); }
+.empty-state { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.empty-state .icon { width: 2.5em; height: 2.5em; }
+.skeleton-inline { display: inline-block; width: 8em; height: 1em; vertical-align: middle; }
+
+/* Settings popover and theme picker */
+.settings-menu { position: relative; flex-shrink: 0; margin-left: auto; }
+.popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: var(--z-index-dropdown);
+  width: min(300px, calc(100vw - 32px));
+  padding: 16px;
+  background: var(--glass-bg-strong);
+  color: var(--popover-foreground);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--glass-shadow);
+}
+.popover .field { margin-bottom: 16px; }
+.popover .field:last-child { margin-bottom: 0; }
+.version-info { display: grid; gap: 4px; margin: 16px 0 0; padding-top: 12px; border-top: 1px solid var(--glass-border); font-size: var(--text-sm, 0.875rem); color: var(--muted-foreground); }
+.version-info > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 24px; }
+.version-info dd { margin: 0; display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; color: var(--popover-foreground); }
+.theme-picker { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0; border: 0; }
+/* The option carries its own data-theme, so --primary / --primary-foreground resolve to that preset's light values. */
+.theme-option { display: inline-flex; align-items: center; justify-content: center; width: var(--tap); height: var(--tap); padding: 0; min-height: var(--tap); background: transparent; border: 0; border-radius: 50%; cursor: pointer; color: var(--primary-foreground); }
+.theme-option .swatch { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--primary); box-shadow: inset 0 0 0 1px var(--input); }
+.theme-option[aria-checked='true'] { box-shadow: 0 0 0 2px var(--foreground); }
+
+/* Dialog (native <dialog>): bottom sheet on mobile, centered card on larger screens.
+   Sized to its content: `height: auto` would stretch between the modal's top/bottom insets, so use fit-content.
+   Title and actions are sticky so they stay reachable while the body scrolls. */
+.dialog {
+  width: 100%;
+  max-width: none;
+  height: fit-content;
+  max-height: 100dvh;
+  margin: auto 0 0;
+  padding: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  color: var(--popover-foreground);
+}
+.dialog::backdrop { background: oklch(0 0 0 / 0.5); overscroll-behavior: contain; }
+.dialog h2 { position: sticky; top: 0; z-index: 1; margin: 0; padding: 16px 16px 12px; background: var(--glass-bg-strong); }
+.dialog form { padding: 0 16px; }
+.dialog-actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--glass-bg-strong);
+}
+@media (min-width: 768px) {
+  .dialog { width: 520px; max-height: 90dvh; margin: auto; border-radius: var(--radius-xl); }
+}
+
+/* Loading effects */
+.spinner { width: 1em; height: 1em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.skeleton { background: linear-gradient(90deg, var(--muted) 25%, color-mix(in oklch, var(--muted), var(--foreground) 7%) 50%, var(--muted) 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: var(--radius-sm); }
+@keyframes shimmer { to { background-position: -200% 0; } }
+.skeleton-line { height: 14px; margin: 10px 0; }
+.skeleton-title { width: 60%; height: 18px; }
+.skeleton-short { width: 40%; }
+.skeleton-row { height: 56px; margin-bottom: 8px; }
+.skeleton-table { display: flex; flex-direction: column; gap: 8px; }
+.skeleton-table-row { height: 48px; }
+.progress-bar { height: 3px; margin-bottom: 8px; background: var(--primary); animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.3; } }
+
+/* Animations stop but stay visibly "loading": static muted skeleton, static spinner arc, static bar. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner, .skeleton, .progress-bar { animation: none; }
+  .skeleton { background: var(--muted); }
+  .progress-bar { opacity: 0.6; }
+  .surface-interactive { transition: none; }
+}
+
+/* Surface list: stacked card rows (maintenance log, category tree). */
+.surface-list { list-style: none; margin: 8px 0 16px; padding: 0; display: flex; flex-direction: column; gap: 8px; transition: opacity var(--duration-fast); }
+.surface-list.is-refreshing { opacity: 0.6; }
+.surface-item { display: flex; flex-direction: column; gap: 8px; overflow-wrap: anywhere; }
+.surface-item-body { min-width: 0; }
+.surface-item-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (min-width: 768px) {
+  .surface-item { flex-direction: row; align-items: center; justify-content: space-between; }
+}
+
+/* Control with a trailing element (e.g. category select + quick-add button). */
+.field-control-row { display: flex; flex-direction: column; gap: 8px; }
+@media (min-width: 768px) {
+  .field-control-row { flex-direction: row; }
+  .field-control-row select { flex: 1; min-width: 0; }
+}
+
+/* Data table: stacked cards below 768px (labels come from data-label), real table from 768px. */
+.data-table { display: block; width: 100%; margin: 8px 0 16px; border-collapse: collapse; transition: opacity var(--duration-fast); }
+.data-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.data-table tbody, .data-table tr { display: block; }
+.data-table tr { padding: 8px 12px; border-bottom: 1px solid var(--border); transition: background-color var(--duration-fast); }
+.data-table tr:last-child { border-bottom: 0; }
+.data-table tbody tr:hover { background: color-mix(in oklch, var(--muted) 50%, transparent); }
+.data-table td { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; min-width: 0; overflow-wrap: anywhere; }
+.data-table td[data-label]::before { content: attr(data-label); flex: 0 0 40%; color: var(--muted-foreground); font-size: 0.875rem; }
+.data-table-primary { font-weight: 600; }
+.data-table a { display: inline-flex; align-items: center; min-height: var(--tap); }
+.data-table.is-refreshing { opacity: 0.6; }
+@media (min-width: 768px) {
+  /* Separate borders so the card radius clips the row hover background. */
+  .data-table { display: table; border-collapse: separate; border-spacing: 0; overflow: hidden; }
+  .data-table thead { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
+  .data-table tbody { display: table-row-group; }
+  .data-table tr { display: table-row; padding: 0; border-bottom: 0; }
+  .data-table th, .data-table td { display: table-cell; padding: 8px 12px; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--border); }
+  .data-table tr:last-child td { border-bottom: 0; }
+  .data-table td[data-label]::before { content: none; }
+  .data-table th { color: var(--muted-foreground); font-size: 0.875rem; font-weight: 500; }
+  .data-table a { min-height: 0; }
+}
+
+/* Tree (WAI-ARIA tree): guide lines sit under each parent's chevron; rows keep a tap-sized height. */
+.tree-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.tree-toolbar .btn > span, .tree-actions .btn > span { display: inline-flex; align-items: center; gap: 6px; }
+.tree, .tree-group { margin: 0; padding: 0; list-style: none; }
+.tree { padding: 4px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-soft-sm); }
+.tree-group { margin-left: calc(var(--control-height) / 2); border-left: 1px solid var(--border); }
+.tree-line { display: flex; flex-wrap: wrap; align-items: center; border-radius: var(--radius-md); transition: background-color var(--duration-fast); }
+.tree-line:hover { background: color-mix(in oklch, var(--muted) 70%, transparent); }
+.tree-line.is-selected { background: color-mix(in oklch, var(--primary) 12%, transparent); color: var(--primary-ink); }
+.tree-item { flex: 1 1 12rem; min-width: 0; min-height: var(--control-height); display: flex; align-items: center; gap: 6px; cursor: pointer; border-radius: var(--radius-md); user-select: none; overflow-wrap: anywhere; }
+.tree-item:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
+.tree-toggle { flex: 0 0 var(--control-height); align-self: stretch; display: inline-flex; align-items: center; justify-content: center; color: var(--muted-foreground); }
+.tree-toggle .icon { transition: transform var(--duration-fast) var(--ease-standard); }
+.tree-toggle.is-open .icon { transform: rotate(90deg); }
+.tree-icon { display: inline-flex; color: var(--muted-foreground); }
+.tree-line.is-selected .tree-icon, .tree-line.is-selected .tree-toggle { color: inherit; }
+.tree-label { font-weight: 500; }
+.tree-count { font-size: 0.8rem; white-space: nowrap; }
+.tree-actions { flex: 1 0 100%; display: flex; flex-wrap: wrap; gap: 8px; padding: 0 0 8px var(--control-height); }
+.tree-actions .tree-action-label { display: inline; }
+.tree-collapse { display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows var(--duration-base) var(--ease-standard), visibility 0s var(--duration-base); }
+.tree-collapse.is-open { grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows var(--duration-base) var(--ease-standard); }
+.tree-collapse-inner { overflow: hidden; min-height: 0; }
+@media (min-width: 768px) {
+  .tree-actions { flex: 0 0 auto; padding: 0 4px 0 0; gap: 4px; }
+  .tree-actions .tree-action-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .tree-actions .btn-sm { padding-inline: 0; min-width: var(--control-height-sm); }
+}
+@media (min-width: 768px) and (hover: hover) {
+  .tree-actions { visibility: hidden; }
+  .tree-line:hover .tree-actions, .tree-line.is-selected .tree-actions, .tree-line:focus-within .tree-actions { visibility: visible; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tree-collapse, .tree-collapse.is-open, .tree-toggle .icon, .tree-line { transition: none; }
+}
+
+/* Login / auth */
+.login-page { min-height: 100dvh; display: grid; place-items: center; padding: 16px; }
+.login-card { width: 100%; max-width: 24rem; display: flex; flex-direction: column; gap: 12px; }
+.login-card h1 { margin: 0; }
+/* The Google button iframe is 44px tall with a focus ring; the padding leaves room so the ring is not clipped. */
+.login-button { min-height: 48px; padding: 2px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; max-width: 100%; overflow-x: auto; }
+/* display:flex above would otherwise override the [hidden] attribute while a sign-in is pending. */
+.login-button[hidden] { display: none; }
+.login-status { display: flex; align-items: center; gap: 8px; margin: 0; }
+.settings-trigger { padding-inline: 6px; max-width: 100%; }
+.settings-trigger > span { display: inline-flex; min-width: 0; }
+.current-user { display: flex; align-items: center; gap: 8px; min-width: 0; text-align: left; }
+.current-user-avatar { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--glass-border); font-weight: 700; }
+.current-user-text { display: none; flex-direction: column; min-width: 0; line-height: 1.2; }
+.current-user-email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; font-size: 0.875rem; font-weight: 600; }
+.current-user-role { font-size: 0.75rem; opacity: 0.75; }
+@media (min-width: 768px) {
+  .settings-menu { margin-left: 0; }
+  .current-user-text { display: flex; }
+}
+.user-menu { display: grid; gap: 4px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--glass-border); }
+.user-menu p { margin: 0; }
+.user-menu .btn { margin-top: 8px; }
+.user-menu-email { overflow-wrap: anywhere; font-weight: 600; }
+.launcher-grid { display: grid; grid-template-columns: 1fr; gap: 12px; list-style: none; margin: 8px 0 16px; padding: 0; }
+@media (min-width: 768px) { .launcher-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1280px) { .launcher-grid { grid-template-columns: repeat(3, 1fr); } }
+.launcher-card { display: flex; align-items: flex-start; gap: 12px; min-height: var(--tap); height: 100%; color: inherit; text-decoration: none; }
+.launcher-card .icon { flex: none; width: 28px; height: 28px; color: var(--primary-ink); }
+.launcher-card-title { margin: 0; font-size: 1.1rem; }
+.launcher-card-description { margin: 4px 0 0; color: var(--muted-foreground); }
+.app-loading { display: flex; justify-content: center; padding: 48px 16px; }

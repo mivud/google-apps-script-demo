@@ -1,0 +1,13 @@
+// Public API of the device-management module; other code imports only from here.
+export type { DataService } from './application/data-service'
+export { CategoryService } from './application/category-service'
+export { EquipmentService } from './application/equipment-service'
+export { MaintenanceService } from './application/maintenance-service'
+export { createDeviceManagementDataService, type DataServiceConfig } from './infrastructure/create-data-service'
+export { CategoriesProvider } from './ui/categories-provider'
+export { ServicesProvider } from './ui/services-provider'
+export { useServices, type Services } from './ui/services-context'
+export { CategoriesPage } from './ui/pages/categories-page'
+export { EquipmentDetailPage } from './ui/pages/equipment-detail-page'
+export { EquipmentListPage } from './ui/pages/equipment-list-page'
+export { CATEGORIES_PATH, DEVICES_PATH, navigate, parseEquipmentId } from './ui/navigation'

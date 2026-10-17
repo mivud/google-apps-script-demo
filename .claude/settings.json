@@ -6,11 +6,11 @@
   "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npm test:*)"
     ],
     "ask": [
       "Bash(git push:*)",
-      "Bash(npm test:*)",
       "Bash(npm run test:*)",
       "Bash(npx vitest:*)",
       "Bash(npx jest:*)"

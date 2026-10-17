@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>Equipment Manager</title>
+    <!-- Runs before first paint so the saved accent and color scheme never flash; the theme list and meta colors are injected from shared/theme by vite-theme-plugin.ts. -->
+    <script>
+      (function () {
+        var THEMES = __THEMES__
+        var META_COLORS = __META_COLORS__
+        var root = document.documentElement
+        var theme = 'green'
+        var mode = 'system'
+        var dark = false
+        try {
+          var savedTheme = window.localStorage.getItem('app.theme')
+          if (THEMES.indexOf(savedTheme) !== -1) theme = savedTheme
+          var savedMode = window.localStorage.getItem('app.color-scheme')
+          if (savedMode === 'light' || savedMode === 'dark' || savedMode === 'system') mode = savedMode
+        } catch (e) {
+          // Storage unavailable: use the defaults.
+        }
+        if (mode === 'system') dark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        else dark = mode === 'dark'
+        var scheme = dark ? 'dark' : 'light'
+        root.dataset.theme = theme
+        root.dataset.colorScheme = scheme
+        root.style.colorScheme = scheme
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', META_COLORS[scheme])
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

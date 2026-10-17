@@ -1,0 +1,75 @@
+name: Deploy frontend to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      # VITE_* values are public; set them as repository variables (Settings > Secrets and variables > Actions > Variables).
+      VITE_DB_PROVIDER: ${{ vars.VITE_DB_PROVIDER }}
+      VITE_SHEETS_API_URL: ${{ vars.VITE_SHEETS_API_URL }}
+      VITE_IDENTITY_API_URL: ${{ vars.VITE_IDENTITY_API_URL }}
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+      VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      # Fail before publishing a demo that would only show a configuration error.
+      - name: Check required variables
+        run: |
+          missing=0
+          require() { if [ -z "${!1}" ]; then echo "::error::Repository variable $1 is not set"; missing=1; fi; }
+          require VITE_DB_PROVIDER
+          require VITE_GOOGLE_CLIENT_ID
+          if [ "$VITE_DB_PROVIDER" = "sheets" ]; then
+            require VITE_SHEETS_API_URL
+            require VITE_IDENTITY_API_URL
+          else
+            require VITE_SUPABASE_URL
+            require VITE_SUPABASE_ANON_KEY
+          fi
+          exit $missing
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+        env:
+          # Pages serves under /<repo>/; Cloudflare Pages will use '/' later.
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        with:
+          path: frontend/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

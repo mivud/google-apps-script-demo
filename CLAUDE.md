@@ -16,9 +16,11 @@ Data can live in **Google Sheets (via Apps Script Web App)** or **Supabase**; sw
    - **Claude config goes through `core/agents` first.** Commit changes to the basic Claude files (`CLAUDE.md`, `.claude/`) on branch `core/agents`, then merge `core/agents` into the working branches (`dev`, feature branches such as `devices-mgt`). Never commit Claude files directly on a feature branch. Branch names must not collide with an existing branch used as a prefix (e.g. `dev/x` is impossible while `dev` exists).
 5. **SOLID always.** See the SOLID checklist below.
 6. **Responsive always.** Every frontend screen must work well on both desktop and mobile: mobile-first CSS, fluid layouts, touch-friendly targets (>= 44px), no horizontal scroll, and verified at common breakpoints (~360px, ~768px, ~1280px).
+   - Every interactive element must show `cursor: pointer` (disabled: `not-allowed`) through the global rule in `frontend/src/styles/base.css`; custom clickable elements need a matching ARIA role.
 7. **Visible feedback on every async operation.** Any UI action that calls an API must disable its control while pending and show a loading effect (spinner/skeleton), then restore on success or error. This also covers data loading (lists, detail pages, initial fetch, refresh): always show a loading state (skeleton/spinner) and an error state with retry. Use the shared `LoadingButton` / `useAsyncAction` / `useAsyncData` pattern, never ad-hoc handling.
 8. **Delegate complex work.** Give complex or multi-area parts to the agents in `.claude/agents/`, run independent ones in parallel, and keep only short summaries in the main thread to save context and tokens. Agents read only their scope and report in <= 10 lines; before a big task check context size and ask the user before any compact (see `plan-feature` step 0). Do trivial edits directly.
 9. **English only for artifacts.** Code comments, docs, and diagrams (Mermaid) are written in English. All identifiers must be English too: variables, functions, classes, files, folders, DB tables/columns, and branch names (no Vietnamese or unaccented-Vietnamese names). Chat with the user may be in Vietnamese.
+10. **Security first (highest priority).** Check security while coding, not only afterwards: validate all input at the boundary, never trust the client, no secrets in code, logs, URLs or `VITE_*` env vars (they are public in the bundle), generic error messages, least privilege (OAuth scopes, RLS, tokens). Dev agents follow this checklist; after coding run `review-security-backend` / `review-security-frontend` (agents `security-reviewer-backend` / `security-reviewer-frontend`) together with `review-solid`, fix critical and high findings before handing over for review. Security findings outrank style and speed.
 
 ## Architecture
 
@@ -46,7 +48,7 @@ frontend/
     config/      # provider factory, env parsing
   docs/          # frontend docs, one file per module
 backend/
-  apps-script/   # .clasp.json + src/ (Main.gs, composition/, shared/, modules/<module>/{domain,application,interface,persistence/googlesheet}); pushed with clasp
+  apps-script/   # .clasp.json + src/ (Main.gs, composition/, shared/, modules/device-management/...); pushed with clasp
   supabase/      # SQL migrations, RLS policies
   docs/          # backend docs, one file per module
 ```
@@ -55,28 +57,62 @@ Frontend and backend are fully separated: code, docs, and dependencies never mix
 
 ### Modules (the primary unit)
 
-**The module is the main unit of organization** (today: `equipment`, `maintenance`, `category`). Always decide the module first, then apply the clean architecture layers *inside* it. Do not slice by feature or use case below the module: no folder, namespace or file per use case/handler/screen action, which would fragment a module into tiny pieces. New modules can then be added without touching existing ones. Each module owns its slice end to end:
+**The module is the main unit of organization** (today: the backend module `device-management` groups the entities `equipment`, `maintenance_log` and `category`). Always decide the module first (a bounded context that owns several related entities), then apply the clean architecture layers *inside* it. Do not create sub-modules. New modules can be added without touching existing ones. Each module owns its slice end to end:
 
 - **Frontend:** model types, repository interface, service, adapter parts (sheets + supabase), UI pages/components, i18n messages, and a short doc `frontend/docs/<module>.md`. Expose a small public API (`index.ts`); other modules import only that, never deep paths.
-- **Backend:** Apps Script actions namespaced `<module>.<action>` (e.g. `category.list`), one SQL migration per module (`NNN_<module>.sql`), and `backend/docs/<module>.md`.
+- **Backend:** Apps Script actions namespaced `<module>.<entity>.<action>` (e.g. `device-management.category.list`), one SQL migration per module (`NNN_<module>.sql`), and `backend/docs/<module>.md`.
 - **Dependencies:** a module may depend on `core/` shared pieces (errors, `Page`, async hooks, `Modal`) and, when truly needed, on another module's public API or service interface. No circular module dependencies; cross-module rules go in the depending module's service, not in the other module's internals.
 - **Shared composition only:** `DataService` is composed from per-module repository interfaces; the factory and `ServicesProvider` are the only places that know all modules.
 - New module = follow the `add-module` skill. Do not grow a module by dumping unrelated logic into it.
-- Migration status: Apps Script is split into `src/modules/<module>/{domain,application,interface,persistence/googlesheet}`; the frontend (still laid out by layer: `core/`, `adapters/`, `services/`, `ui/`) follows afterwards into `modules/<module>/{domain,application,infrastructure/persistence/{googlesheet,supabase},ui}` with `app/` (composition) and `shared/`.
+- Migration status: Apps Script is organized as `src/modules/device-management/` (see below), and the shared building blocks (domain, ports, infrastructure, `persistence/googlesheet`, `interface`) are a separate library project `backend/apps-script-shared-kernel-library` imported as `SharedKernelLibrary` (see `backend/docs/shared-library.md`); the frontend (still laid out by layer: `core/`, `adapters/`, `services/`, `ui/`) follows afterwards into `modules/<module>/{domain,application,infrastructure/persistence/{googlesheet,supabase},ui}` with `app/` (composition) and `shared/`.
 
-### Clean architecture inside each module (layers per module, not per feature)
+### Clean architecture inside each module
 
-Layering happens once per module. Default granularity: **one file (or one small folder) per layer per module**, e.g. `CategoryDomain`, `CategoryUseCases` (all category use cases together), `CategoryHandlers`, `CategoryInfrastructure`. Split a layer file only when it grows past ~300 lines or mixes two responsibilities, and then split by responsibility inside the same layer. Shared technical pieces (clock, id generator, sheet table, token guard...) live in `shared/`, grouped by concern in a few files, not one file per tiny class. Never create "feature" sub-modules inside a module; if a part truly deserves its own life cycle, make it a new module.
+Dependencies point inward only: `endpoints` (backend) / `ui` (frontend) and `persistence`/`infrastructure` -> `application` -> `domain`.
 
-Dependencies point inward only: `interface` and `infrastructure` -> `application` -> `domain`.
+Backend (Apps Script) layout of a module:
+
+```
+src/modules/<module>/
+  <Module>Module.gs        # namespace root + public surface for the composition root
+  domain/entities/         # models: Equipment, Category, MaintenanceLog
+  domain/values/           # value objects: EquipmentCriteria
+  application/<feature>/commands/   # one file per write use case: CreateEquipment
+  application/<feature>/queries/    # one file per read use case: ListEquipment
+  application/<feature>/            # <Feature>SupportService (rules shared by the feature's use cases)
+  endpoints/               # <Entity>Endpoints: request <-> use case input, errors -> codes
+  persistence/googlesheet/ # <Entity>Service: repository/lookup implementations, migrations
+```
 
 - **domain:** entities and pure business rules (e.g. category tree, cycle check, name rules). No `SpreadsheetApp`, `fetch`, React or any framework.
-- **application:** use cases (`CreateCategory`, `RemoveCategory`...) depending only on domain and **ports** (interfaces) such as `CategoryRepository`, `Clock`, `IdGenerator`. Time and ids always come through the `Clock` / `IdGenerator` ports so they are replaceable.
-- **interface (backend) / ui (frontend):** handlers or pages that translate requests to use-case input and errors to codes; row <-> entity mappers.
-- **infrastructure:** non-database port implementations (locks, token guard, system clock, uuid).
-- **persistence/<provider>:** all database access code of one provider in its own folder: `persistence/googlesheet` (Apps Script: sheet table, schema upgrade, repositories, row mappers) and `persistence/supabase` (Supabase adapters and SQL). Shared pieces live in `shared/persistence/<provider>`, module-specific repositories in `modules/<module>/persistence/<provider>`. A new provider means a new `persistence/<provider>` folder, never edits to another provider's folder. Same inward dependency rule as infrastructure.
+- **application:** the feature is the entity area (`equipment`, `category`, `maintenance`); each use case is one file under `commands/` (changes state) or `queries/` (reads). Depends only on domain and **ports** (`Clock`, `IdGenerator`, repositories). Time and ids always come through ports so they are replaceable.
+- **endpoints (backend) / ui (frontend):** endpoints or pages that translate requests to use-case input and errors to codes; row <-> entity mappers.
+- **infrastructure:** non-database port implementations (locks, access resolver, system clock, uuid).
+- **persistence/<provider>:** all database access code of one provider in its own folder: `persistence/googlesheet` (Apps Script) and `persistence/supabase`. Shared pieces live in `shared/persistence/<provider>`, module-specific ones in `modules/<module>/persistence/<provider>`. A new provider means a new `persistence/<provider>` folder, never edits to another provider's folder.
 - **Composition root** is the only place that wires implementations to ports. Modules reach each other only through public ports/`index.ts`, never through internals.
-- Apps Script has one global scope and no imports: each module exposes one namespace object (e.g. `CategoryModule`), registration of handlers happens inside functions (never at file load), and file load order is fixed by `filePushOrder` in `.clasp.json`.
+- Keep files short (about <= 100 lines; split by responsibility past ~300). Shared technical pieces (clock, id generator, sheet table, access resolver...) live in `shared/`, one file per class so reviews stay easy.
+
+Naming rules:
+- **Models** (entities, value objects) have no suffix: `Equipment`, `EquipmentCriteria`.
+- **Use cases** that bundle the command/query with its handling logic in one file are named after the use case, no suffix: `CreateEquipment`, `ListEquipment`.
+- **Every other class has a role suffix**: `EquipmentEndpoints`, `EquipmentService` (persistence), `EquipmentSupportService`, `Router`... File name equals the class name.
+- Apps Script has one global scope and no imports: each module exposes one root namespace `<Module>` (e.g. `DeviceManagement`) with layer sub-namespaces (`DeviceManagement.Domain.Equipment`, `DeviceManagement.Application.CreateEquipment`, `DeviceManagement.Persistence.GoogleSheet.EquipmentService`, `DeviceManagement.Endpoints.EquipmentEndpoints`). Registration of handlers happens inside functions (never at file load), and file load order is fixed by `filePushOrder` in `.clasp.json` (the module root file loads first).
+
+## Domain-Driven Design Rules
+
+Applied on top of the clean architecture layers; they guide how the `domain` and `application` layers are modeled.
+
+- **Ubiquitous language:** use the business terms of the domain for every name (`Equipment`, `MaintenanceLog`, `Category`, `retire`, `repair`), the same word in code, API actions, UI labels and docs. No technical synonyms (`Item`, `Record`, `Manager`).
+- **Bounded context = module:** a module owns one consistent model. A term may mean different things in two modules; do not share entities between modules, share only ids and public ports.
+- **Entities:** identified by id (UUID), carry audit fields, and protect their own invariants through domain functions (validate, change status). Business rules live in `domain`, never in endpoints, use cases or persistence.
+- **Value objects:** immutable, compared by value, validated on creation (`EquipmentCriteria`, status, quantity, maintenance type). Prefer a value object over a loose primitive that has rules.
+- **Aggregates:** one aggregate root per consistency boundary; code outside refers to it by id and changes it only through the root. Equipment owns its maintenance logs (a log cannot exist without equipment; deleting equipment cascades). `Category` is its own aggregate; equipment references it by id only. One transaction/lock changes one aggregate.
+- **Repositories:** one port per aggregate root, in `application` (interface) with the implementation in `persistence/<provider>`. They load and save whole aggregates and return domain entities, never storage rows or sheet ranges.
+- **Domain services:** logic that spans several entities or does not fit one entity (e.g. category tree cycle check) is a pure function in `domain`, with no I/O.
+- **Use cases orchestrate, not decide:** load the aggregate, call domain behavior, save, return. No business rule inline in a use case.
+- **Domain errors:** domain rules fail with explicit typed errors and stable codes (`category_cycle`), translated to the API only in `endpoints`.
+- **Anti-corruption at the edges:** payload and row mapping (snake_case, sheet columns, UTC strings) stays in `endpoints` and `persistence`; the domain only sees domain types.
+- **Domain events:** not used yet. Add them only when another module must react to a change, and decide then with a plan.
 
 ## Clean Code Rules
 
@@ -97,16 +133,26 @@ Dependencies point inward only: `interface` and `infrastructure` -> `application
 ## Conventions
 
 - Comments explain *why*, not *what*; keep them sparse and in English.
-- Docs are split per side and per module: `frontend/docs/<module>.md` and `backend/docs/<module>.md` (e.g. `equipment.md`, `auth.md`); no single monolithic doc.
+- Docs are split per side and per module: `frontend/docs/<module>.md` and `backend/docs/<module>.md` (e.g. `device-management.md`, `auth.md`); no single monolithic doc.
 - Each module doc is short and in English: purpose, public API/behavior, key rules, limits. Add a Mermaid diagram only when it clarifies.
 - Link to the code with relative paths when it helps (e.g. `[EquipmentService](../src/services/equipment-service.ts)`); do not copy code into docs.
 - Update the module doc in the same change that alters the module.
 - Secrets (Supabase keys, Apps Script URLs) go in env files, never committed.
 
+### Naming convention
+
+- **Apps Script project names:** kebab-case (e.g. `shared-kernel-library`).
+- **Shared library identifiers:** PascalCase, like C# namespaces (e.g. `SharedKernel`; this repo uses `SharedKernelLibrary`). Project names and identifiers are independent: a consumer picks a meaningful PascalCase identifier when importing a library.
+- **Script IDs:** always the real Google Apps Script Script ID (used to link libraries).
+- **Source files:** PascalCase with the right extension (e.g. `UserService.gs`).
+- **Functions and variables:** camelCase. **Constants:** UPPER_SNAKE_CASE.
+- **Folders and Git repositories:** kebab-case.
+- Keep naming consistent across all projects.
+
 ## Claude Config in This Repo
 
-- Agents: `.claude/agents/` (architect, frontend-dev, data-adapter-dev, apps-script-dev, solid-reviewer, docs-writer)
-- Skills: `.claude/skills/` (plan-feature, add-module, add-data-adapter, review-solid, write-docs, run-tests)
+- Agents: `.claude/agents/` (architect, frontend-dev, data-adapter-dev, apps-script-dev, solid-reviewer, security-reviewer-backend, security-reviewer-frontend, docs-writer)
+- Skills: `.claude/skills/` (plan-feature, add-module, add-data-adapter, review-solid, review-security-backend, review-security-frontend, write-docs, run-tests)
 - Commands: `.claude/commands/` (`/start-session frontend|backend|full`, `/sync-docs`)
 - Settings: `.claude/settings.json` (push/test commands require confirmation, attribution disabled)
 - Guide: [docs/claude-workflow.md](docs/claude-workflow.md)
