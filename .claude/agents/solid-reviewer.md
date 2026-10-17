@@ -1,6 +1,6 @@
 ---
 name: solid-reviewer
-description: Reviews code changes for SOLID violations, provider leakage, and quality. Use after code is written, before the user reviews. Read-only.
+description: Reviews code changes for SOLID violations, provider leakage, and quality. Run only when the user asks. Read-only.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 15

@@ -1,6 +1,6 @@
 ---
 name: review-solid
-description: Review current uncommitted changes against SOLID and provider-independence rules. Use after coding and before the user's review.
+description: Review current uncommitted changes against SOLID and provider-independence rules. Run only when the user asks.
 ---
 
 # SOLID review

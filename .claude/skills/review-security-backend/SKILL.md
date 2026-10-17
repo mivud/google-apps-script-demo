@@ -1,6 +1,6 @@
 ---
 name: review-security-backend
-description: Security review of backend changes (Apps Script, shared library, Supabase). Use after backend coding, before the user's review, and whenever a change touches auth, input, storage or config.
+description: Security review of backend changes (Apps Script, shared library, Supabase). Run only when the user asks.
 ---
 
 # Backend security review

@@ -1,6 +1,6 @@
 ---
 name: security-reviewer-backend
-description: Security review of backend code (Apps Script API, shared library, Supabase SQL/RLS). Use after backend code is written and whenever a backend change touches auth, input, storage or config. Read-only.
+description: Security review of backend code (Apps Script API, shared library, Supabase SQL/RLS). Run only when the user asks. Read-only.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 15

@@ -1,6 +1,6 @@
 ---
 name: security-reviewer-frontend
-description: Security review of frontend code (React/Vite, data adapters, env config, deploy files). Use after frontend code is written and whenever a change touches rendering of data, env vars, storage, URLs or dependencies. Read-only.
+description: Security review of frontend code (React/Vite, data adapters, env config, deploy files). Run only when the user asks. Read-only.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 15
