@@ -29,3 +29,9 @@
 - The v1 policies in `002` gave `anon` full access; the anon key ships in the frontend bundle. Apply `003_auth.sql` so access requires a Google login and an allowlisted role (see the next point).
 - `003_auth.sql` only trusts Google logins: `current_app_role()` and the `users` policy require `app_metadata.provider = 'google'` and a verified email in the JWT. Still disable every other Supabase auth provider and email signup (Authentication > Providers), so nobody can register with an allowlisted email.
 - Never put the `service_role` key in the frontend.
+
+**Permission access ([009_permission_access.sql](../supabase/migrations/009_permission_access.sql))**
+- Replaces the admin/viewer policies of 003-007: only the `super` role bypasses; `viewer` is dropped (its rows stay as plain data, `admin` assignments are copied to `super`).
+- Identity tables need claim `permission=identity.read` / `identity.write`; device tables (`categories`, `equipment`, `maintenance_logs`) need `device.mgt.read` / `device.mgt.write`; expense tables keep `expense.read` / `expense.write`. `users` keeps its own-row read.
+- Helpers: `has_role(text)`, `has_claim(key, value)` (super bypass); `preview_access` needs `identity.read`. Effective claims merge additively; a role claim is dropped only when the user owns the same (key, value). No `users.role` fallback.
+- Lockout codes: `last_super` (was `last_admin`) and `self_lockout`. Grant the permission claims to roles before applying, otherwise only `super` users keep access.
