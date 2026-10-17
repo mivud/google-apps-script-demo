@@ -8,6 +8,7 @@ One SPA hosts several apps behind one Google sign-in. Code: [app/shell.tsx](../s
 |---|---|
 | `/` (or empty) | launcher: cards of the registered apps |
 | `/devices/...` | device-management (`/devices`, `/devices/equipment/<id>`, `/devices/categories`) |
+| `/expense/...` | expense-tracking app (`/expense`, `/expense/payment-methods`, `/expense/fixed-expenses`) |
 | `/identity/...` | Identity app (`/identity/users[/<id>]`, `/identity/roles[/<id>]`, `/identity/claims`) |
 
 - Legacy redirects ([app-route.ts](../src/app/launcher/app-route.ts)): `/equipment/<id>` to `/devices/equipment/<id>`, `/categories` to `/devices/categories`. The redirect is a `<Navigate replace>`, so it stays out of the back history.
@@ -16,7 +17,7 @@ One SPA hosts several apps behind one Google sign-in. Code: [app/shell.tsx](../s
 
 ## Registry
 
-[app-registry.ts](../src/app/launcher/app-registry.ts) lists `AppDefinition`s ([app-definition.ts](../src/app/launcher/app-definition.ts)): `id`, `titleKey`, `descriptionKey`, `icon`, `path`, `load` and `accessClaimValue`. `isAppAvailable` shows an app when the user has the `super` role or a claim `app` = `accessClaimValue` (`identity` for Identity, `device.mgt` for device-management). The launcher hides other cards and `Shell` redirects a typed URL of a hidden app to `/`; the backend still enforces real access.
+[app-registry.ts](../src/app/launcher/app-registry.ts) lists `AppDefinition`s ([app-definition.ts](../src/app/launcher/app-definition.ts)): `id`, `titleKey`, `descriptionKey`, `icon`, `path`, `load`, `accessClaimValue` and an optional `accessClaimKey` (default `app`). `isAppAvailable` shows an app when the user has the `super` role or a claim `<accessClaimKey>` = `accessClaimValue` (`app=identity`, `app=device.mgt`; expenses use `permission=expense.read`). Seed that claim in the claims catalog and give it to a role or user; without it the tile is hidden and a typed `/expense` URL redirects to `/` like any other hidden app. Write controls inside the expense app need `permission=expense.write`. The launcher hides other cards and `Shell` redirects a typed URL of a hidden app to `/`; the backend still enforces real access.
 
 Add an app: create its root component with a default export taking `{ deps }`, add an entry with a `load: () => import(...)`, add the `launcher.<id>.*` messages and an "All apps" link (`/`) in its shell.
 

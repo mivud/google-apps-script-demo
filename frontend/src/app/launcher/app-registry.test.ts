@@ -8,13 +8,23 @@ const session = { email: 'a@b.c', role: 'viewer' } as Session
 
 describe('APP_REGISTRY', () => {
   it('registers device management and identity with unique ids and paths', () => {
-    expect(APP_REGISTRY.map((app) => app.id)).toEqual(['identity', 'device-management'])
+    expect(APP_REGISTRY.map((app) => app.id)).toEqual(['identity', 'device-management', 'expense'])
     expect(new Set(APP_REGISTRY.map((app) => app.path)).size).toBe(APP_REGISTRY.length)
   })
 
   it('owns the documented route prefixes', () => {
     expect(findOwner(APP_REGISTRY, '/devices/categories')?.id).toBe('device-management')
     expect(findOwner(APP_REGISTRY, '/identity/users/1')?.id).toBe('identity')
+  })
+})
+
+describe('isAppAvailable with a custom claim key', () => {
+  const expense = APP_REGISTRY.find((app) => app.id === 'expense')!
+  const userWith = (claims: { key: string; value: string }[]) => ({ ...session, roles: [], claims }) as Session
+
+  it('requires permission=expense.read, not app=expense', () => {
+    expect(isAppAvailable(expense, userWith([{ key: 'permission', value: 'expense.read' }]))).toBe(true)
+    expect(isAppAvailable(expense, userWith([{ key: 'app', value: 'expense' }]))).toBe(false)
   })
 })
 

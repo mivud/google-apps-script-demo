@@ -6,7 +6,7 @@ Workflow: [deploy-pages.yml](../../.github/workflows/deploy-pages.yml). Runs on 
 
 Setup:
 1. Repo Settings > Pages > Source: **GitHub Actions**.
-2. Repo Settings > Secrets and variables > Actions > **Variables**: `VITE_DB_PROVIDER`, `VITE_SHEETS_API_URL`, `VITE_IDENTITY_API_URL`, `VITE_GOOGLE_CLIENT_ID` (status: **done**, all four are set). For Supabase also `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`. The workflow passes them to the build.
+2. Repo Settings > Secrets and variables > Actions > **Variables**: `VITE_DB_PROVIDER`, `VITE_SHEETS_API_URL`, `VITE_IDENTITY_API_URL`, `VITE_EXPENSE_API_URL`, `VITE_GOOGLE_CLIENT_ID` (the first, second and fourth are **done**; `VITE_EXPENSE_API_URL` must be added once the expense web app is deployed, the workflow fails without it for `sheets`). For Supabase also `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`. The workflow passes them to the build.
 3. Merge to `main`.
 
 The workflow sets `VITE_BASE_PATH=/<repo>/` automatically. Pages has no rewrites, so the build also emits [404.html](../404.html) as the SPA fallback (see [launcher](launcher.md)): deep links and refreshes work on the clean URLs.

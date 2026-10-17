@@ -28,6 +28,7 @@ jobs:
       VITE_DB_PROVIDER: ${{ vars.VITE_DB_PROVIDER }}
       VITE_SHEETS_API_URL: ${{ vars.VITE_SHEETS_API_URL }}
       VITE_IDENTITY_API_URL: ${{ vars.VITE_IDENTITY_API_URL }}
+      VITE_EXPENSE_API_URL: ${{ vars.VITE_EXPENSE_API_URL }}
       VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
       VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
       VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
@@ -49,6 +50,7 @@ jobs:
           if [ "$VITE_DB_PROVIDER" = "sheets" ]; then
             require VITE_SHEETS_API_URL
             require VITE_IDENTITY_API_URL
+            require VITE_EXPENSE_API_URL
           else
             require VITE_SUPABASE_URL
             require VITE_SUPABASE_ANON_KEY

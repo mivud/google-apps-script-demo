@@ -1,3 +1,4 @@
+import { EXPENSE_READ_PERMISSION, PERMISSION_CLAIM_KEY } from '../../modules/expense-tracking/permissions'
 import type { AppDefinition } from './app-definition'
 
 // Cards appear in this order on the launcher.
@@ -19,5 +20,15 @@ export const APP_REGISTRY: readonly AppDefinition[] = [
     path: '/devices',
     accessClaimValue: 'device.mgt',
     load: () => import('../device-management-app'),
+  },
+  {
+    id: 'expense',
+    titleKey: 'launcher.expense.title',
+    descriptionKey: 'launcher.expense.description',
+    icon: 'file',
+    path: '/expense',
+    accessClaimKey: PERMISSION_CLAIM_KEY,
+    accessClaimValue: EXPENSE_READ_PERMISSION,
+    load: () => import('../expense/expense-app'),
   },
 ]

@@ -9,6 +9,7 @@ Env parsing and the provider factory. Switching data source is a config change o
 | `VITE_DB_PROVIDER` | `sheets` or `supabase` (required) |
 | `VITE_SHEETS_API_URL` | `sheets` provider |
 | `VITE_IDENTITY_API_URL` | `sheets` provider: Apps Script web app answering `auth.session.get`; ignored by `supabase` |
+| `VITE_EXPENSE_API_URL` | `sheets` provider: Apps Script web app of the expense-tracking module ([expense-tracking](expense-tracking.md)); ignored by `supabase` |
 | `VITE_GOOGLE_CLIENT_ID` | Google login (all providers) |
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | `supabase` provider |
 | `VITE_BASE_PATH` | Vite `base` (default `/`) |

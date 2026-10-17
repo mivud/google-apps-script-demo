@@ -41,3 +41,40 @@ Behavior: click selects, chevron only toggles, double-click or Enter toggles par
 ## Known limits
 
 `--control-border` keeps input borders at about 3:1; other decorative borders (`--border`, `--input`) are subtle by design and are not relied on to identify controls.
+
+## DataTable toolbar (search, filters, reload)
+
+`DataTable` ([data-table.tsx](../src/shared/components/data-table.tsx)) has an opt-in `toolbar` prop; without it the table renders exactly as before. A column can also set `align: 'end'` to right-align its header and cells (use it on the actions column; CSS uses `text-align: end`).
+
+How to adopt in a page (config only):
+
+1. Build `filters: FilterDefinition<Row>[]` ([table-filters.ts](../src/shared/table-filters.ts)): `key` (also the URL param), `label` and a `predicate(row, value)` called only for non-"all" values. Pick the `kind`: `select` (long lists; `options` start with `ALL_VALUE`), `radio` (a few fixed choices; `options` start with `ALL_VALUE`; rendered as a joined segmented control of real radio inputs in a fieldset) or `toggle` (independent on/off flag; no options; all toggles share one checkbox group captioned by `toolbar.toggleGroupLabel`). Example: `{ key: 'type', label, kind: 'radio', options: [{ value: ALL_VALUE, label: 'All types' }, { value: 'fixed', label: 'Fixed' }], predicate: (row, v) => row.isFixed === (v === 'fixed') }` and `{ key: 'needsAmount', label: 'Needs amount', kind: 'toggle', predicate: (row) => row.amount === null }`. "All" / off means no active filter for the badge count.
+2. Pass `toolbar={{ searchLabel, searchFields: (row) => [...], filters, itemsName, urlSync: true, actions: <ReloadButton source={list} /> }}`. Search is trimmed, case- and accent-insensitive ([search-text.ts](../src/shared/search-text.ts)).
+3. The toolbar is made of separate blocks at every width: the action strip on top; row A with the search field first and then the `select` filters (one line when they fit, wrapping only when full; the search is full width at 360px); row B with the `radio` groups and the `toggle` checkbox group on their own line below, never sharing a line with row A. A row with no controls is not rendered. Then the count line ("N of M items") with a "Clear filters" button beside it while a filter is active; the empty state offers "Clear filters" too.
+4. `urlSync: true` keeps search (`q`) and filters in the URL via [use-table-query.ts](../src/shared/hooks/use-table-query.ts); unknown values fall back to "all". Do not put sensitive data in the search.
+5. [ActionGroup](../src/shared/components/action-group.tsx) is the joined icon-button set for the `actions` slot: `<ActionGroup label={t('table.actions')} actions={[reload]} />` with `reload = useReloadAction(list)` (or `<ReloadButton source={list} />` when Reload is the only action). Each entry is `{id, icon, label, onClick, loading?, disabled?}`; `label` is both the aria-label and the tooltip, and `loading` swaps the icon for a spinner. A future Export button is just one more entry, e.g. `{ id: 'export', icon: 'download', label: t('table.export'), onClick: exportRows }` (add the icon and key then; export is not implemented yet).
+6. Layout: the action group sits in its own right-aligned row at the very top of the table block (no row when there are no actions), shown as a compact 32px function-key strip (`size="sm"`, 44px on coarse pointers). Below it come the search field (with the Filters toggle beside it on phones), the filters (always open from 768px) and the count.
+
+Not yet adopted by device-management, identity, roles or users.
+
+### Buttons
+
+[Button](../src/shared/components/button.tsx) renders its children in one centered `.btn-content` row (icon + label + badge, gap 6px, icons do not shrink). While `loading`, the content turns transparent and a spinner overlays it, so the button never changes width. Icon-only buttons (`size="icon"`) have the same 44px height and border as text buttons.
+
+### Donut chart
+
+[DonutChart](../src/shared/components/donut-chart.tsx) shows each item's share of the total as a ring (about a third of the radius thick, starting at 12 o'clock, clockwise): `items: {key, label, value, count, colorIndex?, members?}[]`, `formatValue`, `totalLabel` (centre caption), `title`, `caption`, header labels, `emptyMessage` and an optional `note`. Slices keep the caller's stable order and fixed colors (`colorIndex` 1-4 maps to `--chart-series-N`, none means the gray `--chart-neutral`), so filtering never repaints survivors; a slice below 2 degrees is widened to stay hoverable (labels keep the true share); a single 100% slice is a full ring; zero total shows the empty message. The legend (swatch, name, amount, share) is the direct labelling, slices are separated by a 2px surface-colored gap, hover or focus on a slice or legend row highlights both, updates the centre text and shows a tooltip, and a "Show as table" toggle gives the same numbers. A hatch overlay appears under `forced-colors` and print. Layout: ring on top at 360px, ring left and legend right from 768px.
+
+Palette check (dataviz `validate_palette.js`, `--pairs all` because any two slices can touch after filtering; surfaces light #ffffff and dark #171717 = `--card`): only a set of four validates, so slots 1, 4, 5, 6 of the reference palette are used (light `#2a78d6 #eda100 #e87ba4 #008300`, dark `#3987e5 #c98500 #d55181 #008300`). Light: worst CVD 13.0, worst normal-vision 19.6, contrast WARN for yellow and magenta (relief: legend labels and table view). Dark: worst CVD 6.9 (WARN band, secondary encoding required: legend, gaps, table), worst normal-vision 19.3, contrast passes. Five or six slots fail the hard normal-vision floor, so more methods fold into "Other". The gray (de-emphasis) only has to pass contrast; against magenta (light) and magenta/yellow (dark) its pair deltas are below the floors, which the legend, gaps and table cover.
+
+### Amount input
+
+[AmountInput](../src/shared/components/amount-input.tsx) is the field for whole amounts (VND): `<AmountInput label={t('expense.amount')} value={amount} onChange={setAmount} />` with `value: number | null` (null = empty), so forms keep their own rules (required, or "empty / 0 means none"). It is a text input (`inputMode="numeric"`, `autoComplete="off"`) with the live mask `#,###` (comma every 3 digits, never the browser locale). Only digits are kept (pasted spaces, dots, signs and currency text are dropped), leading zeros collapse, at most 12 digits, and the caret stays at the same digit when separators move; Backspace/Delete next to a comma removes the neighbouring digit. Digits are right-aligned. The pure helpers (`formatAmountDigits`, `parseAmountDigits`, `maskInput`) live in [amount-mask.ts](../src/shared/amount-mask.ts); display columns use the same grouping through `useMoneyFormat`.
+
+### Tabs
+
+[Tabs](../src/shared/components/tabs.tsx): `<Tabs label={t('...')} tabs={[{ id, label, content }]} initialId="summary" />`. Underline style with `role="tablist"` / `tab` / `tabpanel`, `aria-selected` / `aria-controls`, roving tabindex, Left/Right/Home/End select and focus (activation on focus), a visible inset focus ring and 44px tabs on coarse pointers. Only the selected panel is rendered (a chart in another tab is not computed). The strip scrolls inside itself if the labels do not fit, never the page.
+
+### RichSelect
+
+[RichSelect](../src/shared/components/rich-select.tsx) is a listbox-style select for options that need more than text (colored badges, icons): `<RichSelect label value options={[{ value, label }]} onChange renderOption={(option) => <Badge ... />} />`. It is wrapped by Field like the native select (label, error, aria-invalid), uses the select-only combobox pattern (`aria-haspopup="listbox"`, `aria-activedescendant`), supports Up/Down/Home/End, type-ahead, Enter/Space and Escape, closes on outside click, and has compact 32px rows. A table filter of kind `select` can opt in with `renderOption`. Keep the native `Select` for plain text options.

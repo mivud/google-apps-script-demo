@@ -15,6 +15,8 @@ export interface AppDefinition {
   load: () => Promise<{ default: ComponentType<{ deps: AppDeps }> }>
   // Value of the `app` claim that grants access to this app.
   accessClaimValue: string
+  // Claim key checked against accessClaimValue; defaults to APP_CLAIM_KEY ("app").
+  accessClaimKey?: string
 }
 
 export const APP_CLAIM_KEY = 'app'
@@ -22,5 +24,5 @@ export const APP_CLAIM_KEY = 'app'
 export const SUPER_ROLE = 'super'
 
 export function isAppAvailable(app: AppDefinition, identity: Session): boolean {
-  return identity.roles.includes(SUPER_ROLE) || hasClaim(identity.claims, APP_CLAIM_KEY, app.accessClaimValue)
+  return identity.roles.includes(SUPER_ROLE) || hasClaim(identity.claims, app.accessClaimKey ?? APP_CLAIM_KEY, app.accessClaimValue)
 }

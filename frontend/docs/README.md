@@ -11,6 +11,7 @@ Static Vite + React + TypeScript app (responsive, English and Vietnamese). Data 
 | [access-control.md](access-control.md) | Module: Google sign-in, session, roles and claims of the caller, access preview |
 | [users.md](users.md) | Module: Identity app users, role assignment, own claims |
 | [roles.md](roles.md) | Module: Identity app roles and role claims |
+| [expense-tracking.md](expense-tracking.md) | Module: expenses, payment methods, fixed expense templates |
 | [claims.md](claims.md) | Module: claim catalog, `hasClaim` |
 | [config.md](config.md) | Env vars, provider factory, base path, data flow |
 | [design-system.md](design-system.md) | Admin-style theme: tokens, 7 accents, light/dark/system, shared components, TreeList, DataTable |

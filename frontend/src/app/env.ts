@@ -6,6 +6,8 @@ export interface AppEnv {
   sheetsApiUrl: string
   // Apps Script web app that verifies Google sign-in (auth.session.get); ignored by the supabase provider.
   identityApiUrl: string
+  // Apps Script web app of the expense module; ignored by the supabase provider.
+  expenseApiUrl: string
   googleClientId: string
   supabaseUrl: string
   supabaseAnonKey: string
@@ -28,6 +30,7 @@ export function readEnv(raw: Record<string, string | undefined>): AppEnv {
     provider: provider as DbProvider,
     sheetsApiUrl: raw.VITE_SHEETS_API_URL ?? '',
     identityApiUrl: raw.VITE_IDENTITY_API_URL ?? '',
+    expenseApiUrl: raw.VITE_EXPENSE_API_URL ?? '',
     googleClientId: raw.VITE_GOOGLE_CLIENT_ID ?? '',
     supabaseUrl: raw.VITE_SUPABASE_URL ?? '',
     supabaseAnonKey: raw.VITE_SUPABASE_ANON_KEY ?? '',
