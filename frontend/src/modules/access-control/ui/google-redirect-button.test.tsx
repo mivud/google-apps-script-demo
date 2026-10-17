@@ -46,4 +46,23 @@ describe('GoogleRedirectButton', () => {
     renderButton(() => Promise.resolve(), true)
     expect(screen.getByRole('status')).toBeTruthy()
   })
+
+  it('has no hint when not emphasized', () => {
+    renderButton(() => Promise.resolve())
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('looks the same whether or not it is emphasized', () => {
+    const { unmount } = renderButton(() => Promise.resolve())
+    const plain = button().className
+    unmount()
+    renderButton(() => Promise.resolve(), true)
+    expect(button().className).toBe(plain)
+    expect(button().classList.contains('btn-google')).toBe(true)
+  })
+
+  it('hides the decorative Google logo from assistive technology', () => {
+    renderButton(() => Promise.resolve())
+    expect(button().querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
+  })
 })
