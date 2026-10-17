@@ -43,4 +43,4 @@ The same ID must be used everywhere: both Web Apps check the token `aud` claim a
 - **Going public later:** set the publishing status to Production on the Audience page. With only the basic scopes (`openid`, `email`, `profile`) no Google verification review is required.
 - **New origin** (for example a Cloudflare Pages domain): add it under the client's Authorized JavaScript origins. Changes need a few minutes to apply.
 - **Secrets:** the client secret is shown once at creation. If it is ever needed, create a new one in the client page instead of searching for the old one.
-- **Related:** [identity-api](identity-api.md) for the Script Properties and deploy steps, [auth](auth.md) for the token checks, [supabase](supabase.md) for the provider setup, and `frontend/docs/auth.md` for the sign-in flow.
+- **Related:** [identity-api](identity-api.md) for the Script Properties and deploy steps, [auth](auth.md) for the token checks, [supabase](supabase.md) for the provider setup, and `frontend/docs/access-control.md` for the sign-in flow.

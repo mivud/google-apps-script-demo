@@ -1,22 +1,26 @@
 # identity-api (Apps Script Web App)
 
-**Purpose:** a standalone Web App that owns Google ID token verification, the allowlist and roles. Other backends (today `apps-script`, device-management) ask it who a token belongs to. Code: [backend/apps-script-identity-api](../apps-script-identity-api). Module details: [auth](auth.md).
+**Purpose:** a standalone Web App that owns Google ID token verification, the allowlist and roles. Other backends (today `apps-script`, device-management) ask it who a token belongs to. Code: [backend/apps-script-identity-api](../apps-script-identity-api). Modules: [claims](claims.md), [roles](roles.md), [users](users.md), [access-control](access-control.md); token details: [auth](auth.md). Version `1.0.0-beta.2`.
 
-**Contract:** same envelope as the other API: `POST` `text/plain` JSON `{ idToken, action, payload }` (token at the top level) -> `{ ok, data }` or `{ ok, error: { code, message } }`. `doGet` returns `{ service, version }`.
+**Contract:** same envelope as the other API: `POST` `text/plain` JSON `{ idToken, action, payload }` (token at the top level) -> `{ ok, data }` or `{ ok, error: { code, message } }`. `doGet` returns `{ service, version }`. Domain failures are `VALIDATION` with the stable code in `message` (for example `role_in_use`); a wrong payload type is `VALIDATION` `invalid_request`. Every action except `auth.*` and `system.*` needs an `admin` caller (else `FORBIDDEN`); writes run under the write lock.
 
-| Action | Input | Result | Caller |
+| Action | Input | Result | Module |
 |---|---|---|---|
-| `auth.session.get` | `idToken`, `payload.nonce` (raw, 16-128 chars of `A-Za-z0-9_-`) | `{ email, role }` | web client, at sign-in |
-| `auth.access.resolve` | `idToken` | `{ email, role }` | other backends (server-to-server) |
+| `auth.session.get` | `idToken`, `payload.nonce` (raw, 16-128 chars of `A-Za-z0-9_-`) | `{ email, role, roles, claims }` | access-control (web client, at sign-in) |
+| `auth.access.resolve` | `idToken` | `{ email, role, roles, claims }` | access-control (other backends) |
+| `access-control.access.preview` | `user_id` | effective access of that user | access-control |
+| `claims.claim.list/create/delete` | `key`, `value` | claim(s) | [claims](claims.md) |
+| `roles.role.list/get/create/update/delete`, `roles.roleClaim.add/remove` | see module doc | role(s) | [roles](roles.md) |
+| `users.user.list/get/create/update/delete`, `users.userRole.assign/unassign`, `users.userClaim.add/remove` | see module doc | user(s) | [users](users.md) |
 | `system.version.get` | none | `{ version }` | anyone |
 
 Both auth actions check `aud` (= `GOOGLE_CLIENT_ID`), `iss`, `exp` and `email_verified`, then the allowlist. Errors stay generic: `UNAUTHORIZED` (any token or nonce problem), `FORBIDDEN` (unknown, inactive or role-less user).
 
 **Nonce:** the client creates a random nonce, passes `sha256(nonce)` (lowercase hex) to Google sign-in, and sends the raw nonce in `auth.session.get`. The server hashes it and compares it with the token `nonce` claim; a mismatch is `UNAUTHORIZED`. A token without a `nonce` claim is refused with the same generic `UNAUTHORIZED`. Domain rules raise typed errors (`invalid_email`, `invalid_nonce`, `nonce_mismatch`) that the endpoints translate to generic `FORBIDDEN` / `UNAUTHORIZED`. Limit: an attacker holding a stolen token together with its nonce can still replay it; the nonce only stops tokens minted for another sign-in attempt. `auth.access.resolve` takes no nonce.
 
-**Data:** the `users` sheet (`id,email,role,active,created_at,updated_at`) lives in the identity spreadsheet, separate from the equipment spreadsheet. Created empty on the first call; nothing is seeded.
+**Data:** sheets `claims`, `roles`, `role_claims`, `users`, `user_roles`, `user_claims` in the identity spreadsheet, separate from the equipment spreadsheet. Every sheet ends with the audit columns `created,created_by,last_modified,last_modified_by`. `users` is `id,email,role,active` + audit; `role` is the LEGACY phase 1 column. Tabs are created on the first valid request. The built-in roles `admin` and `viewer` are seeded on the first write while `roles` is empty. If a live `users` tab has the old header (`created_at,updated_at`), `SheetInstaller`/`SheetUpgrade` rewrites it automatically to the new header: `id,email,role,active` are kept, `created_at`/`updated_at` are dropped and the audit columns start empty. No manual column rename is needed. Legacy rows have an empty `last_modified`, so clients send `''` as `expected_last_modified`.
 
-**Script Properties:** `GOOGLE_CLIENT_ID`, `SPREADSHEET_ID` (identity spreadsheet). `SCHEMA_SIGNATURE` is written by the app.
+**Script Properties:** `GOOGLE_CLIENT_ID`, `SPREADSHEET_ID` (identity spreadsheet). `SCHEMA_SIGNATURE` is written by the app. Unchanged by the identity feature.
 
 **Revocation delay:** token cache 60 s + `IdentityClient` cache 60 s + `users` row cache about 60 s (see [auth](auth.md)). The token is verified before the schema check or any sheet access. Callers pin `IDENTITY_API_URL` to `https://script.google.com/macros/s/<id>/exec`. Role literals `admin`/`viewer` are an API contract.
 
@@ -46,7 +50,7 @@ Each step says who does it and whether it is already done. Values below are real
 
 ### 7. Create the identity spreadsheet
 1. Go to https://sheets.new and name it `nexus-identity-users`. It must be a separate file from the equipment spreadsheet.
-2. Leave it empty. The API creates the `users` tab with the right headers (`id`, `email`, `role`, `active`, `created_at`, `updated_at`) on the first request that carries a valid Google token, so the first sign-in attempt (which will be refused as "Access denied") creates it; then do step 9. If you prefer to create the tab by hand, name it `users` and use exactly those headers in that order.
+2. Leave it empty. The API creates all tabs (`claims`, `roles`, `role_claims`, `users`, `user_roles`, `user_claims`) on the first request that carries a valid Google token, so the first sign-in attempt (which will be refused as "Access denied") creates them; then do step 9. The `users` header is `id,email,role,active,created,created_by,last_modified,last_modified_by`. An existing `users` tab with the old header (`created_at,updated_at`) is upgraded automatically on that first request: nothing to rename by hand. If you create the tab by hand, use exactly that header in that order.
 3. Copy the spreadsheet id from the URL: `https://docs.google.com/spreadsheets/d/<THIS_PART>/edit`.
 
 ### 8. Script Properties of identity-api
@@ -63,7 +67,7 @@ Each step says who does it and whether it is already done. Values below are real
    - The consent window is a separate pop-up window; if it does not appear, check that the browser did not block pop-ups.
 
 ### 9. First admin row
-Open the app (or call the API) once with the admin account so the `users` tab exists (it is refused with "Access denied" that first time), then in the `users` tab, row 2: `id` any UUID (for example from https://www.uuidgenerator.net/), `email` the Google account that will sign in, `role` `admin`, `active` `TRUE`, `created_at` and `updated_at` the current time as `2026-10-16T00:00:00.000Z`. **`active` must be the text `TRUE`** (or `true`); `1`, `yes` or an empty cell count as inactive and the sign-in is refused with "This Google account is not allowed to use this app" (the exact message for an email that is not listed or not active). `role` must be exactly `admin` or `viewer`, and the email must match the Google account (case is ignored). Add more rows later for other people (`viewer` for read only). The same email must also be a test user in Google Cloud while the app is in Testing mode.
+Open the app (or call the API) once with the admin account so the `users` tab exists (it is refused with "Access denied" that first time), then in the `users` tab, row 2: `id` any UUID (for example from https://www.uuidgenerator.net/; short ids of letters, digits, `_` and `-` also work), `email` the Google account that will sign in, `role` `admin` (legacy column, phase 1 fallback), `active` `TRUE`; the four audit columns may stay empty (or use `system` for `created_by`/`last_modified_by`). Later users and roles are managed in the Identity app. **`active` must be the text `TRUE`** (or `true`); `1`, `yes` or an empty cell count as inactive and the sign-in is refused with "This Google account is not allowed to use this app" (the exact message for an email that is not listed or not active). `role` must be exactly `admin` or `viewer`, and the email must match the Google account (case is ignored). Add more rows later for other people (`viewer` for read only). The same email must also be a test user in Google Cloud while the app is in Testing mode.
 
 ### 10. Script Properties of apps-script (device-management)
 1. Open https://script.google.com/d/10dTqI3hCbe5kdACYwP6X1I_udUAujWK1fxrwR6J-X4oUZTFRfQtLc7AU/edit
@@ -102,4 +106,17 @@ Library change: push, create a new version, pin the new number in both `appsscri
 
 **Versioning:** [package.json](../apps-script-identity-api/package.json) and `API_VERSION` in [SystemEndpoints.gs](../apps-script-identity-api/src/composition/SystemEndpoints.gs) stay equal, `1.0.x-beta.N`.
 
-**filePushOrder** (in `.clasp.json`): `SharedLibrary.gs`, `AuthModule.gs`, `domain/values/{Role,Email,SessionNonce}`, `domain/entities/User`, `application/access/AccessSupportService`, the two use cases, `persistence/googlesheet/UserRepository`, the two `endpoints/*`, `composition/SystemEndpoints.gs`, `composition/Composition.gs`, `Main.gs` last.
+**filePushOrder** (in `.clasp.json`): `SharedLibrary.gs`, the `shared/*` files, the four module root files (`AccessControlModule`, `ClaimsModule`, `RolesModule`, `UsersModule`), then the files of each module in the order access-control, claims, roles, users, then `composition/SystemEndpoints.gs`, `composition/Composition.gs`, `Main.gs` last.
+
+## Phase 2 runbook: drop the legacy `users.role`
+
+Run only after the new code is live everywhere. Until then a user with no `user_roles` rows still gets access from `users.role`.
+
+**Sheets (by hand)**
+1. In the Identity app (or in the sheets), give every user at least one row in `user_roles` matching the old `users.role` value: copy `users.role` into role assignments (`admin` or `viewer` role id from the `roles` tab). A user left without a row loses access after step 3.
+2. Check by signing in as a non-admin and by opening each user in the Identity app.
+3. Delete the `role` column of the `users` tab. Remove the fallback from the code (`EffectiveAccess.legacyName`, the `role` header) in a follow-up change, then push and redeploy.
+
+**Supabase**
+1. Do the same copy: insert `user_roles` rows from `users.role` for every user.
+2. Only then run [008_drop_legacy_user_role.sql](../supabase/phase2/008_drop_legacy_user_role.sql). **Do not run it before the legacy role migration is done.** It is not applied now; migrations [004-007](../supabase/migrations) are also not yet applied to the live project.

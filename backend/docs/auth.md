@@ -1,8 +1,8 @@
-# auth (module of identity-api)
+# Sign-in and token verification (identity-api)
 
-**Purpose:** sign-in with Google and role-based access, for all backends. Code: [apps-script-identity-api/src/modules/auth](../apps-script-identity-api/src/modules/auth). Setup, actions and the nonce rules: [identity-api](identity-api.md). `apps-script` no longer contains this module.
+**Purpose:** how Google ID tokens are verified and how other backends use the result. The former `auth` module was replaced by [access-control](access-control.md) (decisions, roles, claims), [users](users.md), [roles](roles.md) and [claims](claims.md); this page keeps the token and caching details. Setup, actions and the nonce rules: [identity-api](identity-api.md). `apps-script` does not contain this logic.
 
-**Layers:** `domain` (values `Email`, `Role`, `SessionNonce`; entity `User`), `application` (`AccessSupportService`, queries `ResolveAccess`, `GetSession`), `endpoints` (`SessionEndpoints`, `AccessEndpoints`), `persistence/googlesheet` (`UserRepository`). Emails are normalized once, in the `Email` value; the repository only receives an `Email` and matches with `User.hasEmail`.
+**Responses:** `auth.session.get` and `auth.access.resolve` return `{ email, role, roles, claims }`; `role` keeps its old meaning (`admin` or `viewer`). The allowlist is the `users` sheet (see [users](users.md)); `IdentityClient` in `apps-script` only reads `email` and `role`.
 
 **Token verification** ([GoogleIdTokenVerifier](../apps-script-shared-kernel-library/src/infrastructure/GoogleIdTokenVerifier.gs)): shape and length check, then POST to `https://oauth2.googleapis.com/tokeninfo`. Accepted only if `aud` equals `GOOGLE_CLIENT_ID`, `iss` is Google, `exp` is in the future and `email_verified` is `true`. Verified identities (email, nonce) are cached under the SHA-256 of the token for `min(exp - now, 60 s)`; the raw token is never stored. Refused tokens are remembered 30 s (also by hash) to protect the UrlFetch quota.
 
@@ -12,7 +12,7 @@
 
 **OAuth scopes:** `spreadsheets` is accepted because the scripts are standalone (they open sheets by id); `drive.file` is a possible future narrowing.
 
-**Allowlist:** sheet `users`; `active` must be `true`; `role` is `admin` or `viewer`. Rows are cached about 60 s, so manual edits apply within a minute.
+**Allowlist:** sheet `users`; `active` must be `true` and the user needs an `admin` or `viewer` role (through `user_roles`, or the legacy `role` column in phase 1). Rows are cached about 60 s, so manual edits apply within a minute.
 
 **Permissions (enforced by each consuming backend):** `apps-script` allows reads (`*.list`, `*.get`, `system.version.get`) for `admin` and `viewer`, every other action only for `admin` ([AccessControl.gs](../apps-script/src/composition/AccessControl.gs)).
 
