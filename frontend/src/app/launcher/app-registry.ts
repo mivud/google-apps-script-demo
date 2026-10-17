@@ -8,6 +8,7 @@ export const APP_REGISTRY: readonly AppDefinition[] = [
     descriptionKey: 'launcher.identity.description',
     icon: 'users',
     path: '/identity',
+    accessClaimValue: 'identity',
     load: () => import('../identity/identity-app'),
   },
   {
@@ -16,6 +17,7 @@ export const APP_REGISTRY: readonly AppDefinition[] = [
     descriptionKey: 'launcher.devices.description',
     icon: 'book',
     path: '/devices',
+    accessClaimValue: 'device.mgt',
     load: () => import('../device-management-app'),
   },
 ]

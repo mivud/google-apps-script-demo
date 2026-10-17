@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isAppAvailable, type AppDefinition } from './app-definition'
+import { isAppAvailable } from './app-definition'
 import { findOwner } from './app-route'
 import { APP_REGISTRY } from './app-registry'
 import type { Session } from '../../modules/access-control'
@@ -19,14 +19,25 @@ describe('APP_REGISTRY', () => {
 })
 
 describe('isAppAvailable', () => {
-  const base = { ...APP_REGISTRY[0] }
+  const [identity, devices] = APP_REGISTRY
+  const userWith = (roles: string[], claims: { key: string; value: string }[]) => ({ ...session, roles, claims }) as Session
 
-  it('defaults to available', () => {
-    expect(isAppAvailable(base, session)).toBe(true)
+  it('requires the matching app claim', () => {
+    const user = userWith(['viewer'], [{ key: 'app', value: 'identity' }])
+    expect(isAppAvailable(identity, user)).toBe(true)
+    expect(isAppAvailable(devices, user)).toBe(false)
   })
 
-  it('uses the app rule when present', () => {
-    const hidden: AppDefinition = { ...base, isAvailable: () => false }
-    expect(isAppAvailable(hidden, session)).toBe(false)
+  it('maps device.mgt to device management', () => {
+    expect(isAppAvailable(devices, userWith([], [{ key: 'app', value: 'device.mgt' }]))).toBe(true)
+  })
+
+  it('ignores the value under another claim key', () => {
+    expect(isAppAvailable(identity, userWith([], [{ key: 'other', value: 'identity' }]))).toBe(false)
+  })
+
+  it('gives the super role every app without claims', () => {
+    const superUser = userWith(['super'], [])
+    expect(APP_REGISTRY.every((app) => isAppAvailable(app, superUser))).toBe(true)
   })
 })

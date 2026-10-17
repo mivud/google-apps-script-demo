@@ -16,7 +16,7 @@ One SPA hosts several apps behind one Google sign-in. Code: [app/shell.tsx](../s
 
 ## Registry
 
-[app-registry.ts](../src/app/launcher/app-registry.ts) lists `AppDefinition`s ([app-definition.ts](../src/app/launcher/app-definition.ts)): `id`, `titleKey`, `descriptionKey`, `icon`, `path`, `load` and an optional `isAvailable(identity)` (default: available; the visibility rule is not decided yet, so every signed-in user sees all cards and the backend enforces access).
+[app-registry.ts](../src/app/launcher/app-registry.ts) lists `AppDefinition`s ([app-definition.ts](../src/app/launcher/app-definition.ts)): `id`, `titleKey`, `descriptionKey`, `icon`, `path`, `load` and `accessClaimValue`. `isAppAvailable` shows an app when the user has the `super` role or a claim `app` = `accessClaimValue` (`identity` for Identity, `device.mgt` for device-management). The launcher hides other cards and `Shell` redirects a typed URL of a hidden app to `#/`; the backend still enforces real access.
 
 Add an app: create its root component with a default export taking `{ deps }`, add an entry with a `load: () => import(...)`, add the `launcher.<id>.*` messages and an "All apps" link (`#/`) in its shell.
 
@@ -26,4 +26,4 @@ Add an app: create its root component with a default export taking `{ deps }`, a
 
 ## Limits
 
-Hash routing only (no host rewrites). Per-user app visibility is not implemented yet.
+Hash routing only (no host rewrites). App visibility is a UI convenience only; it is not a security boundary.
