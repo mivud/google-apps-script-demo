@@ -15,7 +15,7 @@ Named groups of claims. Backend counterpart: [backend/docs/roles.md](../../backe
 
 ## UI
 
-[RolesPage](../src/modules/roles/ui/pages/roles-page.tsx) (`#/identity/roles`) and [RoleDetailPage](../src/modules/roles/ui/pages/role-detail-page.tsx) (`#/identity/roles/<id>`) with form dialog and claim assignment. The backend refuses to rename or delete built-in roles (`role_protected`).
+[RolesPage](../src/modules/roles/ui/pages/roles-page.tsx) (`#/identity/roles`) and [RoleDetailPage](../src/modules/roles/ui/pages/role-detail-page.tsx) (`#/identity/roles/<id>`) with form dialog and claim assignment. The list is a `DataTable` (name link, built-in badge, claim count, description) plus an actions column with `Edit | Delete` icon buttons per row (Delete hidden for built-in roles). Delete uses the shared `useDeleteAction` flow (confirm dialog, toast, translated errors such as `role_in_use`) on the list and the detail page. The backend refuses to rename or delete built-in roles (`role_protected`).
 
 ## Limits
 

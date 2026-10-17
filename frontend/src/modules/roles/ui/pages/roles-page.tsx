@@ -9,8 +9,10 @@ import { LoadingButton } from '../../../../shared/components/loading-button'
 import { PageHeader } from '../../../../shared/components/page-header'
 import { RefreshIndicator } from '../../../../shared/components/refresh-indicator'
 import { ListSkeleton } from '../../../../shared/components/skeleton'
-import { SurfaceList, SurfaceListItem } from '../../../../shared/components/surface-list'
-import type { RoleService } from '../..'
+import { DataTable, type DataColumn } from '../../../../shared/components/data-table'
+import { RowActions } from '../../../../shared/components/row-actions'
+import { useDeleteAction } from '../../../../shared/hooks/use-delete-action'
+import type { Role, RoleService } from '../..'
 import { RoleFormDialog } from '../components/role-form-dialog'
 import { isBuiltInRole } from '../role-rules'
 
@@ -18,6 +20,20 @@ export function RolesPage({ roles }: { roles: RoleService }) {
   const { t } = useI18n()
   const list = useAsyncData(() => roles.list(), [roles])
   const [creating, setCreating] = useState(false)
+  const [editing, setEditing] = useState<Role | undefined>(undefined)
+  const remove = useDeleteAction({
+    getName: (role: Role) => role.name,
+    remove: (role) => roles.remove(role.id),
+    onDeleted: () => list.reload(),
+  })
+
+  const columns: DataColumn<Role>[] = [
+    { key: 'name', header: t('identity.roles.name'), primary: true, cell: (role) => <a href={roleHref(role.id)}>{role.name}</a> },
+    { key: 'builtIn', header: t('identity.roles.type'), cell: (role) => (isBuiltInRole(role.name) ? <Badge>{t('identity.builtIn')}</Badge> : '') },
+    { key: 'claims', header: t('identity.roles.claimsColumn'), cell: (role) => t('identity.roles.claimCount', { count: role.claims.length }) },
+    { key: 'description', header: t('identity.roles.description'), cell: (role) => role.description },
+    { key: 'actions', header: t('common.actions'), cell: (role) => <RowActions itemName={role.name} disabled={remove.pending} onEdit={() => setEditing(role)} onDelete={(isBuiltInRole(role.name) ? undefined : () => remove.ask(role))} /> },
+  ]
 
   return (
     <section>
@@ -34,16 +50,27 @@ export function RolesPage({ roles }: { roles: RoleService }) {
       ) : list.data.length === 0 ? (
         <EmptyState icon="list" message={t('identity.roles.empty')} />
       ) : (
-        <SurfaceList refreshing={list.loading}>
-          {list.data.map((role) => (
-            <SurfaceListItem key={role.id}>
-              <a href={roleHref(role.id)}><strong>{role.name}</strong></a>{' '}
-              {isBuiltInRole(role.name) && <Badge>{t('identity.builtIn')}</Badge>}{' '}
-              <span className="muted">{t('identity.roles.claimCount', { count: role.claims.length })}</span>
-              {role.description && <p>{role.description}</p>}
-            </SurfaceListItem>
-          ))}
-        </SurfaceList>
+        <DataTable
+          caption={t('identity.roles.title')}
+          columns={columns}
+          rows={list.data}
+          getRowKey={(role) => role.id}
+          refreshing={list.loading}
+        />
+      )}
+      {remove.dialog}
+
+      {editing && (
+        <RoleFormDialog
+          initial={editing}
+          onSubmit={async (input) => {
+            const updated = await roles.update(editing.id, input, editing.lastModified)
+            list.reload()
+            return updated
+          }}
+          onRefresh={() => { list.reload(); setEditing(undefined) }}
+          onClose={() => setEditing(undefined)}
+        />
       )}
 
       {creating && (

@@ -10,8 +10,10 @@ import { LoadingButton } from '../../../../shared/components/loading-button'
 import { PageHeader } from '../../../../shared/components/page-header'
 import { RefreshIndicator } from '../../../../shared/components/refresh-indicator'
 import { ListSkeleton } from '../../../../shared/components/skeleton'
-import { SurfaceList, SurfaceListItem } from '../../../../shared/components/surface-list'
-import type { UserService } from '../..'
+import { DataTable, type DataColumn } from '../../../../shared/components/data-table'
+import { RowActions } from '../../../../shared/components/row-actions'
+import { useDeleteAction } from '../../../../shared/hooks/use-delete-action'
+import type { User, UserService } from '../..'
 import { UserFormDialog } from '../components/user-form-dialog'
 import { roleNamesFor } from '../role-names'
 
@@ -21,6 +23,27 @@ export function UsersPage({ users, roles }: { users: UserService; roles: RoleSer
   // Role names are decoration; a failed roles load must not block the user list.
   const roleList = useAsyncData(() => roles.list(), [roles])
   const [creating, setCreating] = useState(false)
+  const [editing, setEditing] = useState<User | undefined>(undefined)
+  const remove = useDeleteAction({
+    getName: (user: User) => user.email,
+    remove: (user) => users.remove(user.id),
+    onDeleted: () => list.reload(),
+  })
+
+  const columns: DataColumn<User>[] = [
+    { key: 'email', header: t('identity.users.email'), primary: true, cell: (user) => <a href={userHref(user.id)}>{user.email}</a> },
+    { key: 'active', header: t('identity.users.status'), cell: (user) => <Badge tone={user.active ? 'success' : 'neutral'}>{t(user.active ? 'identity.active' : 'identity.inactive')}</Badge> },
+    {
+      key: 'roles',
+      header: t('identity.users.roles'),
+      cell: (user) => {
+        if (!roleList.data) return ''
+        const names = roleNamesFor(user.roleIds, roleList.data)
+        return names.length ? names.join(', ') : t('identity.users.noRoles')
+      },
+    },
+    { key: 'actions', header: t('common.actions'), cell: (user) => <RowActions itemName={user.email} disabled={remove.pending} onEdit={() => setEditing(user)} onDelete={() => remove.ask(user)} /> },
+  ]
 
   return (
     <section>
@@ -37,18 +60,27 @@ export function UsersPage({ users, roles }: { users: UserService; roles: RoleSer
       ) : list.data.length === 0 ? (
         <EmptyState icon="list" message={t('identity.users.empty')} />
       ) : (
-        <SurfaceList refreshing={list.loading}>
-          {list.data.map((user) => {
-            const names = roleNamesFor(user.roleIds, roleList.data ?? [])
-            return (
-              <SurfaceListItem key={user.id}>
-                <a href={userHref(user.id)}><strong>{user.email}</strong></a>{' '}
-                <Badge tone={user.active ? 'success' : 'neutral'}>{t(user.active ? 'identity.active' : 'identity.inactive')}</Badge>
-                <p className="muted">{roleList.data ? (names.length ? names.join(', ') : t('identity.users.noRoles')) : ''}</p>
-              </SurfaceListItem>
-            )
-          })}
-        </SurfaceList>
+        <DataTable
+          caption={t('identity.users.title')}
+          columns={columns}
+          rows={list.data}
+          getRowKey={(user) => user.id}
+          refreshing={list.loading}
+        />
+      )}
+      {remove.dialog}
+
+      {editing && (
+        <UserFormDialog
+          initial={editing}
+          onSubmit={async (input) => {
+            const updated = await users.update(editing.id, input, editing.lastModified)
+            list.reload()
+            return updated
+          }}
+          onRefresh={() => { list.reload(); setEditing(undefined) }}
+          onClose={() => setEditing(undefined)}
+        />
       )}
 
       {creating && (
