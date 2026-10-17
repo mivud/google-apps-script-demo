@@ -23,6 +23,7 @@ const ICONS = {
   apps: <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />,
   users: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2a6.5 6.5 0 0 1 3.5 5.8" /></>,
   palette: <><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.3-1.7-.4-1 .3-2.3 1.5-2.3H17a4 4 0 0 0 4-4c0-5-4-10-9-10z" /><path d="M7.5 11h.01M10 7.5h.01M14.5 7.5h.01" /></>,
+  refresh: <path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v4h-4" />,
 } satisfies Record<string, ReactNode>
 
 export type IconName = keyof typeof ICONS

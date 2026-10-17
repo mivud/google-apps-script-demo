@@ -65,7 +65,7 @@
   padding: 0;
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
-  overflow-y: auto;
+  overflow: visible;
   overscroll-behavior: contain;
   /* Solid on purpose: the sticky title and actions bars repeat this color, and stacked translucent layers would not match it. */
   background: var(--popover);
@@ -75,18 +75,25 @@
   color: var(--popover-foreground);
 }
 .dialog::backdrop { background: oklch(0 0 0 / 0.5); overscroll-behavior: contain; }
-.dialog h2 { position: sticky; top: 0; z-index: 1; margin: 0; padding: 16px 16px 12px; background: var(--popover); }
+.dialog h2 { position: sticky; top: 0; z-index: 1; margin: 0; padding: 16px 16px 12px; background: var(--popover); border-top-left-radius: var(--radius-xl); border-top-right-radius: var(--radius-xl); }
 .dialog form { padding: 0 16px; }
 .dialog-actions {
   position: sticky;
   bottom: 0;
+  z-index: 2;
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
   margin-top: 16px;
   padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--border);
   background: var(--popover);
+  border-bottom-left-radius: var(--radius-xl);
+  border-bottom-right-radius: var(--radius-xl);
+}
+@media (max-height: 520px) {
+  .dialog { overflow-y: auto; }
 }
 
 /* Loading effects */

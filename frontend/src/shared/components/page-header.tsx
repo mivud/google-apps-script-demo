@@ -16,7 +16,7 @@ export function PageHeader({ title, actions, back }: PageHeaderProps) {
       {(title || actions) && (
         <div className="page-header">
           {title && <h1>{title}</h1>}
-          {actions}
+          {actions && <div className="button-group button-group-end">{actions}</div>}
         </div>
       )}
     </>

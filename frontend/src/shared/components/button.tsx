@@ -12,7 +12,7 @@ interface ButtonProps extends ComponentProps<'button'> {
 
 const SIZE_CLASS: Record<ButtonSize, string> = { default: '', sm: 'btn-sm', icon: 'btn-icon' }
 
-// Disables itself and shows a spinner while loading, so double submits are impossible.
+// Disables itself while loading; the spinner overlays the (transparent) content so the button keeps its width.
 export function Button({
   loading = false,
   variant = 'default',
@@ -30,8 +30,8 @@ export function Button({
       disabled={disabled || loading}
       aria-busy={loading}
     >
-      {loading && <Spinner />}
-      {size === 'icon' ? children : <span>{children}</span>}
+      {loading && <span className="btn-spinner"><Spinner /></span>}
+      <span className={loading ? 'btn-content is-loading' : 'btn-content'}>{children}</span>
     </button>
   )
 }
