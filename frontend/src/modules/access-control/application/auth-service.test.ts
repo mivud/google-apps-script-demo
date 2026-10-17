@@ -94,6 +94,15 @@ describe('AuthService', () => {
     expect(auth.getRole()).toBeNull()
   })
 
+  it('signOut runs the sign-out hook so redirect leftovers are cleared', async () => {
+    const { sessions, tokens, store } = setup()
+    const onSignOut = vi.fn()
+    const auth = new AuthService(sessions, tokens, store, undefined, onSignOut)
+    await auth.signIn(FUTURE_TOKEN, 'n')
+    await auth.signOut()
+    expect(onSignOut).toHaveBeenCalledTimes(1)
+  })
+
   it('refreshIdToken returns the stored token after a credential arrives', async () => {
     const { auth, tokens } = setup()
     tokens.requestToken.mockImplementation(async () => {
