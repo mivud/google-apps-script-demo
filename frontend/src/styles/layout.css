@@ -39,7 +39,7 @@
 .filters { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin-bottom: 16px; }
 .filters .field { margin-bottom: 0; }
 .pager { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 16px; }
-.button-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.button-row { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin: 16px 0; }
 .field-row { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
 /* Picker + add button: the button keeps its natural width instead of stretching. */
 .assign-row { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }

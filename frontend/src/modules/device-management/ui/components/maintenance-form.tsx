@@ -5,7 +5,7 @@ import { translateError, useI18n } from '../../../../shared/i18n'
 import { MAINTENANCE_LABEL_KEYS } from '../labels'
 import { FormError } from '../../../../shared/components/form-error'
 import { GlassSurface } from '../../../../shared/components/glass-surface'
-import { FieldRow } from '../../../../shared/components/layout'
+import { ButtonRow, FieldRow } from '../../../../shared/components/layout'
 import { LoadingButton } from '../../../../shared/components/loading-button'
 import { Select } from '../../../../shared/components/select'
 import { Textarea } from '../../../../shared/components/textarea'
@@ -63,7 +63,9 @@ export function MaintenanceForm({ equipmentId, onSubmit, onSaved }: MaintenanceF
       </FieldRow>
       <Textarea label={t('maintenance.note')} rows={2} value={note} disabled={submit.pending} onChange={(e) => setNote(e.target.value)} />
       {submit.error && <FormError message={translateError(submit.error, t)} />}
-      <LoadingButton type="submit" loading={submit.pending}>{t('maintenance.addRecord')}</LoadingButton>
+      <ButtonRow>
+        <LoadingButton type="submit" loading={submit.pending}>{t('maintenance.addRecord')}</LoadingButton>
+      </ButtonRow>
     </GlassSurface>
   )
 }

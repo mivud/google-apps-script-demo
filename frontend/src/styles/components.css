@@ -52,28 +52,29 @@
 .theme-option .swatch { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--primary); box-shadow: inset 0 0 0 1px var(--input); }
 .theme-option[aria-checked='true'] { box-shadow: 0 0 0 2px var(--foreground); }
 
-/* Dialog (native <dialog>): bottom sheet on mobile, centered card on larger screens.
+/* Dialog (native <dialog>): centered card on every screen size (full width minus a gutter on mobile).
    Sized to its content: `height: auto` would stretch between the modal's top/bottom insets, so use fit-content.
    Title and actions are sticky so they stay reachable while the body scrolls. */
 .dialog {
-  width: 100%;
-  max-width: none;
+  width: calc(100% - 32px);
+  max-width: 520px;
   height: fit-content;
-  max-height: 100dvh;
-  margin: auto 0 0;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
   padding: 0;
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  border-radius: var(--radius-xl);
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: var(--glass-bg-strong);
+  /* Solid on purpose: the sticky title and actions bars repeat this color, and stacked translucent layers would not match it. */
+  background: var(--popover);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   box-shadow: var(--glass-shadow);
   color: var(--popover-foreground);
 }
 .dialog::backdrop { background: oklch(0 0 0 / 0.5); overscroll-behavior: contain; }
-.dialog h2 { position: sticky; top: 0; z-index: 1; margin: 0; padding: 16px 16px 12px; background: var(--glass-bg-strong); }
+.dialog h2 { position: sticky; top: 0; z-index: 1; margin: 0; padding: 16px 16px 12px; background: var(--popover); }
 .dialog form { padding: 0 16px; }
 .dialog-actions {
   position: sticky;
@@ -84,10 +85,7 @@
   margin-top: 16px;
   padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--border);
-  background: var(--glass-bg-strong);
-}
-@media (min-width: 768px) {
-  .dialog { width: 520px; max-height: 90dvh; margin: auto; border-radius: var(--radius-xl); }
+  background: var(--popover);
 }
 
 /* Loading effects */
@@ -117,7 +115,7 @@
 .surface-list.is-refreshing { opacity: 0.6; }
 .surface-item { display: flex; flex-direction: column; gap: 8px; overflow-wrap: anywhere; }
 .surface-item-body { min-width: 0; }
-.surface-item-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.surface-item-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 @media (min-width: 768px) {
   .surface-item { flex-direction: row; align-items: center; justify-content: space-between; }
 }
@@ -139,6 +137,8 @@
 .data-table td { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; min-width: 0; overflow-wrap: anywhere; }
 .data-table td[data-label]::before { content: attr(data-label); flex: 0 0 40%; color: var(--muted-foreground); font-size: 0.875rem; }
 .data-table-primary { font-weight: 600; }
+.data-table a { display: inline-flex; align-items: center; min-height: var(--tap); }
+.data-table.is-refreshing { opacity: 0.6; }
 .row-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .dialog-body { padding: 0 16px; }
 
@@ -155,8 +155,6 @@
 .toast-close:hover { color: #fff; }
 @keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } }
 @keyframes toast-progress { to { transform: scaleX(0); } }
-.data-table a { display: inline-flex; align-items: center; min-height: var(--tap); }
-.data-table.is-refreshing { opacity: 0.6; }
 @media (min-width: 768px) {
   /* Separate borders so the card radius clips the row hover background. */
   .data-table { display: table; border-collapse: separate; border-spacing: 0; overflow: hidden; }
