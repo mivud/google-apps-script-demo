@@ -9,7 +9,8 @@ setupDomTests()
 describe('AuthCallbackLoading', () => {
   it('shows a spinner with the signing-in text', () => {
     renderApp(<AuthCallbackLoading />)
-    expect(screen.getByText(/signing in/i)).toBeTruthy()
+    // The spinner label and the visible text both read "Signing in", so assert on the spinner itself.
+    expect(screen.getByRole('status').textContent).toMatch(/signing in/i)
     expect(screen.getByRole('main')).toBeTruthy()
   })
 })
