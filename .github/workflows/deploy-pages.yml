@@ -60,8 +60,9 @@ jobs:
       - run: npm test
       - run: npm run build
         env:
-          # Pages serves under /<repo>/; Cloudflare Pages will use '/' later.
-          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          # A custom domain serves the site at '/'; without one Pages serves under /<repo>/.
+          # Set the repository variable VITE_BASE_PATH to /<repo>/ only for the github.io URL.
+          VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || '/' }}
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: frontend/dist
