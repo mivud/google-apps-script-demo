@@ -16,7 +16,7 @@ export function hasChanges(change: AssignmentChange): boolean {
   return change.added.length + change.removed.length > 0
 }
 
-// Adds run before removals so swapping the only admin role never passes through a lockout state.
+// Adds run before removals so swapping the only super role never passes through a lockout state.
 // onDone also runs when a call fails half way, so the page shows what was really saved.
 export async function applyAssignmentChange(
   change: AssignmentChange,

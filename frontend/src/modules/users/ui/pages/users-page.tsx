@@ -18,7 +18,7 @@ import type { User, UserService } from '../..'
 import { UserFormDialog } from '../components/user-form-dialog'
 import { roleNamesFor } from '../role-names'
 
-export function UsersPage({ users, roles }: { users: UserService; roles: RoleService }) {
+export function UsersPage({ users, roles, canWrite }: { users: UserService; roles: RoleService; canWrite: boolean }) {
   const { t } = useI18n()
   const list = useAsyncData(() => users.list(), [users])
   // Role names are decoration; a failed roles load must not block the user list.
@@ -43,14 +43,14 @@ export function UsersPage({ users, roles }: { users: UserService; roles: RoleSer
         return names.length ? names.join(', ') : t('identity.users.noRoles')
       },
     },
-    { key: 'actions', header: t('common.actions'), cell: (user) => <RowActions itemName={user.email} disabled={remove.pending} onEdit={() => setEditing(user)} onDelete={() => remove.ask(user)} /> },
+    ...(canWrite ? [{ key: 'actions', header: t('common.actions'), cell: (user: User) => <RowActions itemName={user.email} disabled={remove.pending} onEdit={() => setEditing(user)} onDelete={() => remove.ask(user)} /> }] : []),
   ]
 
   return (
     <section>
       <PageHeader
         title={t('identity.users.title')}
-        actions={<LoadingButton onClick={() => setCreating(true)}>{t('identity.users.add')}</LoadingButton>}
+        actions={canWrite ? <LoadingButton onClick={() => setCreating(true)}>{t('identity.users.add')}</LoadingButton> : undefined}
       />
       <RefreshIndicator active={list.loading && !!list.data} />
 

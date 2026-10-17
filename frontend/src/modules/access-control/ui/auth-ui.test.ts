@@ -3,13 +3,12 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import { I18nContext, type I18nValue } from '../../../shared/i18n/i18n-context'
 import type { AuthService } from '../application/auth-service'
-import type { Role } from '../domain/role'
 import type { Session } from '../domain/session'
 import { AuthContext } from './auth-context'
 import { AuthGate } from './auth-gate'
 import { CurrentUserBadge } from './current-user-badge'
 import { UserMenu } from './user-menu'
-import { useCanWrite } from './use-session'
+import { useHasPermission } from './use-session'
 
 // There is no DOM in this test setup: render to static markup and read stores synchronously (no server snapshot needed).
 vi.mock('react', async (importOriginal) => {
@@ -20,8 +19,8 @@ vi.mock('./login-page', () => ({ LoginPage: () => 'LOGIN_PAGE' }))
 
 const i18n: I18nValue = { t: (key) => key, language: 'en', setLanguage: () => undefined }
 
-function sessionWith(role: Role): Session {
-  return { email: 'jane@example.com', role, roles: [role], claims: [], idToken: 'tok', expiresAt: null }
+function sessionWith(roles: string[], claims: { key: string; value: string }[] = []): Session {
+  return { email: 'jane@example.com', role: roles[0] ?? '', roles, claims, idToken: 'tok', expiresAt: null }
 }
 
 function fakeAuth(session: Session | null, refresh = vi.fn().mockResolvedValue(null)) {
@@ -39,24 +38,26 @@ function render(auth: AuthService, node: ReactNode): string {
   )
 }
 
-function CanWriteProbe() {
-  return createElement('span', null, String(useCanWrite()))
+function PermissionProbe() {
+  return createElement('span', null, String(useHasPermission('device.mgt.write')))
 }
 
-describe('useCanWrite', () => {
-  it('is true for admin only', () => {
-    expect(render(fakeAuth(sessionWith('admin')), createElement(CanWriteProbe))).toContain('true')
-    expect(render(fakeAuth(sessionWith('viewer')), createElement(CanWriteProbe))).toContain('false')
-    expect(render(fakeAuth(null), createElement(CanWriteProbe))).toContain('false')
+describe('useHasPermission', () => {
+  it('is true for the permission claim or the super role', () => {
+    const claim = [{ key: 'permission', value: 'device.mgt.write' }]
+    expect(render(fakeAuth(sessionWith(['editor'], claim)), createElement(PermissionProbe))).toContain('true')
+    expect(render(fakeAuth(sessionWith(['super'])), createElement(PermissionProbe))).toContain('true')
+    expect(render(fakeAuth(sessionWith(['viewer'])), createElement(PermissionProbe))).toContain('false')
+    expect(render(fakeAuth(null), createElement(PermissionProbe))).toContain('false')
   })
 })
 
 describe('CurrentUserBadge', () => {
   it('shows the avatar initial, email and role', () => {
-    const html = render(fakeAuth(sessionWith('viewer')), createElement(CurrentUserBadge))
+    const html = render(fakeAuth(sessionWith(['viewer'])), createElement(CurrentUserBadge))
     expect(html).toContain('>J<')
     expect(html).toContain('jane@example.com')
-    expect(html).toContain('auth.role.viewer')
+    expect(html).toContain('viewer')
   })
 
   it('renders nothing without a session', () => {
@@ -65,16 +66,10 @@ describe('CurrentUserBadge', () => {
 })
 
 describe('UserMenu', () => {
-  it('shows the read-only hint for viewers', () => {
-    const html = render(fakeAuth(sessionWith('viewer')), createElement(UserMenu))
-    expect(html).toContain('auth.viewerReadOnly')
+  it('shows the role names and the sign-out button', () => {
+    const html = render(fakeAuth(sessionWith(['editor'])), createElement(UserMenu))
+    expect(html).toContain('editor')
     expect(html).toContain('auth.signOut')
-  })
-
-  it('hides the read-only hint for admins', () => {
-    const html = render(fakeAuth(sessionWith('admin')), createElement(UserMenu))
-    expect(html).not.toContain('auth.viewerReadOnly')
-    expect(html).toContain('auth.role.admin')
   })
 
   it('renders nothing without a session', () => {
@@ -90,7 +85,7 @@ describe('AuthGate', () => {
     render(auth, createElement(AuthGate, protectedProps(auth)))
 
   it('renders the children when signed in', () => {
-    expect(gate(fakeAuth(sessionWith('admin')))).toContain('PROTECTED')
+    expect(gate(fakeAuth(sessionWith(['editor'])))).toContain('PROTECTED')
   })
 
   it('shows the checking state while no session is known yet', () => {

@@ -34,8 +34,8 @@ describe('applyAssignmentChange', () => {
   it('stops at the first failure, rethrows it and still reports done', async () => {
     const remove = vi.fn()
     const onDone = vi.fn()
-    const add = vi.fn().mockRejectedValue(new Error('last_admin'))
-    await expect(applyAssignmentChange({ added: ['x'], removed: ['y'] }, add, remove, onDone)).rejects.toThrow('last_admin')
+    const add = vi.fn().mockRejectedValue(new Error('last_super'))
+    await expect(applyAssignmentChange({ added: ['x'], removed: ['y'] }, add, remove, onDone)).rejects.toThrow('last_super')
     expect(remove).not.toHaveBeenCalled()
     expect(onDone).toHaveBeenCalledOnce()
   })

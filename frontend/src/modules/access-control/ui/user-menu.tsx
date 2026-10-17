@@ -16,8 +16,7 @@ export function UserMenu() {
   return (
     <div className="user-menu" role="group" aria-label={t('auth.account')}>
       <p className="user-menu-email">{session.email}</p>
-      <p className="muted">{t(`auth.role.${session.role}`)}</p>
-      {session.role === 'viewer' && <p className="muted">{t('auth.viewerReadOnly')}</p>}
+      {session.roles.length > 0 && <p className="muted">{session.roles.join(', ')}</p>}
       {signOut.error && <FormError message={translateError(signOut.error, t)} />}
       <Button variant="outline" loading={signOut.pending} onClick={() => signOut.run()}>{t('auth.signOut')}</Button>
     </div>

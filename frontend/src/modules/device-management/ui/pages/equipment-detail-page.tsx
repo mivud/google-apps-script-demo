@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useCanWrite } from '../../../access-control'
+import { useCanWriteDevices } from '../use-can-write-devices'
 import { EquipmentFormDialog } from '../components/equipment-form-dialog'
 import { AuditInfo } from '../components/audit-info'
 import { EquipmentCategoryLine, EquipmentQuantityLine } from '../components/equipment-meta'
@@ -28,7 +28,7 @@ interface EquipmentDetailPageProps {
 export function EquipmentDetailPage({ id, onDeleted }: EquipmentDetailPageProps) {
   const { equipment, maintenance } = useServices()
   const { t, language } = useI18n()
-  const canWrite = useCanWrite()
+  const canWrite = useCanWriteDevices()
   const detail = useAsyncData(() => equipment.get(id), [equipment, id])
   const logs = useAsyncData(() => maintenance.listByEquipment(id), [maintenance, id])
   const [editing, setEditing] = useState(false)

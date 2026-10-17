@@ -34,8 +34,8 @@ describe('users on Sheets', () => {
   })
 
   it('maps domain failures and rejects malformed rows', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: false, error: { code: 'VALIDATION', message: 'last_admin' } }) }))
-    await expect(createUserService(config).remove('u1')).rejects.toMatchObject({ code: 'last_admin' })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: false, error: { code: 'VALIDATION', message: 'last_super' } }) }))
+    await expect(createUserService(config).remove('u1')).rejects.toMatchObject({ code: 'last_super' })
     stub({ id: 5 })
     await expect(createUserService(config).get('u1')).rejects.toMatchObject({ code: 'network' })
   })

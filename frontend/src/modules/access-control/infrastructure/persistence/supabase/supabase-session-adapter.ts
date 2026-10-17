@@ -38,13 +38,12 @@ export class SupabaseSessionAdapter implements SessionProvider {
     }
   }
 
-  // The RPC returns null for unknown or inactive users and for callers without a valid primary role.
+  // The RPC returns null for unknown or inactive users.
   private async loadIdentity(email: string): Promise<Identity | null> {
     const { data, error } = await this.client.rpc(CURRENT_IDENTITY_RPC)
     if (error) throw new NetworkError()
     if (!data) return null
     const access = parseEffectiveAccess(data)
-    if (access.role === '') return null
-    return { ...access, role: access.role, email: access.email || email }
+    return { ...access, email: access.email || email }
   }
 }

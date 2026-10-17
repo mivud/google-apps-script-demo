@@ -1,4 +1,6 @@
+import { DEVICE_MGT_READ } from '../../modules/device-management/permissions'
 import { EXPENSE_READ_PERMISSION, PERMISSION_CLAIM_KEY } from '../../modules/expense-tracking/permissions'
+import { IDENTITY_READ } from '../identity/permissions'
 import type { AppDefinition } from './app-definition'
 
 // Cards appear in this order on the launcher.
@@ -9,7 +11,8 @@ export const APP_REGISTRY: readonly AppDefinition[] = [
     descriptionKey: 'launcher.identity.description',
     icon: 'users',
     path: '/identity',
-    accessClaimValue: 'identity',
+    accessClaimKey: PERMISSION_CLAIM_KEY,
+    accessClaimValue: IDENTITY_READ,
     load: () => import('../identity/identity-app'),
   },
   {
@@ -18,7 +21,8 @@ export const APP_REGISTRY: readonly AppDefinition[] = [
     descriptionKey: 'launcher.devices.description',
     icon: 'book',
     path: '/devices',
-    accessClaimValue: 'device.mgt',
+    accessClaimKey: PERMISSION_CLAIM_KEY,
+    accessClaimValue: DEVICE_MGT_READ,
     load: () => import('../device-management-app'),
   },
   {

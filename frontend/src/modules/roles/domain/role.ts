@@ -17,7 +17,7 @@ export interface RoleInput {
 export const ROLE_NAME_PATTERN = /^[a-z][a-z0-9_-]{1,31}$/
 export const ROLE_DESCRIPTION_MAX_LENGTH = 200
 // The backend refuses to rename or delete these.
-export const BUILT_IN_ROLE_NAMES = ['admin', 'viewer'] as const
+export const BUILT_IN_ROLE_NAMES = ['super'] as const
 
 export function isBuiltInRoleName(name: string): boolean {
   return (BUILT_IN_ROLE_NAMES as readonly string[]).includes(name)

@@ -13,7 +13,7 @@ import type { Claim, ClaimService } from '../..'
 import { ClaimFormDialog } from '../components/claim-form-dialog'
 import { claimLabel, sortClaims } from '../claim-format'
 
-export function ClaimsPage({ claims }: { claims: ClaimService }) {
+export function ClaimsPage({ claims, canWrite }: { claims: ClaimService; canWrite: boolean }) {
   const { t } = useI18n()
   const list = useAsyncData(() => claims.list(), [claims])
   const [creating, setCreating] = useState(false)
@@ -27,7 +27,7 @@ export function ClaimsPage({ claims }: { claims: ClaimService }) {
     <section>
       <PageHeader
         title={t('identity.claims.title')}
-        actions={<LoadingButton onClick={() => setCreating(true)} disabled={remove.pending}>{t('identity.claims.add')}</LoadingButton>}
+        actions={canWrite ? <LoadingButton onClick={() => setCreating(true)} disabled={remove.pending}>{t('identity.claims.add')}</LoadingButton> : undefined}
       />
       {remove.dialog}
       <RefreshIndicator active={list.loading && !!list.data} />
@@ -45,11 +45,11 @@ export function ClaimsPage({ claims }: { claims: ClaimService }) {
             return (
               <SurfaceListItem
                 key={label}
-                actions={
+                actions={canWrite ? (
                   <LoadingButton variant="destructive" size="sm" disabled={remove.pending} aria-label={t('identity.claims.deleteNamed', { name: label })} onClick={() => remove.ask(claim)}>
                     {t('common.delete')}
                   </LoadingButton>
-                }
+                ) : undefined}
               >
                 <strong>{claim.key}</strong>
                 <span className="muted"> = </span>

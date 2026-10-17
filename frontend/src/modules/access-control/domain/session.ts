@@ -1,10 +1,10 @@
 import type { Claim } from '../../claims'
-import type { Role } from './role'
 
 // Who the backend says the caller is, as returned by the provider adapters.
 export interface Identity {
   email: string
-  role: Role
+  // Primary role name as sent by the backend; may be empty. Not used for permission checks.
+  role: string
   // Role names and effective claims, for feature checks such as hasClaim(identity.claims, ...).
   roles: string[]
   claims: Claim[]

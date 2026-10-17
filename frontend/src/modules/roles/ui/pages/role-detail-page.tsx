@@ -21,9 +21,10 @@ interface RoleDetailPageProps {
   roles: RoleService
   claims: ClaimService
   onDeleted: () => void
+  canWrite: boolean
 }
 
-export function RoleDetailPage({ id, roles, claims, onDeleted }: RoleDetailPageProps) {
+export function RoleDetailPage({ id, roles, claims, onDeleted, canWrite }: RoleDetailPageProps) {
   const { t } = useI18n()
   const detail = useAsyncData(() => roles.get(id), [roles, id])
   const [editing, setEditing] = useState(false)
@@ -49,10 +50,10 @@ export function RoleDetailPage({ id, roles, claims, onDeleted }: RoleDetailPageP
         <p>{role.description}</p>
         <AuditDetails audit={role} />
 
-        <ButtonRow>
+        {canWrite && <ButtonRow>
           <LoadingButton variant="outline" disabled={remove.pending} onClick={() => setEditing(true)}>{t('common.edit')}</LoadingButton>
           {!builtIn && <LoadingButton variant="destructive" disabled={remove.pending} onClick={() => remove.ask(role.name)}>{t('common.delete')}</LoadingButton>}
-        </ButtonRow>
+        </ButtonRow>}
 
         <h2>{t('identity.roles.claims')}</h2>
         <ClaimAssignment
@@ -62,6 +63,7 @@ export function RoleDetailPage({ id, roles, claims, onDeleted }: RoleDetailPageP
           onRemove={(claim) => roles.removeClaim(id, claim)}
           onChanged={detail.reload}
           onRefresh={detail.reload}
+          readOnly={!canWrite}
         />
       </div>
 

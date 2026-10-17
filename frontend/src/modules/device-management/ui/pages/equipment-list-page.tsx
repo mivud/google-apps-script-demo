@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { EquipmentStatus } from '../../domain/equipment'
 import { EQUIPMENT_STATUSES } from '../../domain/equipment'
-import { useCanWrite } from '../../../access-control'
+import { useCanWriteDevices } from '../use-can-write-devices'
 import { CategorySelect } from '../components/category-select'
 import { EquipmentFormDialog } from '../components/equipment-form-dialog'
 import { EquipmentTable } from '../components/equipment-table'
@@ -24,7 +24,7 @@ import { useServices } from '../services-context'
 export function EquipmentListPage() {
   const { equipment } = useServices()
   const { t } = useI18n()
-  const canWrite = useCanWrite()
+  const canWrite = useCanWriteDevices()
   const [search, setSearch] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [status, setStatus] = useState<EquipmentStatus | ''>('')

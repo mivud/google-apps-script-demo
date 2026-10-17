@@ -16,7 +16,7 @@ const IDENTITY_CODES: readonly ValidationCode[] = [
   'user_email_invalid',
   'user_email_duplicate',
   'limit_exceeded',
-  'last_admin',
+  'last_super',
   'self_lockout',
   'conflict',
 ]

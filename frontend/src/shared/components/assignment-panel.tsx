@@ -21,10 +21,12 @@ interface AssignmentPanelProps {
   // Receives only the difference, so the caller can apply additions before removals.
   onSave: (change: AssignmentChange) => Promise<unknown>
   onRefresh?: () => void
+  // View-only: boxes are disabled and Save is hidden.
+  readOnly?: boolean
 }
 
 // Checkbox list of all options with one Save button; shared by roles and claims.
-export function AssignmentPanel({ options, assignedIds, emptyMessage, legend, onSave, onRefresh }: AssignmentPanelProps) {
+export function AssignmentPanel({ options, assignedIds, emptyMessage, legend, onSave, onRefresh, readOnly = false }: AssignmentPanelProps) {
   const { t } = useI18n()
   const assignedKey = assignedIds.join('\n')
   const [checked, setChecked] = useState(() => new Set(assignedIds))
@@ -60,7 +62,7 @@ export function AssignmentPanel({ options, assignedIds, emptyMessage, legend, on
 
   return (
     <form onSubmit={handleSave}>
-      <fieldset className="checkbox-list" disabled={save.pending}>
+      <fieldset className="checkbox-list" disabled={save.pending || readOnly}>
         <legend className="visually-hidden">{legend}</legend>
         {options.map((option) => (
           <label key={option.id} className="checkbox-item">
@@ -69,9 +71,11 @@ export function AssignmentPanel({ options, assignedIds, emptyMessage, legend, on
           </label>
         ))}
       </fieldset>
-      <ButtonRow>
-        <LoadingButton type="submit" loading={save.pending} disabled={!dirty}>{t('common.save')}</LoadingButton>
-      </ButtonRow>
+      {!readOnly && (
+        <ButtonRow>
+          <LoadingButton type="submit" loading={save.pending} disabled={!dirty}>{t('common.save')}</LoadingButton>
+        </ButtonRow>
+      )}
       <ActionError error={save.error} onRefresh={onRefresh} />
     </form>
   )

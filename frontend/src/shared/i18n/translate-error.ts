@@ -28,7 +28,7 @@ const VALIDATION_CODE_KEYS: Record<ValidationCode, MessageKey> = {
   user_email_invalid: 'error.validation.userEmailInvalid',
   user_email_duplicate: 'error.validation.userEmailDuplicate',
   limit_exceeded: 'error.validation.limitExceeded',
-  last_admin: 'error.validation.lastAdmin',
+  last_super: 'error.validation.lastSuper',
   self_lockout: 'error.validation.selfLockout',
   conflict: 'error.validation.conflict',
   expense_description_invalid: 'error.validation.expenseDescriptionInvalid',

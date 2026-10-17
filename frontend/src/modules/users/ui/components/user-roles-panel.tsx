@@ -12,9 +12,10 @@ interface UserRolesPanelProps {
   // Called after a save, also when it stopped half way, so the page shows the real state.
   onChanged: () => void
   onRefresh: () => void
+  readOnly: boolean
 }
 
-export function UserRolesPanel({ user, roles, onAssign, onUnassign, onChanged, onRefresh }: UserRolesPanelProps) {
+export function UserRolesPanel({ user, roles, onAssign, onUnassign, onChanged, onRefresh, readOnly }: UserRolesPanelProps) {
   const { t } = useI18n()
   const options = [...roles].sort((a, b) => a.name.localeCompare(b.name)).map((role) => ({ id: role.id, label: role.name }))
   const save = (change: AssignmentChange) => applyAssignmentChange(change, onAssign, onUnassign, onChanged)
@@ -26,6 +27,7 @@ export function UserRolesPanel({ user, roles, onAssign, onUnassign, onChanged, o
       legend={t('identity.users.roles')}
       onSave={save}
       onRefresh={onRefresh}
+      readOnly={readOnly}
     />
   )
 }

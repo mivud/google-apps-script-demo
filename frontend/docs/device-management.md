@@ -86,4 +86,4 @@ flowchart TD
 
 ## Limits
 
-Sign-in and roles come from [access-control](access-control.md); viewers get no write controls. Types are the only client schema; keep them in sync with backend columns. Nothing outside persistence may import the Supabase client or call `fetch` for data.
+Sign-in and roles come from [access-control](access-control.md); write controls need `device.mgt.write` (`useCanWriteDevices`) and the app needs `device.mgt.read`. Types are the only client schema; keep them in sync with backend columns. Nothing outside persistence may import the Supabase client or call `fetch` for data.

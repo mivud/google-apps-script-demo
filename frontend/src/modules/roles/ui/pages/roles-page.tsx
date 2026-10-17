@@ -17,7 +17,7 @@ import type { Role, RoleService } from '../..'
 import { RoleFormDialog } from '../components/role-form-dialog'
 import { isBuiltInRole } from '../role-rules'
 
-export function RolesPage({ roles }: { roles: RoleService }) {
+export function RolesPage({ roles, canWrite }: { roles: RoleService; canWrite: boolean }) {
   const { t } = useI18n()
   const list = useAsyncData(() => roles.list(), [roles])
   const [creating, setCreating] = useState(false)
@@ -33,14 +33,14 @@ export function RolesPage({ roles }: { roles: RoleService }) {
     { key: 'builtIn', header: t('identity.roles.type'), cell: (role) => (isBuiltInRole(role.name) ? <Badge>{t('identity.builtIn')}</Badge> : '') },
     { key: 'claims', header: t('identity.roles.claimsColumn'), cell: (role) => t('identity.roles.claimCount', { count: role.claims.length }) },
     { key: 'description', header: t('identity.roles.description'), cell: (role) => role.description },
-    { key: 'actions', header: t('common.actions'), cell: (role) => <RowActions itemName={role.name} disabled={remove.pending} onEdit={() => setEditing(role)} onDelete={(isBuiltInRole(role.name) ? undefined : () => remove.ask(role))} /> },
+    ...(canWrite ? [{ key: 'actions', header: t('common.actions'), cell: (role: Role) => <RowActions itemName={role.name} disabled={remove.pending} onEdit={() => setEditing(role)} onDelete={(isBuiltInRole(role.name) ? undefined : () => remove.ask(role))} /> }] : []),
   ]
 
   return (
     <section>
       <PageHeader
         title={t('identity.roles.title')}
-        actions={<LoadingButton onClick={() => setCreating(true)}>{t('identity.roles.add')}</LoadingButton>}
+        actions={canWrite ? <LoadingButton onClick={() => setCreating(true)}>{t('identity.roles.add')}</LoadingButton> : undefined}
       />
       <RefreshIndicator active={list.loading && !!list.data} />
 

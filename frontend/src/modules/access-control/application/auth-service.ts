@@ -1,6 +1,5 @@
 import { AuthError, ForbiddenError } from '../../../shared/errors'
 import { readIdTokenExpiry } from '../domain/id-token'
-import type { Role } from '../domain/role'
 import type { Session } from '../domain/session'
 import type { IdTokenSource, SilentFailure } from './id-token-source'
 import type { SessionProvider } from './session-provider'
@@ -74,7 +73,7 @@ export class AuthService {
     return this.store.get()?.idToken ?? null
   }
 
-  getRole(): Role | null {
+  getRole(): string | null {
     return this.store.get()?.role ?? null
   }
 

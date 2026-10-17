@@ -19,7 +19,7 @@ describe('toIdentityError', () => {
 
 describe('toSupabaseIdentityError', () => {
   it('maps raised exception messages to stable codes', () => {
-    expect(toSupabaseIdentityError({ message: 'last_admin' })).toMatchObject({ code: 'last_admin' })
+    expect(toSupabaseIdentityError({ message: 'last_super' })).toMatchObject({ code: 'last_super' })
     expect(toSupabaseIdentityError({ code: 'P0001', message: 'ERROR: self_lockout' })).toMatchObject({ code: 'self_lockout' })
   })
 

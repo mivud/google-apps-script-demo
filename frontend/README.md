@@ -7,3 +7,5 @@ Environment variables (put them in `.env.local`, never commit): `VITE_DB_PROVIDE
 Sheets provider: `VITE_SHEETS_API_URL` and `VITE_IDENTITY_API_URL` (see [identity-api](../backend/docs/identity-api.md)); requests carry a Google ID token, no shared token.
 Google login (all providers): `VITE_GOOGLE_CLIENT_ID` (public value, see [docs/access-control.md](docs/access-control.md)).
 Supabase provider: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
+
+Permissions: apps and write controls are gated by `permission` claims (`identity.read|write`, `device.mgt.read|write`, `expense.read|write`); the `super` role passes every check. See [docs/access-control.md](docs/access-control.md) and [docs/launcher.md](docs/launcher.md).

@@ -4,8 +4,8 @@ Monthly expense tracking: expenses per statement month, payment methods and fixe
 
 ## Access
 
-- App access: claim `permission` = `expense.read` (registry entry `expense`, path `/expense`, via the optional `accessClaimKey`). Seed `permission=expense.read` in the claims catalog and assign it to a role or user. Without it the tile is hidden and a typed URL redirects to `/` (same behavior as the other apps).
-- Data access inside the app: claim `permission` = `expense.read` (list) and `permission` = `expense.write` (create, update, delete, generate). `useCanWriteExpenses` hides every write control for users without `expense.write` (admin and `super` also pass); the backend / RLS is authoritative.
+- App access: claim `permission` = `expense.read` (registry entry `expense`, path `/expense`, via `accessClaimKey`). Seed `permission=expense.read` in the claims catalog and assign it to a role or user. Without it the tile is hidden and a typed URL redirects to `/` (same behavior as the other apps).
+- Data access inside the app: claim `permission` = `expense.read` (list) and `permission` = `expense.write` (create, update, delete, generate). `useCanWriteExpenses` hides every write control for users without `expense.write` (the `super` role also passes, through `hasPermission` of [access-control](access-control.md); `PERMISSION_CLAIM_KEY` is re-used from there); the backend / RLS is authoritative.
 
 ## Model
 

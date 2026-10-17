@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { Category } from '../../domain/category'
 import { buildTree, MAX_CATEGORY_DEPTH, type CategoryNode } from '../../domain/category-tree'
-import { useCanWrite } from '../../../access-control'
+import { useCanWriteDevices } from '../use-can-write-devices'
 import { useI18n } from '../../../../shared/i18n'
 import { useCategories } from '../categories-context'
 import { EmptyState } from '../../../../shared/components/empty-state'
@@ -32,7 +32,7 @@ function toTreeNodes(nodes: CategoryNode[]): CategoryTreeNode[] {
 export function CategoriesPage() {
   const { categories } = useServices()
   const { t } = useI18n()
-  const canWrite = useCanWrite()
+  const canWrite = useCanWriteDevices()
   const { data, flat, loading, error, reload } = useCategories()
   const [dialog, setDialog] = useState<DialogState | undefined>(undefined)
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined)

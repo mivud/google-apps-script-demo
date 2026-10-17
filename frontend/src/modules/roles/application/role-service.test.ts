@@ -35,7 +35,7 @@ describe('RoleService', () => {
   })
 
   it('protects built-in roles and roles in use', async () => {
-    const admin = await store.createRole({ name: 'admin', description: '' })
+    const admin = await store.createRole({ name: 'super', description: '' })
     await expect(service.remove(admin.id)).rejects.toMatchObject({ code: 'role_protected' })
     await expect(service.update(admin.id, { name: 'boss', description: '' }, admin.lastModified)).rejects.toMatchObject({
       code: 'role_protected',

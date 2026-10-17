@@ -31,6 +31,12 @@ describe('SheetsSessionAdapter', () => {
     expect(identity).toEqual({ email: 'a@b.c', role: 'viewer', roles: [], claims: [] })
   })
 
+  it('accepts any role name, including an empty one', async () => {
+    stubResponse({ ok: true, data: { email: 'a@b.c', role: '' } })
+    const identity = await new SheetsSessionAdapter('u').establish('t', 'n')
+    expect(identity).toEqual({ email: 'a@b.c', role: '', roles: [], claims: [] })
+  })
+
   it('maps UNAUTHORIZED and FORBIDDEN', async () => {
     stubResponse({ ok: false, error: { code: 'UNAUTHORIZED', message: 'x' } })
     await expect(new SheetsSessionAdapter('u').establish('t', 'n')).rejects.toBeInstanceOf(AuthError)
@@ -40,8 +46,8 @@ describe('SheetsSessionAdapter', () => {
 
   it('rejects malformed identity data', async () => {
     const malformed = [
-      { email: 'a@b.c', role: 'root' },
-      { email: 'a@b.c', role: '' },
+      { email: 'a@b.c', role: 5 },
+      { role: 'admin' },
       { email: 'a@b.c', role: 'admin', roles: 'admin' },
       { email: 'a@b.c', role: 'admin', roles: [1] },
       { email: 'a@b.c', role: 'admin', claims: [{ key: 'a' }] },

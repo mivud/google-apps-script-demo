@@ -8,7 +8,7 @@ import {
 } from '../domain/user'
 import type { UserRepository } from './user-repository'
 
-// Validates input at the boundary, then delegates; last-admin and self-lockout rules are enforced by the backend.
+// Validates input at the boundary, then delegates; last-super and self-lockout rules are enforced by the backend.
 export class UserService {
   private readonly repository: UserRepository
 

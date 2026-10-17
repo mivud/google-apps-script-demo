@@ -20,3 +20,5 @@ The catalog of claims (`key` + `value`) that roles and users hold. Backend count
 ## Limits
 
 No paging. In-memory fake for tests: [testing](../src/modules/claims/testing/in-memory-claim-repository.ts).
+
+The `permission` claim key (values such as `identity.read`, `device.mgt.write`) drives app access and write controls; the old `app` claim is no longer read. Seed these claims in the catalog. In the Identity app the claims page and claim checklists are editable only with `identity.write`.

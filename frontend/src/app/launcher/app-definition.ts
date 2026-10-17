@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import { hasClaim, type Session } from '../../modules/access-control'
+import { hasClaim, isSuper, type Session } from '../../modules/access-control'
 import type { IconName } from '../../shared/components/icon'
 import type { MessageKey } from '../../shared/i18n'
 import type { AppDeps } from '../app-deps'
@@ -13,16 +13,12 @@ export interface AppDefinition {
   path: string
   // Code-split entry; the module is fetched only when the user opens the app.
   load: () => Promise<{ default: ComponentType<{ deps: AppDeps }> }>
-  // Value of the `app` claim that grants access to this app.
+  // Claim (key and value) that grants access to this app, e.g. permission=expense.read.
+  accessClaimKey: string
   accessClaimValue: string
-  // Claim key checked against accessClaimValue; defaults to APP_CLAIM_KEY ("app").
-  accessClaimKey?: string
 }
 
-export const APP_CLAIM_KEY = 'app'
-// Users holding this role skip the claim check.
-export const SUPER_ROLE = 'super'
-
+// Same rule as hasPermission, but with the app's own claim key.
 export function isAppAvailable(app: AppDefinition, identity: Session): boolean {
-  return identity.roles.includes(SUPER_ROLE) || hasClaim(identity.claims, app.accessClaimKey ?? APP_CLAIM_KEY, app.accessClaimValue)
+  return isSuper(identity) || hasClaim(identity.claims, app.accessClaimKey, app.accessClaimValue)
 }

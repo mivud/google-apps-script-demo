@@ -28,9 +28,10 @@ interface UserDetailPageProps {
   // Rendered by the shell so users does not depend on access-control; version changes after each edit.
   renderAccess: (version: number) => ReactNode
   onDeleted: () => void
+  canWrite: boolean
 }
 
-export function UserDetailPage({ id, users, roles, claims, renderAccess, onDeleted }: UserDetailPageProps) {
+export function UserDetailPage({ id, users, roles, claims, renderAccess, onDeleted, canWrite }: UserDetailPageProps) {
   const { t } = useI18n()
   const detail = useAsyncData(() => users.get(id), [users, id])
   const roleList = useAsyncData(() => roles.list(), [roles])
@@ -70,13 +71,13 @@ export function UserDetailPage({ id, users, roles, claims, renderAccess, onDelet
         <GlassSurface className="detail-card">
           <AuditDetails audit={user} />
 
-          <ButtonRow>
+          {canWrite && <ButtonRow>
             <LoadingButton variant="outline" disabled={busy} onClick={() => setEditing(true)}>{t('common.edit')}</LoadingButton>
             <LoadingButton variant="outline" loading={toggleActive.pending} disabled={remove.pending} onClick={() => toggleActive.run()}>
               {t(user.active ? 'identity.deactivate' : 'identity.activate')}
             </LoadingButton>
             <LoadingButton variant="destructive" disabled={busy} onClick={() => remove.ask(user.email)}>{t('common.delete')}</LoadingButton>
-          </ButtonRow>
+          </ButtonRow>}
           <ActionError error={toggleActive.error} onRefresh={detail.reload} />
 
           <hr className="card-divider" />
@@ -98,6 +99,7 @@ export function UserDetailPage({ id, users, roles, claims, renderAccess, onDelet
               onUnassign={(roleId) => users.unassignRole(id, roleId)}
               onChanged={changed}
               onRefresh={detail.reload}
+              readOnly={!canWrite}
             />
           )}
         </GlassSurface>
@@ -112,6 +114,7 @@ export function UserDetailPage({ id, users, roles, claims, renderAccess, onDelet
             onRemove={(claim) => users.removeClaim(id, claim)}
             onChanged={changed}
             onRefresh={detail.reload}
+            readOnly={!canWrite}
           />
         </GlassSurface>
       </div>

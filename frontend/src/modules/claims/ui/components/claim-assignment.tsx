@@ -16,10 +16,11 @@ interface ClaimAssignmentProps {
   // Called after a save, also when it stopped half way, so the page shows the real state.
   onChanged: () => void
   onRefresh?: () => void
+  readOnly?: boolean
 }
 
 // Claims can only be assigned from the catalog, so the checklist lists every existing claim.
-export function ClaimAssignment({ claimService, assigned, onAdd, onRemove, onChanged, onRefresh }: ClaimAssignmentProps) {
+export function ClaimAssignment({ claimService, assigned, onAdd, onRemove, onChanged, onRefresh, readOnly }: ClaimAssignmentProps) {
   const { t } = useI18n()
   const catalog = useAsyncData(() => claimService.list(), [claimService])
   const assignedIds = useMemo(() => assigned.map(claimLabel), [assigned])
@@ -47,6 +48,7 @@ export function ClaimAssignment({ claimService, assigned, onAdd, onRemove, onCha
       legend={t('identity.claims.title')}
       onSave={save}
       onRefresh={onRefresh}
+      readOnly={readOnly}
     />
   )
 }

@@ -4,7 +4,7 @@ Named groups of claims. Backend counterpart: [backend/docs/roles.md](../../backe
 
 ## Public API ([index.ts](../src/modules/roles/index.ts))
 
-- Types `Role` (id, name, description, claims, audit fields) and `RoleInput`; `BUILT_IN_ROLE_NAMES` (`admin`, `viewer`), `isBuiltInRoleName`, `validateRoleInput`.
+- Types `Role` (id, name, description, claims, audit fields) and `RoleInput`; `BUILT_IN_ROLE_NAMES` (`super`, which cannot be renamed or deleted), `isBuiltInRoleName`, `validateRoleInput`.
 - `RoleService`: `list`, `get`, `create`, `update(id, input, expectedLastModified)`, `remove`, `addClaim`, `removeClaim`, over the `RoleRepository` port.
 - `createRoleService(config: ProviderConfig)`: Sheets calls `roles.role.*` and `roles.roleClaim.*`; Supabase uses the `roles` and `role_claims` tables.
 

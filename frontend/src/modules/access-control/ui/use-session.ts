@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { canWrite, type Role } from '../domain/role'
+import { hasPermission } from '../domain/permission'
 import type { Session } from '../domain/session'
 import { useAuth } from './auth-context'
 
@@ -11,12 +11,8 @@ export function useSession(): Session | null {
   )
 }
 
-export function useRole(): Role | null {
-  return useSession()?.role ?? null
-}
-
 // UI convenience only; the backend enforces the real permission.
-export function useCanWrite(): boolean {
-  const role = useRole()
-  return role !== null && canWrite(role)
+export function useHasPermission(permission: string): boolean {
+  const session = useSession()
+  return session !== null && hasPermission(session, permission)
 }

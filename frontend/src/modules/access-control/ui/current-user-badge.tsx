@@ -13,7 +13,7 @@ export function CurrentUserBadge() {
       <span className="current-user-text">
         <span className="visually-hidden">{t('settings.label')}: </span>
         <span className="current-user-email">{session.email}</span>
-        <span className="current-user-role">{t(`auth.role.${session.role}`)}</span>
+        <span className="current-user-role">{session.roles.join(', ')}</span>
       </span>
     </span>
   )
