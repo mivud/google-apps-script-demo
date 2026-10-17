@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { ClaimsPage } from '../../modules/claims/ui'
 import { RoleDetailPage, RolesPage } from '../../modules/roles/ui'
@@ -63,8 +63,10 @@ describe.each([
 
   it('user detail with both assignment panels', async () => {
     render(<UserDetailPage id="u1" users={users as never} roles={roles as never} claims={claims as never} renderAccess={() => null} onDeleted={() => undefined} canWrite={canWrite} />, { wrapper: sessionWrapper(sessionOf([])) })
-    await screen.findAllByRole('checkbox')
-    expectWrite(!!button(/Save/))
+    // The role and claim panels load independently; wait for both checkboxes.
+    await waitFor(() => expect(screen.queryAllByRole('checkbox')).toHaveLength(2))
+    // Roles and claims each render their own Save button.
+    expectWrite(screen.queryAllByRole('button', { name: /Save/ }).length === 2)
     expectWrite(!!button(/Deactivate/))
   })
 })
