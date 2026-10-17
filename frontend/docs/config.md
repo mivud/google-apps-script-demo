@@ -30,7 +30,7 @@ No existing adapter or UI code changes.
 
 ## Base path
 
-[vite.config.ts](../vite.config.ts) sets `base` from `VITE_BASE_PATH`. The workflow defaults to `/` (custom domain, Cloudflare Pages, local dev); the plain `github.io/<repo>/` URL needs `/<repo>/` through the repository variable `VITE_BASE_PATH`. See [deploy](deploy.md).
+[vite.config.ts](../vite.config.ts) sets `base` from `VITE_BASE_PATH`. The workflow detects it from the Pages settings (`/` with a custom domain, `/<repo>/` on `github.io`); the repository variable `VITE_BASE_PATH` overrides it. Cloudflare Pages and local dev use `/`. See [deploy](deploy.md).
 
 ## Data flow
 
