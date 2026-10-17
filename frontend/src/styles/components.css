@@ -43,7 +43,8 @@
 }
 .popover .field { margin-bottom: 16px; }
 .popover .field:last-child { margin-bottom: 0; }
-.version-info { display: grid; gap: 4px; margin: 16px 0 0; padding-top: 12px; border-top: 1px solid var(--glass-border); font-size: var(--text-sm, 0.875rem); color: var(--muted-foreground); }
+/* The only divider between the account block and the versions. */
+.version-info { display: grid; gap: 4px; margin: 0; padding-top: 12px; border-top: 1px solid var(--glass-border); font-size: var(--text-sm, 0.875rem); color: var(--muted-foreground); }
 .version-info > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 24px; }
 .version-info dd { margin: 0; display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; color: var(--popover-foreground); }
 .theme-picker { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0; border: 0; }
@@ -231,7 +232,7 @@
   .settings-menu { margin-left: 0; }
   .current-user-text { display: flex; }
 }
-.user-menu { display: grid; gap: 4px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--glass-border); }
+.user-menu { display: grid; gap: 4px; margin-bottom: 12px; }
 .user-menu p { margin: 0; }
 .user-menu .btn { margin-top: 8px; }
 .user-menu-email { overflow-wrap: anywhere; font-weight: 600; }
