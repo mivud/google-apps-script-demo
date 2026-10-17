@@ -24,10 +24,6 @@ function SelectControl<T>({ definition, value, onChange }: { definition: ChoiceF
   )
 }
 
-export function hasChoiceFilters<T>(definitions: readonly FilterDefinition<T>[]): boolean {
-  return definitions.some((definition) => definition.kind !== 'select')
-}
-
 // Row A: the select filters, in config order, next to the search field.
 export function SelectFilters<T>({ definitions, values, onChange }: Omit<FilterControlsProps<T>, 'toggleGroupLabel'>) {
   return (

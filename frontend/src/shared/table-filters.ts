@@ -79,3 +79,7 @@ export function countActiveFilters<T>(definitions: readonly FilterDefinition<T>[
 export function isDefaultQuery<T>(definitions: readonly FilterDefinition<T>[], query: TableQueryValues): boolean {
   return query.search === '' && countActiveFilters(definitions, query.values) === 0
 }
+
+export function hasChoiceFilters<T>(definitions: readonly FilterDefinition<T>[]): boolean {
+  return definitions.some((definition) => definition.kind !== 'select')
+}

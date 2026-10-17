@@ -1,12 +1,12 @@
 import { useMemo } from 'react'
 import { useLocalTableQuery, useUrlTableQuery } from '../hooks/use-table-query'
 import { useI18n } from '../i18n'
-import { applyFilters, isDefaultQuery, type DataTableToolbar } from '../table-filters'
+import { applyFilters, hasChoiceFilters, isDefaultQuery, type DataTableToolbar } from '../table-filters'
 import { ClearableSearch } from './clearable-search'
 import { DataTableView, type DataTableViewProps } from './data-table-view'
 import { EmptyState } from './empty-state'
 import { LoadingButton } from './loading-button'
-import { ChoiceFilters, SelectFilters, hasChoiceFilters } from './table-filter-panel'
+import { ChoiceFilters, SelectFilters } from './table-filter-panel'
 
 interface FilterableDataTableProps<T> extends DataTableViewProps<T> {
   toolbar: DataTableToolbar<T>
