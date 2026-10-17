@@ -21,7 +21,7 @@ export function LauncherPage({ apps, path }: LauncherPageProps) {
   const navItems: NavItemData[] = [{ label: t('launcher.allApps'), href: '#/', icon: 'apps', current: true }]
 
   return (
-    <AppShell title={t('launcher.title')} navItems={navItems} mainRef={mainRef} onSkipToContent={skipToContent} settingsTrigger={<CurrentUserBadge />} settingsFooter={<UserMenu />}>
+    <AppShell title={t('launcher.brand')} navItems={navItems} mainRef={mainRef} onSkipToContent={skipToContent} settingsTrigger={<CurrentUserBadge />} settingsFooter={<UserMenu />}>
       <PageHeader title={t('launcher.title')} />
       {visibleApps.length === 0 ? (
         <EmptyState message={t('launcher.empty')} />

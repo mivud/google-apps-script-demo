@@ -14,7 +14,7 @@ export const APP_REGISTRY: readonly AppDefinition[] = [
     id: 'device-management',
     titleKey: 'launcher.devices.title',
     descriptionKey: 'launcher.devices.description',
-    icon: 'laptop',
+    icon: 'book',
     path: '/devices',
     load: () => import('../device-management-app'),
   },

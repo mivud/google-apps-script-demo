@@ -31,6 +31,7 @@ export const vi: Messages = {
   'nav.equipment': 'Thiết bị',
 
   'launcher.title': 'Ứng dụng',
+  'launcher.brand': 'Nexus',
   'launcher.allApps': 'Tất cả ứng dụng',
   'launcher.empty': 'Không có ứng dụng nào dành cho tài khoản của bạn',
   'launcher.devices.title': 'Quản lý thiết bị',

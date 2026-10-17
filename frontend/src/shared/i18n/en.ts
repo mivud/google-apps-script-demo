@@ -35,6 +35,7 @@ export const en = {
   'nav.equipment': 'Equipment',
 
   'launcher.title': 'Apps',
+  'launcher.brand': 'Nexus',
   'launcher.allApps': 'All apps',
   'launcher.empty': 'No apps are available for your account',
   'launcher.identity.title': 'Identity',
