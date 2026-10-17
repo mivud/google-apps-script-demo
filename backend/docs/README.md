@@ -8,6 +8,7 @@ Two interchangeable storage backends behind one API contract: a Google Apps Scri
 |---|---|
 | [apps-script.md](apps-script.md) | API contract, clean-architecture layout, audit columns, sheets, setup and clasp workflow, tests (`npm test`) |
 | [identity-api.md](identity-api.md) | Standalone identity Web App: token verification, allowlist, roles, setup steps |
+| [expense-api.md](expense-api.md) | Standalone expense Web App: money sources, fixed expense templates, expenses, claims, setup runbook |
 | [access-control.md](access-control.md) | Sign-in, effective roles/claims, admin authorization, lockout rules |
 | [users.md](users.md) | Users module: allowlist, role assignment, own claims |
 | [roles.md](roles.md) | Roles module: built-in roles, role claims |
