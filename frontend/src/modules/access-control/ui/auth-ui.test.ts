@@ -82,7 +82,8 @@ describe('UserMenu', () => {
   })
 })
 
-const protectedProps = (auth: AuthService) => ({ auth, renderSignInButton: () => undefined, children: 'PROTECTED' })
+const redirectLogin = { begin: async () => undefined, consumeCallback: () => ({ status: 'none' as const }), clear: () => undefined }
+const protectedProps = (auth: AuthService) => ({ auth, renderSignInButton: () => undefined, redirectLogin, children: 'PROTECTED' })
 
 describe('AuthGate', () => {
   const gate = (auth: AuthService) =>

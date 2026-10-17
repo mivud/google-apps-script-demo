@@ -1,11 +1,13 @@
 import { createContext, useContext } from 'react'
 import type { AuthService } from '../application/auth-service'
+import type { RedirectLogin } from '../application/redirect-token-source'
 
 // DOM-facing, so it lives with the UI and is supplied by the infrastructure.
 export type RenderSignInButton = (container: HTMLElement) => void
 
 export const AuthContext = createContext<AuthService | null>(null)
 export const SignInButtonContext = createContext<RenderSignInButton | null>(null)
+export const RedirectLoginContext = createContext<RedirectLogin | null>(null)
 
 export function useAuth(): AuthService {
   const auth = useContext(AuthContext)
@@ -17,4 +19,10 @@ export function useSignInButton(): RenderSignInButton {
   const render = useContext(SignInButtonContext)
   if (!render) throw new Error('useSignInButton must be used inside AuthGate')
   return render
+}
+
+export function useRedirectLogin(): RedirectLogin {
+  const redirectLogin = useContext(RedirectLoginContext)
+  if (!redirectLogin) throw new Error('useRedirectLogin must be used inside AuthGate')
+  return redirectLogin
 }

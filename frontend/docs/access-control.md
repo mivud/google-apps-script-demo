@@ -4,7 +4,7 @@ Google sign-in, the signed-in caller's roles and claims, and the admin access pr
 
 ## Public API ([index.ts](../src/modules/access-control/index.ts))
 
-- `createAuthService(config)` returns `{ auth, renderSignInButton }`; `buildAuth(env, supabaseClient)` ([build-auth.ts](../src/app/build-auth.ts)) calls it once in [main.tsx](../src/main.tsx) and passes both to `AuthGate`.
+- `createAuthService(config)` returns `{ auth, renderSignInButton, redirectLogin }`; `buildAuth(env, supabaseClient)` ([build-auth.ts](../src/app/build-auth.ts)) calls it once in [main.tsx](../src/main.tsx), which first runs [consume-auth-callback.ts](../src/app/consume-auth-callback.ts) and then passes all three to `AuthGate`.
 - `AuthService`: `signIn(idToken, nonce)`, `restoreSession`, `silentFailure`, `signOut`, `current`, `getIdToken`, `getRole`, `subscribe`, `refreshIdToken`, `attempts` (pending or failed sign-in, read by the login page).
 - Types: `Identity` and `Session` (`email`, `role`, `roles: string[]`, `claims: Claim[]`; `Session` adds the token), `Role` (`admin` | `viewer`), `EffectiveAccess` (same fields, but `role` may be `''`: only a preview of a role-less user shows it, a real sign-in is refused). `hasClaim` and `Claim` are re-exported from [claims](claims.md).
 - `AccessPreviewService.preview(userId)` and `createAccessPreviewService(config)`: calls `access-control.access.preview` (Sheets) or the `preview_access` RPC (Supabase); admin only.
@@ -32,3 +32,30 @@ Google sign-in, the signed-in caller's roles and claims, and the admin access pr
 - `postToAppsScript` aborts after 45 s; the first request after sign-in runs alone through [WarmupGate](../src/shared/api/warmup-gate.ts).
 - `NetworkError` carries a fixed message; server or browser error text is never kept.
 - Conflict handling for the admin screens lives in [conflict.ts](../src/modules/access-control/ui/conflict.ts); route helpers for the Identity app are in [identity-routes.ts](../src/modules/access-control/ui/identity-routes.ts).
+
+## Redirect sign-in (fallback to One Tap)
+
+Shown on the login page under the Google button (emphasized with a hint when the silent sign-in failed). It works where One Tap cannot (third-party sign-in blocked, dismissed prompt). Code: [GoogleRedirectClient](../src/modules/access-control/infrastructure/google-redirect-client.ts) behind the `RedirectLogin` port; the button is [google-redirect-button.tsx](../src/modules/access-control/ui/google-redirect-button.tsx).
+
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant A as App (/login)
+  participant G as Google
+  participant B as Backend
+  U->>A: click "Sign in with Google (redirect)"
+  A->>A: state + nonce into sessionStorage (10 min)
+  A->>G: redirect (response_type=id_token, sha256(nonce), state)
+  G->>A: /auth/callback#id_token=...&state=...
+  A->>A: strip fragment, check state and TTL, take raw nonce
+  A->>B: auth.signIn(idToken, rawNonce)
+  B-->>A: session (role, claims)
+  A->>A: replace URL with the app root
+```
+
+- Redirect URIs must be registered: see [google-oauth-setup](../../backend/docs/google-oauth-setup.md). The URI is derived from `origin + BASE_URL + auth/callback`; there is no env var.
+- The backend is unchanged: the same `(idToken, rawNonce)` pair as One Tap.
+- The fragment is removed from the address bar as the first synchronous step. [404.html](../404.html) keeps the fragment out of `?p=`, so the token never reaches a server in a query string.
+- `state` is compared in constant time and is one-shot; the pending entry is deleted when read, on sign-out, and expires after 10 minutes. Errors are generic (`auth.redirectFailed`, `auth.redirectStateMismatch`); Google error text is never shown or logged.
+- If `sessionStorage` is unavailable the flow does not start and shows a generic error.
+- Limits: no silent renew after a reload (no `prompt=none`), and the token lasts about 1 hour with no refresh, so the user signs in again afterwards.

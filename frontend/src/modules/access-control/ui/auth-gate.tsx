@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Spinner } from '../../../shared/components/spinner'
 import { useI18n } from '../../../shared/i18n'
 import type { AuthService } from '../application/auth-service'
-import { AuthContext, SignInButtonContext, useAuth, type RenderSignInButton } from './auth-context'
+import type { RedirectLogin } from '../application/redirect-token-source'
+import { AuthContext, RedirectLoginContext, SignInButtonContext, useAuth, type RenderSignInButton } from './auth-context'
 import { LoginPage } from './login-page'
 import { useSession } from './use-session'
 
@@ -34,14 +35,17 @@ function GateContent({ children }: { children: ReactNode }) {
 interface AuthGateProps {
   auth: AuthService
   renderSignInButton: RenderSignInButton
+  redirectLogin: RedirectLogin
   children: ReactNode
 }
 
-export function AuthGate({ auth, renderSignInButton, children }: AuthGateProps) {
+export function AuthGate({ auth, renderSignInButton, redirectLogin, children }: AuthGateProps) {
   return (
     <AuthContext.Provider value={auth}>
       <SignInButtonContext.Provider value={renderSignInButton}>
-        <GateContent>{children}</GateContent>
+        <RedirectLoginContext.Provider value={redirectLogin}>
+          <GateContent>{children}</GateContent>
+        </RedirectLoginContext.Provider>
       </SignInButtonContext.Provider>
     </AuthContext.Provider>
   )

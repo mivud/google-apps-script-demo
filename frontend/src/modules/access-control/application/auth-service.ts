@@ -15,8 +15,16 @@ export class AuthService {
   private readonly store: SessionStore
   readonly attempts: SignInAttemptStore
   private lastSilentFailure: SilentFailure | null = null
+  private readonly onSignOut: () => void
 
-  constructor(sessions: SessionProvider, tokens: IdTokenSource, store: SessionStore, attempts = new SignInAttemptStore()) {
+  constructor(
+    sessions: SessionProvider,
+    tokens: IdTokenSource,
+    store: SessionStore,
+    attempts = new SignInAttemptStore(),
+    onSignOut: () => void = () => {},
+  ) {
+    this.onSignOut = onSignOut
     this.sessions = sessions
     this.tokens = tokens
     this.store = store
@@ -53,6 +61,7 @@ export class AuthService {
 
   async signOut(): Promise<void> {
     this.tokens.signOut()
+    this.onSignOut()
     this.store.set(null)
     await this.sessions.clear()
   }

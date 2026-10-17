@@ -8,8 +8,9 @@
       (function () {
         var base = '%BASE_URL%'
         var location = window.location
-        var route = location.pathname.slice(base.length - 1) + location.search + location.hash
-        location.replace(base + '?p=' + encodeURIComponent(route))
+        // The fragment (OAuth id_token) is re-appended outside ?p= so it never reaches a server in a query string.
+        var route = location.pathname.slice(base.length - 1) + location.search
+        location.replace(base + '?p=' + encodeURIComponent(route) + location.hash)
       })()
     </script>
   </head>

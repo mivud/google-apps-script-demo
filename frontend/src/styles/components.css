@@ -212,6 +212,8 @@
 .login-button { min-height: 48px; padding: 2px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; max-width: 100%; overflow-x: auto; }
 /* display:flex above would otherwise override the [hidden] attribute while a sign-in is pending. */
 .login-button[hidden] { display: none; }
+.login-redirect { display: flex; flex-direction: column; gap: 8px; }
+.login-redirect .btn { min-height: 44px; }
 .login-status { display: flex; align-items: center; gap: 8px; margin: 0; }
 .settings-trigger { padding-inline: 6px; max-width: 100%; }
 .settings-trigger > span { display: inline-flex; min-width: 0; }

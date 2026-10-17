@@ -9,6 +9,7 @@ import './styles/controls.css'
 import './styles/components.css'
 import { buildAuth } from './app/build-auth'
 import { buildSupabaseClient } from './app/build-supabase-client'
+import { consumeAuthCallback } from './app/consume-auth-callback'
 import { readEnv } from './app/env'
 import { resetRouteOnSignOut } from './app/reset-route-on-sign-out'
 import { buildRouter } from './app/router'
@@ -20,37 +21,43 @@ import { AppearanceProvider } from './shared/theme'
 import { ToastProvider } from './shared/toast'
 
 const root = createRoot(document.getElementById('root')!)
-
-try {
-  // Built once; both throw ConfigError on missing env so the startup error page shows.
-  const env = readEnv(import.meta.env)
-  const supabase = buildSupabaseClient(env)
-  const { auth, renderSignInButton } = buildAuth(env, supabase)
-  const router = buildRouter({ auth, env, supabase })
-  resetRouteOnSignOut(auth, router)
-  root.render(
-    <StrictMode>
+async function start() {
+  try {
+    // Built once; both throw ConfigError on missing env so the startup error page shows.
+    const env = readEnv(import.meta.env)
+    const supabase = buildSupabaseClient(env)
+    const runtime = buildAuth(env, supabase)
+    const { auth, renderSignInButton, redirectLogin } = runtime
+    // Before the router and the gate exist, so a redirect result is exchanged before any silent restore starts.
+    await consumeAuthCallback(runtime, window)
+    const router = buildRouter({ auth, env, supabase })
+    resetRouteOnSignOut(auth, router)
+    root.render(
+      <StrictMode>
+        <AppearanceProvider>
+          <I18nProvider>
+            <ToastProvider>
+              <ErrorBoundary>
+                <AuthGate auth={auth} renderSignInButton={renderSignInButton} redirectLogin={redirectLogin}>
+                  <RouterProvider router={router} />
+                </AuthGate>
+              </ErrorBoundary>
+            </ToastProvider>
+          </I18nProvider>
+        </AppearanceProvider>
+      </StrictMode>,
+    )
+  } catch (error) {
+    // Misconfiguration (missing env vars) is shown instead of a blank page; details stay in the console only.
+    console.error(error)
+    root.render(
       <AppearanceProvider>
         <I18nProvider>
-          <ToastProvider>
-            <ErrorBoundary>
-              <AuthGate auth={auth} renderSignInButton={renderSignInButton}>
-                <RouterProvider router={router} />
-              </AuthGate>
-            </ErrorBoundary>
-          </ToastProvider>
+          <StartupError />
         </I18nProvider>
-      </AppearanceProvider>
-    </StrictMode>,
-  )
-} catch (error) {
-  // Misconfiguration (missing env vars) is shown instead of a blank page; details stay in the console only.
-  console.error(error)
-  root.render(
-    <AppearanceProvider>
-      <I18nProvider>
-        <StartupError />
-      </I18nProvider>
-    </AppearanceProvider>,
-  )
+      </AppearanceProvider>,
+    )
+  }
 }
+
+void start()

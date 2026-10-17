@@ -12,8 +12,13 @@
         var base = '%BASE_URL%'
         var params = new URLSearchParams(window.location.search)
         var route = params.get('p')
-        if (route === null && window.location.hash.indexOf('#/') === 0) route = window.location.hash.slice(1)
-        if (route !== null && route.charAt(0) === '/') window.history.replaceState(null, '', base + route.slice(1))
+        var hash = window.location.hash
+        if (route === null && hash.indexOf('#/') === 0) {
+          route = hash.slice(1)
+          hash = ''
+        }
+        // The real fragment (e.g. an OAuth callback) is kept; only a migrated old hash route is dropped.
+        if (route !== null && route.charAt(0) === '/') window.history.replaceState(null, '', base + route.slice(1) + hash)
       })()
     </script>
     <!-- Runs before first paint so the saved accent and color scheme never flash; the theme list and meta colors are injected from shared/theme by vite-theme-plugin.ts. -->
