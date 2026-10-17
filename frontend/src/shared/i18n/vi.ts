@@ -1,6 +1,7 @@
 import type { Messages } from './en'
 
 export const vi: Messages = {
+  'app.name': 'Nexus Gate',
   'app.title': 'Quản lý thiết bị',
   'app.startFailed': 'Không thể khởi động ứng dụng',
 

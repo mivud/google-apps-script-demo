@@ -5,6 +5,8 @@ type ThemeMessageKey = `theme.${Theme}`
 
 // Source of truth for message keys; other catalogs must satisfy the same shape.
 export const en = {
+  // Browser tab title (the product name); app.title is the device management header.
+  'app.name': 'Nexus Gate',
   'app.title': 'Equipment manager',
   'app.startFailed': 'Application failed to start',
 

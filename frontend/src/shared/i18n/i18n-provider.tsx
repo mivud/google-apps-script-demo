@@ -19,7 +19,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, [language])
 
   useEffect(() => {
-    document.title = CATALOGS[language]['app.title']
+    document.title = CATALOGS[language]['app.name']
   }, [language])
 
   const setLanguage = useCallback((next: Language) => {
