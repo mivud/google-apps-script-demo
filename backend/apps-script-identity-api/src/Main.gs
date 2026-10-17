@@ -5,8 +5,10 @@
  * Contract: POST (Content-Type text/plain to avoid a CORS preflight) with
  *   { "idToken": "<Google ID token>", "action": "auth.session.get", "payload": { "nonce": "<raw nonce>" } }
  *   { "idToken": "<Google ID token>", "action": "auth.access.resolve" }   (server-to-server)
- * Response: { "ok": true, "data": { "email", "role" } } or { "ok": false, "error": { "code", "message" } }
- * Error codes: VALIDATION, UNAUTHORIZED, FORBIDDEN, INTERNAL. doGet returns { service, version } without authentication.
+ * Admin actions (claims.*, roles.*, users.*, access-control.*) are documented in backend/docs; they need an admin caller.
+ * Response: { "ok": true, "data": { "email", "role", "roles", "claims" } } or { "ok": false, "error": { "code", "message" } }
+ * Error codes: VALIDATION (domain rules put the stable code in message), NOT_FOUND, UNAUTHORIZED, FORBIDDEN, INTERNAL.
+ * doGet returns { service, version } without authentication.
  *
  * Script properties: GOOGLE_CLIENT_ID, SPREADSHEET_ID (the identity spreadsheet, not the equipment one).
  * Entry points only: all logic lives in modules/, wired by composition/Composition.gs.
@@ -36,9 +38,15 @@ function doPost(event) {
       app.lockGuard.runExclusive(function () { app.schemaInstaller.ensureSchema(); });
     }
     var handler = app.router.resolve(request.action);
-    var payload = request.payload && typeof request.payload === 'object' ? request.payload : {};
-    // The token always comes from the top level; every action here only reads, so no write lock.
-    return ResponseWriter.success(handler({ idToken: request.idToken, nonce: payload.nonce }));
+    var payload = request.payload && typeof request.payload === 'object' && !Array.isArray(request.payload) ? request.payload : {};
+    // The token always comes from the top level, never from the payload.
+    var input = { idToken: request.idToken, payload: payload, nonce: payload.nonce };
+    if (app.router.isReadOnly(request.action)) return ResponseWriter.success(handler(input));
+    // Writes run one at a time; the built-in roles are (re)checked under the same lock.
+    return ResponseWriter.success(app.lockGuard.runExclusive(function () {
+      app.seedBuiltInRoles();
+      return handler(input);
+    }));
   } catch (err) {
     return ResponseWriter.failure(err);
   }
