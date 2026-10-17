@@ -7,7 +7,11 @@ Static Vite + React + TypeScript app (responsive, English and Vietnamese). Data 
 | Doc | Purpose |
 |---|---|
 | [device-management.md](device-management.md) | Module: domain, services, adapters, contract tests, UI, async pattern |
-| [auth.md](auth.md) | Module: Google sign-in, session, roles, login gate |
+| [launcher.md](launcher.md) | App shell: hash routes, legacy redirects, app registry |
+| [access-control.md](access-control.md) | Module: Google sign-in, session, roles and claims of the caller, access preview |
+| [users.md](users.md) | Module: Identity app users, role assignment, own claims |
+| [roles.md](roles.md) | Module: Identity app roles and role claims |
+| [claims.md](claims.md) | Module: claim catalog, `hasClaim` |
 | [config.md](config.md) | Env vars, provider factory, base path, data flow |
 | [design-system.md](design-system.md) | Admin-style theme: tokens, 7 accents, light/dark/system, shared components, TreeList, DataTable |
 | [i18n.md](i18n.md) | Catalogs, language detection, error translation |
@@ -15,10 +19,10 @@ Static Vite + React + TypeScript app (responsive, English and Vietnamese). Data 
 
 ## Architecture
 
-- Code in [frontend/src](../src): `app/` (composition root: env, factory, App), `shared/` (errors, i18n, async hooks, `api/` Apps Script client and warmup gate, common components), `modules/auth/` (Google sign-in, see [auth.md](auth.md)), `modules/device-management/` (`domain`, `application` ports and services, `infrastructure/persistence/{googlesheet,supabase}`, `ui`, public `index.ts`). Dependencies point inward; `shared` never imports modules.
+- Code in [frontend/src](../src): `app/` (composition root: env, factory, App), `shared/` (errors, i18n, async hooks, `api/` Apps Script client and warmup gate, common components), `modules/{access-control,claims,roles,users}/` (see their docs; the Identity app is wired in `app/identity/`), `modules/device-management/` (`domain`, `application` ports and services, `infrastructure/persistence/{googlesheet,supabase}`, `ui`, public `index.ts`). Dependencies point inward; `shared` never imports modules.
 - UI calls services only; services depend on `DataService`; adapters are the only code that does network access.
 - [app](../src/app) reads `VITE_*` env vars and the factory injects the chosen adapter.
-- Hash routes: `#/`, `#/equipment/<id>`, `#/categories`.
+- Hash routes: `#/` (launcher), `#/devices/...`, `#/identity/...`, see [launcher.md](launcher.md).
 - Text is localized through a small in-house i18n layer (`en`, `vi`).
 
 Backend side: see [backend docs](../../backend/docs/README.md).

@@ -72,7 +72,7 @@ flowchart TD
 
 ## UI
 
-- Hash routes (no host rewrites): `#/` list, `#/equipment/<id>` detail (remounted per id), `#/categories`. Use `navigate` from [navigation.ts](../src/modules/device-management/ui/navigation.ts), never `window.location`.
+- Hash routes (no host rewrites): `#/devices` list, `#/devices/equipment/<id>` detail (remounted per id), `#/devices/categories`; the old `#/equipment/<id>` and `#/categories` redirect (see [launcher](launcher.md)). Use `navigate` from [navigation.ts](../src/modules/device-management/ui/navigation.ts), never `window.location`.
 - Contexts: [ServicesProvider](../src/modules/device-management/ui/services-provider.tsx) (`useServices`), [CategoriesProvider](../src/modules/device-management/ui/categories-provider.tsx) (`useCategories`: `data`, `flat`, `pathOf`, `loading`, `error`, `reload`; every mutation reloads).
 - List page: debounced search (300 ms), category (includes descendants) and status filters, any change resets to page 1; `EquipmentTable` (built on shared `DataTable`: table >= 768px, stacked labelled cards below), a "Showing X-Y of N" line (`common.showing`), skeleton, empty and error states, shared `Pager`, "Add" dialog. `EquipmentCategoryLine` / `EquipmentQuantityLine` in [EquipmentMeta](../src/modules/device-management/ui/components/equipment-meta.tsx) render the category path and quantity lines.
 - Detail page: equipment and maintenance logs load independently, each with skeleton and `ErrorState`. It shows name, category, status, description, quantity and [AuditInfo](../src/modules/device-management/ui/components/audit-info.tsx) (created/modified at and by; empty author shows "unknown"). Edit opens the form; delete is a two-step inline confirm; maintenance history is followed by `MaintenanceForm` (date defaults to today, sent as noon UTC).
@@ -86,4 +86,4 @@ flowchart TD
 
 ## Limits
 
-No auth yet. Types are the only client schema; keep them in sync with backend columns. Nothing outside persistence may import the Supabase client or call `fetch` for data.
+Sign-in and roles come from [access-control](access-control.md); viewers get no write controls. Types are the only client schema; keep them in sync with backend columns. Nothing outside persistence may import the Supabase client or call `fetch` for data.

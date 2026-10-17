@@ -37,7 +37,7 @@ CLAUDE.md              project rules
 | Variable | Purpose |
 |---|---|
 | `VITE_DB_PROVIDER` | `sheets` or `supabase` |
-| `VITE_SHEETS_API_URL` | Sheets provider: data API URL (requests carry a Google ID token, see [auth](frontend/docs/auth.md)) |
+| `VITE_SHEETS_API_URL` | Sheets provider: data API URL (requests carry a Google ID token, see [access-control](frontend/docs/access-control.md)) |
 | `VITE_IDENTITY_API_URL` | Sheets provider: [identity-api](backend/docs/identity-api.md) URL |
 | `VITE_GOOGLE_CLIENT_ID` | Google login (all providers); public value |
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | Supabase provider |
