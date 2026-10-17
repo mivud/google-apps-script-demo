@@ -41,6 +41,13 @@
 .pager { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 16px; }
 .button-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
 .field-row { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+/* Picker + add button: the button keeps its natural width instead of stretching. */
+.assign-row { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.assign-row .field { margin-bottom: 0; flex: 1; min-width: 0; }
+@media (min-width: 768px) {
+  .assign-row { flex-direction: row; align-items: flex-end; }
+  .assign-row > button { flex: none; }
+}
 
 /* >= 768px: top navigation replaces the tab bar */
 @media (min-width: 768px) {

@@ -214,3 +214,11 @@
 .user-menu p { margin: 0; }
 .user-menu .btn { margin-top: 8px; }
 .user-menu-email { overflow-wrap: anywhere; font-weight: 600; }
+.launcher-grid { display: grid; grid-template-columns: 1fr; gap: 12px; list-style: none; margin: 8px 0 16px; padding: 0; }
+@media (min-width: 768px) { .launcher-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1280px) { .launcher-grid { grid-template-columns: repeat(3, 1fr); } }
+.launcher-card { display: flex; align-items: flex-start; gap: 12px; min-height: var(--tap); height: 100%; color: inherit; text-decoration: none; }
+.launcher-card .icon { flex: none; width: 28px; height: 28px; color: var(--primary-ink); }
+.launcher-card-title { margin: 0; font-size: 1.1rem; }
+.launcher-card-description { margin: 4px 0 0; color: var(--muted-foreground); }
+.app-loading { display: flex; justify-content: center; padding: 48px 16px; }

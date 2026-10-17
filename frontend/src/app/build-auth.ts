@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { createAuthService, type AuthConfig, type AuthRuntime } from '../modules/auth'
+import { createAuthService, type AuthConfig, type AuthRuntime } from '../modules/access-control'
 import { requireValue } from './data-service-factory'
 import type { AppEnv } from './env'
 

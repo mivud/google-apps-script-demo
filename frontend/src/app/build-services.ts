@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { CategoryService, EquipmentService, MaintenanceService, type Services } from '../modules/device-management'
-import type { AuthService } from '../modules/auth'
+import type { AuthService } from '../modules/access-control'
 import { createDataService } from './data-service-factory'
 import type { AppEnv } from './env'
 

@@ -6,14 +6,13 @@ import './styles/base.css'
 import './styles/layout.css'
 import './styles/controls.css'
 import './styles/components.css'
-import App from './app/app.tsx'
 import { buildAuth } from './app/build-auth'
 import { buildSupabaseClient } from './app/build-supabase-client'
-import { buildServices } from './app/build-services'
 import { readEnv } from './app/env'
+import { resetRouteOnSignOut } from './app/reset-route-on-sign-out'
+import { Shell } from './app/shell'
 import { StartupError } from './app/startup-error'
-import { AuthGate } from './modules/auth'
-import { CategoriesProvider, ServicesProvider } from './modules/device-management'
+import { AuthGate } from './modules/access-control'
 import { ErrorBoundary } from './shared/components/error-boundary'
 import { I18nProvider } from './shared/i18n'
 import { AppearanceProvider } from './shared/theme'
@@ -25,18 +24,14 @@ try {
   const env = readEnv(import.meta.env)
   const supabase = buildSupabaseClient(env)
   const { auth, renderSignInButton } = buildAuth(env, supabase)
-  const services = buildServices(auth, env, supabase)
+  resetRouteOnSignOut(auth)
   root.render(
     <StrictMode>
       <AppearanceProvider>
         <I18nProvider>
           <ErrorBoundary>
             <AuthGate auth={auth} renderSignInButton={renderSignInButton}>
-              <ServicesProvider services={services}>
-                <CategoriesProvider>
-                  <App />
-                </CategoriesProvider>
-              </ServicesProvider>
+              <Shell deps={{ auth, env, supabase }} />
             </AuthGate>
           </ErrorBoundary>
         </I18nProvider>

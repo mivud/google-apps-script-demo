@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useCanWrite } from '../../../auth'
+import { useCanWrite } from '../../../access-control'
 import { EquipmentFormDialog } from '../components/equipment-form-dialog'
 import { AuditInfo } from '../components/audit-info'
 import { EquipmentCategoryLine, EquipmentQuantityLine } from '../components/equipment-meta'
@@ -18,6 +18,7 @@ import { useAsyncAction } from '../../../../shared/hooks/use-async-action'
 import { useAsyncData } from '../../../../shared/hooks/use-async-data'
 import { translateError, useI18n } from '../../../../shared/i18n'
 import { MAINTENANCE_LABEL_KEYS, STATUS_LABEL_KEYS, STATUS_TONES, formatDate } from '../labels'
+import { DEVICES_PATH } from '../navigation'
 import { useServices } from '../services-context'
 
 interface EquipmentDetailPageProps {
@@ -39,7 +40,7 @@ export function EquipmentDetailPage({ id, onDeleted }: EquipmentDetailPageProps)
     onDeleted()
   })
 
-  const backToList = { href: '#/', label: t('equipment.backToList') }
+  const backToList = { href: `#${DEVICES_PATH}`, label: t('equipment.backToList') }
 
   return (
     <section>

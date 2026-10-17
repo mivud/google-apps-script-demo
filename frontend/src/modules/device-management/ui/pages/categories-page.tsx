@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { Category } from '../../domain/category'
 import { buildTree, MAX_CATEGORY_DEPTH, type CategoryNode } from '../../domain/category-tree'
-import { useCanWrite } from '../../../auth'
+import { useCanWrite } from '../../../access-control'
 import { translateError, useI18n } from '../../../../shared/i18n'
 import { useCategories } from '../categories-context'
 import { EmptyState } from '../../../../shared/components/empty-state'
@@ -15,6 +15,7 @@ import { RefreshIndicator } from '../../../../shared/components/refresh-indicato
 import { ListSkeleton } from '../../../../shared/components/skeleton'
 import { TreeList, type TreeNode } from '../../../../shared/components/tree-list'
 import { useAsyncAction } from '../../../../shared/hooks/use-async-action'
+import { DEVICES_PATH } from '../navigation'
 import { useServices } from '../services-context'
 
 type DialogState = { kind: 'create'; parentId: string } | { kind: 'edit'; category: Category }
@@ -68,7 +69,7 @@ export function CategoriesPage() {
     <section>
       <PageHeader
         title={t('category.title')}
-        back={{ href: '#/', label: t('equipment.backToList') }}
+        back={{ href: `#${DEVICES_PATH}`, label: t('equipment.backToList') }}
         actions={canWrite ? <LoadingButton onClick={() => setDialog({ kind: 'create', parentId: '' })} disabled={remove.pending}>{t('category.add')}</LoadingButton> : undefined}
       />
 

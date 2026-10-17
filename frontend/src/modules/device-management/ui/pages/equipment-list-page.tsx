@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { EquipmentStatus } from '../../domain/equipment'
 import { EQUIPMENT_STATUSES } from '../../domain/equipment'
-import { useCanWrite } from '../../../auth'
+import { useCanWrite } from '../../../access-control'
 import { CategorySelect } from '../components/category-select'
 import { EquipmentFormDialog } from '../components/equipment-form-dialog'
 import { EquipmentTable } from '../components/equipment-table'
