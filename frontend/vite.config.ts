@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => {
     base: env.VITE_BASE_PATH || '/',
     test: {
       // Real-provider suites hit the network, so they run only via `npm run test:contract` (mode "contract").
-      include: mode === 'contract' ? CONTRACT_TESTS : ['src/**/*.test.ts'],
+      include: mode === 'contract' ? CONTRACT_TESTS : ['src/**/*.test.ts', 'src/**/*.test.tsx'],
       exclude: mode === 'contract' ? [] : CONTRACT_TESTS,
     },
   }
