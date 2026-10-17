@@ -1,5 +1,6 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useI18n } from '../i18n'
+import { diffAssignment, hasChanges, type AssignmentChange } from '../assignment-change'
 import { useAsyncAction } from '../hooks/use-async-action'
 import { ActionError } from './action-error'
 import { EmptyState } from './empty-state'
@@ -18,7 +19,7 @@ interface AssignmentPanelProps {
   emptyMessage: string
   legend: string
   // Receives only the difference, so the caller can apply additions before removals.
-  onSave: (change: { added: string[]; removed: string[] }) => Promise<unknown>
+  onSave: (change: AssignmentChange) => Promise<unknown>
   onRefresh?: () => void
 }
 
@@ -27,18 +28,20 @@ export function AssignmentPanel({ options, assignedIds, emptyMessage, legend, on
   const { t } = useI18n()
   const assignedKey = assignedIds.join('\n')
   const [checked, setChecked] = useState(() => new Set(assignedIds))
-  const save = useAsyncAction(async (change: { added: string[]; removed: string[] }) => {
+  const [baselineKey, setBaselineKey] = useState(assignedKey)
+  const save = useAsyncAction(async (change: AssignmentChange) => {
     await onSave(change)
     return true
   })
 
-  // A reload after saving (or a change elsewhere) becomes the new baseline.
-  useEffect(() => { setChecked(new Set(assignedKey ? assignedKey.split('\n') : [])) }, [assignedKey])
+  // A reload after saving (or a change elsewhere) becomes the new baseline; adjusted during render, not in an effect.
+  if (baselineKey !== assignedKey) {
+    setBaselineKey(assignedKey)
+    setChecked(new Set(assignedIds))
+  }
 
-  const assigned = new Set(assignedIds)
-  const added = options.filter((option) => checked.has(option.id) && !assigned.has(option.id)).map((option) => option.id)
-  const removed = options.filter((option) => !checked.has(option.id) && assigned.has(option.id)).map((option) => option.id)
-  const dirty = added.length + removed.length > 0
+  const change = diffAssignment(options.map((option) => option.id), assignedIds, checked)
+  const dirty = hasChanges(change)
 
   function toggle(id: string) {
     setChecked((current) => {
@@ -50,7 +53,7 @@ export function AssignmentPanel({ options, assignedIds, emptyMessage, legend, on
 
   async function handleSave(event: FormEvent) {
     event.preventDefault()
-    if (dirty) await save.run({ added, removed })
+    if (dirty) await save.run(change)
   }
 
   if (options.length === 0) return <EmptyState message={emptyMessage} />

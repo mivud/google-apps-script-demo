@@ -1,5 +1,6 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { ConfirmDeleteDialog } from '../components/confirm-delete-dialog'
+import { attemptDelete } from '../delete-attempt'
 import { translateError, useI18n } from '../i18n'
 import { useToast } from '../toast'
 import { useAsyncAction } from './use-async-action'
@@ -23,26 +24,19 @@ export function useDeleteAction<T>({ getName, remove, onDeleted }: DeleteActionO
   const { t } = useI18n()
   const toast = useToast()
   const [target, setTarget] = useState<T | undefined>(undefined)
-  const action = useAsyncAction(async (item: T) => {
-    await remove(item)
-    return item
-  })
-  const { error, clearError } = action
-
-  useEffect(() => {
-    if (!error) return
-    setTarget(undefined)
-    toast.show(translateError(error, t), 'error')
-    clearError()
-  }, [error, clearError, toast, t])
+  const action = useAsyncAction((item: T) => attemptDelete(remove, item))
 
   async function confirm() {
     if (target === undefined) return
-    const deleted = await action.run(target)
-    if (deleted === undefined) return
+    const result = await action.run(target)
+    if (result === undefined) return
     setTarget(undefined)
-    toast.show(t('common.deleted', { name: getName(deleted) }), 'success')
-    onDeleted?.(deleted)
+    if (!result.ok) {
+      toast.show(translateError(result.failure, t), 'error')
+      return
+    }
+    toast.show(t('common.deleted', { name: getName(result.item) }), 'success')
+    onDeleted?.(result.item)
   }
 
   const dialog = target === undefined ? null : (

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { applyAssignmentChange, type AssignmentChange } from '../../../../shared/assignment-change'
 import { AssignmentPanel } from '../../../../shared/components/assignment-panel'
 import { useAsyncData } from '../../../../shared/hooks/use-async-data'
 import { useI18n } from '../../../../shared/i18n'
@@ -32,22 +33,11 @@ export function ClaimAssignment({ claimService, assigned, onAdd, onRemove, onCha
   if (!catalog.data) return <ListSkeleton count={2} />
 
   // Labels always come from our own options, so parsing cannot fail; the guard keeps types honest.
-  const apply = async (ids: string[], action: (claim: Claim) => Promise<unknown>) => {
-    for (const id of ids) {
-      const claim = parseClaimLabel(id)
-      if (claim) await action(claim)
-    }
+  const withClaim = (action: (claim: Claim) => Promise<unknown>) => async (id: string) => {
+    const claim = parseClaimLabel(id)
+    if (claim) await action(claim)
   }
-
-  // Add first so a swap never passes through a state with fewer rights than either end.
-  async function save({ added, removed }: { added: string[]; removed: string[] }) {
-    try {
-      await apply(added, onAdd)
-      await apply(removed, onRemove)
-    } finally {
-      onChanged()
-    }
-  }
+  const save = (change: AssignmentChange) => applyAssignmentChange(change, withClaim(onAdd), withClaim(onRemove), onChanged)
 
   return (
     <AssignmentPanel
