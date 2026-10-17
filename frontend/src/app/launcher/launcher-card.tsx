@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import { GlassSurface } from '../../shared/components/glass-surface'
 import { Icon } from '../../shared/components/icon'
 import { useI18n } from '../../shared/i18n'
@@ -8,7 +9,7 @@ export function LauncherCard({ app }: { app: AppDefinition }) {
   const { t } = useI18n()
   return (
     <li>
-      <GlassSurface as="a" href={`#${app.path}`} interactive className="launcher-card">
+      <GlassSurface as={Link} to={app.path} interactive className="launcher-card">
         <Icon name={app.icon} />
         <div>
           <h2 className="launcher-card-title">{t(app.titleKey)}</h2>

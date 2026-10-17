@@ -2,23 +2,23 @@
 
 One SPA hosts several apps behind one Google sign-in. Code: [app/shell.tsx](../src/app/shell.tsx) and [app/launcher](../src/app/launcher). Related: [access-control](access-control.md), [device-management](device-management.md).
 
-## Hash routes
+## Routes
 
 | Route | Shows |
 |---|---|
-| `#/` (or empty) | launcher: cards of the registered apps |
-| `#/devices/...` | device-management (`#/devices`, `#/devices/equipment/<id>`, `#/devices/categories`) |
-| `#/identity/...` | Identity app (`#/identity/users[/<id>]`, `#/identity/roles[/<id>]`, `#/identity/claims`) |
+| `/` (or empty) | launcher: cards of the registered apps |
+| `/devices/...` | device-management (`/devices`, `/devices/equipment/<id>`, `/devices/categories`) |
+| `/identity/...` | Identity app (`/identity/users[/<id>]`, `/identity/roles[/<id>]`, `/identity/claims`) |
 
-- Legacy redirects ([app-route.ts](../src/app/launcher/app-route.ts)): `#/equipment/<id>` to `#/devices/equipment/<id>`, `#/categories` to `#/devices/categories`. The redirect uses `location.replace`, so it stays out of the back history.
-- An unknown route is redirected to `#/`. An app owns its prefix and everything below it (`/devices` matches `/devices/x`, not `/devices-x`).
-- Return URL: it is the hash present before sign-in; `AuthGate` keeps rendering children at the same hash, so there is no query parameter. On sign-out the hash is reset to `#/`.
+- Legacy redirects ([app-route.ts](../src/app/launcher/app-route.ts)): `/equipment/<id>` to `/devices/equipment/<id>`, `/categories` to `/devices/categories`. The redirect is a `<Navigate replace>`, so it stays out of the back history.
+- An unknown route is redirected to `/`. An app owns its prefix and everything below it (`/devices` matches `/devices/x`, not `/devices-x`).
+- Return URL: it is the route present before sign-in; `AuthGate` keeps rendering children at the same route, so there is no query parameter. On sign-out the router navigates to `/` (replace).
 
 ## Registry
 
-[app-registry.ts](../src/app/launcher/app-registry.ts) lists `AppDefinition`s ([app-definition.ts](../src/app/launcher/app-definition.ts)): `id`, `titleKey`, `descriptionKey`, `icon`, `path`, `load` and `accessClaimValue`. `isAppAvailable` shows an app when the user has the `super` role or a claim `app` = `accessClaimValue` (`identity` for Identity, `device.mgt` for device-management). The launcher hides other cards and `Shell` redirects a typed URL of a hidden app to `#/`; the backend still enforces real access.
+[app-registry.ts](../src/app/launcher/app-registry.ts) lists `AppDefinition`s ([app-definition.ts](../src/app/launcher/app-definition.ts)): `id`, `titleKey`, `descriptionKey`, `icon`, `path`, `load` and `accessClaimValue`. `isAppAvailable` shows an app when the user has the `super` role or a claim `app` = `accessClaimValue` (`identity` for Identity, `device.mgt` for device-management). The launcher hides other cards and `Shell` redirects a typed URL of a hidden app to `/`; the backend still enforces real access.
 
-Add an app: create its root component with a default export taking `{ deps }`, add an entry with a `load: () => import(...)`, add the `launcher.<id>.*` messages and an "All apps" link (`#/`) in its shell.
+Add an app: create its root component with a default export taking `{ deps }`, add an entry with a `load: () => import(...)`, add the `launcher.<id>.*` messages and an "All apps" link (`/`) in its shell.
 
 ## Loading
 
@@ -26,4 +26,4 @@ Add an app: create its root component with a default export taking `{ deps }`, a
 
 ## Limits
 
-Hash routing only (no host rewrites). App visibility is a UI convenience only; it is not a security boundary.
+Routing uses `createBrowserRouter` with `basename` = Vite `BASE_URL`. GitHub Pages has no rewrites, so [404.html](../404.html) redirects unknown paths to `index.html?p=<path>` and a script in [index.html](../index.html) restores the URL (and migrates old `#/...` bookmarks) before React starts; Cloudflare Pages uses `public/_redirects`. App visibility is a UI convenience only; it is not a security boundary.

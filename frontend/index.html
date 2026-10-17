@@ -6,6 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#ffffff" />
     <title>Nexus Gate</title>
+    <!-- Restores the clean URL before React starts: the GitHub Pages 404.html fallback passes it as ?p=, and old hash bookmarks (#/devices) are migrated once. -->
+    <script>
+      (function () {
+        var base = '%BASE_URL%'
+        var params = new URLSearchParams(window.location.search)
+        var route = params.get('p')
+        if (route === null && window.location.hash.indexOf('#/') === 0) route = window.location.hash.slice(1)
+        if (route !== null && route.charAt(0) === '/') window.history.replaceState(null, '', base + route.slice(1))
+      })()
+    </script>
     <!-- Runs before first paint so the saved accent and color scheme never flash; the theme list and meta colors are injected from shared/theme by vite-theme-plugin.ts. -->
     <script>
       (function () {

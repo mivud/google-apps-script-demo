@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useLocation, useNavigate } from 'react-router'
 import { AppShell } from '../../shared/components/app-shell'
 import type { NavItemData } from '../../shared/components/nav-types'
 import { EmptyState } from '../../shared/components/empty-state'
@@ -10,17 +11,15 @@ import { ClaimsPage } from '../../modules/claims/ui'
 import { RoleDetailPage, RolesPage } from '../../modules/roles/ui'
 import { UserDetailPage, UsersPage } from '../../modules/users/ui'
 import type { AppDeps } from '../app-deps'
-import { useHashPath } from '../use-hash-path'
 import { useMainFocus } from '../use-main-focus'
+import { LAUNCHER_PATH } from '../launcher/app-route'
 import { VersionInfo } from '../version-info'
 import { buildIdentityServices } from './build-identity-services'
 import { IdentityServicesContext, useIdentityServices } from './identity-services'
 
-function navigate(path: string): void {
-  window.location.hash = `#${path}`
-}
 
 function IdentityPage({ route }: { route: IdentityRoute }) {
+  const navigate = useNavigate()
   const { users, roles, claims, access } = useIdentityServices()
   switch (route.page) {
     case 'user':
@@ -37,17 +36,17 @@ function IdentityPage({ route }: { route: IdentityRoute }) {
 }
 
 function IdentityScreens() {
-  const path = useHashPath()
+  const { pathname: path } = useLocation()
   const { t } = useI18n()
   const isAdmin = useRole() === 'admin'
   const { mainRef, skipToContent } = useMainFocus(path)
   const route = parseIdentityRoute(path)
   const section = route.page === 'user' ? 'users' : route.page === 'role' ? 'roles' : route.page
   const navItems: NavItemData[] = [
-    { label: t('launcher.allApps'), href: '#/', icon: 'apps', current: false },
-    { label: t('identity.nav.users'), href: `#${USERS_PATH}`, icon: 'users', current: section === 'users' },
-    { label: t('identity.nav.roles'), href: `#${ROLES_PATH}`, icon: 'folder', current: section === 'roles' },
-    { label: t('identity.nav.claims'), href: `#${CLAIMS_PATH}`, icon: 'list', current: section === 'claims' },
+    { label: t('launcher.allApps'), to: LAUNCHER_PATH, icon: 'apps', current: false },
+    { label: t('identity.nav.users'), to: USERS_PATH, icon: 'users', current: section === 'users' },
+    { label: t('identity.nav.roles'), to: ROLES_PATH, icon: 'folder', current: section === 'roles' },
+    { label: t('identity.nav.claims'), to: CLAIMS_PATH, icon: 'list', current: section === 'claims' },
   ]
 
   return (

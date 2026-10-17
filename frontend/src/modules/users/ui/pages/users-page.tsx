@@ -1,5 +1,6 @@
+import { Link } from 'react-router'
 import { useState } from 'react'
-import { userHref } from '../../../../shared/identity-routes'
+import { userPath } from '../../../../shared/identity-routes'
 import type { RoleService } from '../../../roles'
 import { useAsyncData } from '../../../../shared/hooks/use-async-data'
 import { useI18n } from '../../../../shared/i18n'
@@ -31,7 +32,7 @@ export function UsersPage({ users, roles }: { users: UserService; roles: RoleSer
   })
 
   const columns: DataColumn<User>[] = [
-    { key: 'email', header: t('identity.users.email'), primary: true, cell: (user) => <a href={userHref(user.id)}>{user.email}</a> },
+    { key: 'email', header: t('identity.users.email'), primary: true, cell: (user) => <Link to={userPath(user.id)}>{user.email}</Link> },
     { key: 'active', header: t('identity.users.status'), cell: (user) => <Badge tone={user.active ? 'success' : 'neutral'}>{t(user.active ? 'identity.active' : 'identity.inactive')}</Badge> },
     {
       key: 'roles',

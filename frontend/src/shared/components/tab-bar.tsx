@@ -5,7 +5,7 @@ import type { NavItemData } from './nav-types'
 export function TabBar({ items, label }: { items: NavItemData[]; label: string }) {
   return (
     <nav className="tab-bar" aria-label={label}>
-      {items.map((item) => <NavItem key={item.href} {...item} />)}
+      {items.map((item) => <NavItem key={item.to} {...item} />)}
     </nav>
   )
 }

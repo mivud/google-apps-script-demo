@@ -2,7 +2,7 @@ import type { ElementType, HTMLAttributes } from 'react'
 
 interface GlassSurfaceProps extends HTMLAttributes<HTMLElement> {
   as?: ElementType
-  href?: string
+  to?: string
   interactive?: boolean
   padding?: 'none' | 'sm' | 'md'
 }

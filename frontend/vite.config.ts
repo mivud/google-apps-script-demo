@@ -17,6 +17,8 @@ export default defineConfig(({ mode }) => {
     define: { __APP_VERSION__: JSON.stringify(APP_VERSION) },
     // Base path differs per host: GitHub Pages serves under /<repo>/, Cloudflare Pages under /.
     base: env.VITE_BASE_PATH || '/',
+    // 404.html is the GitHub Pages SPA fallback; Cloudflare Pages uses public/_redirects instead.
+    build: { rollupOptions: { input: { main: 'index.html', fallback: '404.html' } } },
     test: {
       // Real-provider suites hit the network, so they run only via `npm run test:contract` (mode "contract").
       include: mode === 'contract' ? CONTRACT_TESTS : ['src/**/*.test.ts', 'src/**/*.test.tsx'],

@@ -5,7 +5,7 @@ interface MainFocus {
   skipToContent: (event: MouseEvent) => void
 }
 
-// Hash navigation keeps scroll and focus where they were; move both so keyboard and screen reader users start at the new page.
+// Client-side navigation keeps scroll and focus where they were; move both so keyboard and screen reader users start at the new page.
 export function useMainFocus(path: string): MainFocus {
   const mainRef = useRef<HTMLElement>(null)
   const firstRender = useRef(true)
@@ -19,7 +19,6 @@ export function useMainFocus(path: string): MainFocus {
     mainRef.current?.focus({ preventScroll: true })
   }, [path])
 
-  // A plain "#main" href would be taken as a route by the hash router.
   function skipToContent(event: MouseEvent) {
     event.preventDefault()
     mainRef.current?.focus()

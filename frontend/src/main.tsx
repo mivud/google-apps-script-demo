@@ -1,4 +1,5 @@
 import { StrictMode } from 'react'
+import { RouterProvider } from 'react-router'
 import { createRoot } from 'react-dom/client'
 import './styles/tokens.css'
 import './styles/themes.css'
@@ -10,7 +11,7 @@ import { buildAuth } from './app/build-auth'
 import { buildSupabaseClient } from './app/build-supabase-client'
 import { readEnv } from './app/env'
 import { resetRouteOnSignOut } from './app/reset-route-on-sign-out'
-import { Shell } from './app/shell'
+import { buildRouter } from './app/router'
 import { StartupError } from './app/startup-error'
 import { AuthGate } from './modules/access-control'
 import { ErrorBoundary } from './shared/components/error-boundary'
@@ -25,7 +26,8 @@ try {
   const env = readEnv(import.meta.env)
   const supabase = buildSupabaseClient(env)
   const { auth, renderSignInButton } = buildAuth(env, supabase)
-  resetRouteOnSignOut(auth)
+  const router = buildRouter({ auth, env, supabase })
+  resetRouteOnSignOut(auth, router)
   root.render(
     <StrictMode>
       <AppearanceProvider>
@@ -33,7 +35,7 @@ try {
           <ToastProvider>
             <ErrorBoundary>
               <AuthGate auth={auth} renderSignInButton={renderSignInButton}>
-                <Shell deps={{ auth, env, supabase }} />
+                <RouterProvider router={router} />
               </AuthGate>
             </ErrorBoundary>
           </ToastProvider>

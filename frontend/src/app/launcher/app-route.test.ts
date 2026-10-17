@@ -1,17 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findOwner, legacyRedirect, ownsPath, pathFromHash } from './app-route'
-
-describe('pathFromHash', () => {
-  it('maps an empty hash and a bare # to the launcher', () => {
-    expect(pathFromHash('')).toBe('/')
-    expect(pathFromHash('#')).toBe('/')
-    expect(pathFromHash('#/')).toBe('/')
-  })
-
-  it('strips the leading #', () => {
-    expect(pathFromHash('#/devices/categories')).toBe('/devices/categories')
-  })
-})
+import { findOwner, legacyRedirect, ownsPath } from './app-route'
 
 describe('legacyRedirect', () => {
   it('redirects old equipment and category routes', () => {

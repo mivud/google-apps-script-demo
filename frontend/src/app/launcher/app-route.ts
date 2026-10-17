@@ -1,11 +1,5 @@
 export const LAUNCHER_PATH = '/'
 
-// Hash routing works on static hosts (GitHub Pages, Cloudflare Pages) without server rewrites.
-export function pathFromHash(hash: string): string {
-  const path = hash.startsWith('#') ? hash.slice(1) : hash
-  return path === '' ? LAUNCHER_PATH : path
-}
-
 // Routes from before the app launcher existed; kept so old bookmarks still work.
 const LEGACY_PREFIXES: ReadonlyArray<readonly [string, string]> = [
   ['/equipment/', '/devices/equipment/'],

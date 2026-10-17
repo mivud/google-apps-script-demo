@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Nexus Gate</title>
+    <!-- GitHub Pages has no rewrite rules: unknown paths land here and are handed to index.html as ?p=, which restores the clean URL before React starts (see index.html). -->
+    <script>
+      (function () {
+        var base = '%BASE_URL%'
+        var location = window.location
+        var route = location.pathname.slice(base.length - 1) + location.search + location.hash
+        location.replace(base + '?p=' + encodeURIComponent(route))
+      })()
+    </script>
+  </head>
+  <body></body>
+</html>

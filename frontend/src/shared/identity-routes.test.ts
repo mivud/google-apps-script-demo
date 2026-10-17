@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseIdentityRoute, roleHref, userHref } from './identity-routes'
+import { parseIdentityRoute, rolePath, userPath } from './identity-routes'
 
 const UID = '123e4567-e89b-42d3-a456-426614174000'
 
@@ -28,7 +28,7 @@ describe('parseIdentityRoute', () => {
   })
 
   it('encodes ids in hrefs', () => {
-    expect(userHref('a/b')).toBe('#/identity/users/a%2Fb')
-    expect(roleHref('r1')).toBe('#/identity/roles/r1')
+    expect(userPath('a/b')).toBe('/identity/users/a%2Fb')
+    expect(rolePath('r1')).toBe('/identity/roles/r1')
   })
 })

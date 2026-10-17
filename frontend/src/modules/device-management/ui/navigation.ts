@@ -1,12 +1,8 @@
-// Hash routes live here so components never touch window.location directly.
+// Routes live here so components never build URLs by hand.
 // All device routes sit under one prefix because the SPA shell hosts several apps.
 export const DEVICES_PATH = '/devices'
 export const CATEGORIES_PATH = `${DEVICES_PATH}/categories`
 const EQUIPMENT_PREFIX = `${DEVICES_PATH}/equipment`
-
-export function navigate(path: string): void {
-  window.location.hash = `#${path}`
-}
 
 export function equipmentPath(id: string): string {
   return `${EQUIPMENT_PREFIX}/${encodeURIComponent(id)}`

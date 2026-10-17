@@ -39,7 +39,7 @@ export function EquipmentDetailPage({ id, onDeleted }: EquipmentDetailPageProps)
     onDeleted,
   })
 
-  const backToList = { href: `#${DEVICES_PATH}`, label: t('equipment.backToList') }
+  const backToList = { to: DEVICES_PATH, label: t('equipment.backToList') }
 
   return (
     <section>

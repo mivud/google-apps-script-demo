@@ -6,6 +6,7 @@ import { useI18n } from '../../shared/i18n'
 import { CurrentUserBadge, UserMenu, useSession } from '../../modules/access-control'
 import { useMainFocus } from '../use-main-focus'
 import { isAppAvailable, type AppDefinition } from './app-definition'
+import { LAUNCHER_PATH } from './app-route'
 import { LauncherCard } from './launcher-card'
 
 interface LauncherPageProps {
@@ -18,7 +19,7 @@ export function LauncherPage({ apps, path }: LauncherPageProps) {
   const session = useSession()
   const { mainRef, skipToContent } = useMainFocus(path)
   const visibleApps = session ? apps.filter((app) => isAppAvailable(app, session)) : []
-  const navItems: NavItemData[] = [{ label: t('launcher.allApps'), href: '#/', icon: 'apps', current: true }]
+  const navItems: NavItemData[] = [{ label: t('launcher.allApps'), to: LAUNCHER_PATH, icon: 'apps', current: true }]
 
   return (
     <AppShell title={t('launcher.brand')} navItems={navItems} mainRef={mainRef} onSkipToContent={skipToContent} settingsTrigger={<CurrentUserBadge />} settingsFooter={<UserMenu />}>

@@ -15,7 +15,7 @@ The catalog of claims (`key` + `value`) that roles and users hold. Backend count
 
 ## UI
 
-[ClaimsPage](../src/modules/claims/ui/pages/claims-page.tsx) at `#/identity/claims` (add dialog, delete) and [claim-assignment](../src/modules/claims/ui/components/claim-assignment.tsx) used by the role and user detail pages: a checkbox list of every catalog claim (checked = assigned) with one Save button that applies only the difference (adds first, then removals). Async pattern: `useAsyncData`, `useAsyncAction`, `LoadingButton`, error state with retry.
+[ClaimsPage](../src/modules/claims/ui/pages/claims-page.tsx) at `/identity/claims` (add dialog, delete) and [claim-assignment](../src/modules/claims/ui/components/claim-assignment.tsx) used by the role and user detail pages: a checkbox list of every catalog claim (checked = assigned) with one Save button that applies only the difference (adds first, then removals). Async pattern: `useAsyncData`, `useAsyncAction`, `LoadingButton`, error state with retry.
 
 ## Limits
 

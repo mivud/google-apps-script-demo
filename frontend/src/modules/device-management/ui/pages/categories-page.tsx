@@ -63,7 +63,7 @@ export function CategoriesPage() {
     <section>
       <PageHeader
         title={t('category.title')}
-        back={{ href: `#${DEVICES_PATH}`, label: t('equipment.backToList') }}
+        back={{ to: DEVICES_PATH, label: t('equipment.backToList') }}
         actions={canWrite ? <LoadingButton onClick={() => setDialog({ kind: 'create', parentId: '' })} disabled={remove.pending}>{t('category.add')}</LoadingButton> : undefined}
       />
 

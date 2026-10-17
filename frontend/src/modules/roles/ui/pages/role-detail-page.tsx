@@ -32,7 +32,7 @@ export function RoleDetailPage({ id, roles, claims, onDeleted }: RoleDetailPageP
     remove: () => roles.remove(id),
     onDeleted,
   })
-  const back = { href: `#${ROLES_PATH}`, label: t('identity.roles.back') }
+  const back = { to: ROLES_PATH, label: t('identity.roles.back') }
   const role = detail.data
 
   if (detail.error) {

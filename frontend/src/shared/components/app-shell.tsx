@@ -24,7 +24,7 @@ export function AppShell({ title, navItems, mainRef, onSkipToContent, settingsTr
         <div className="app-header-inner">
           <p className="app-title">{title}</p>
           <nav className="app-nav" aria-label={t('nav.main')}>
-            {navItems.map((item) => <NavItem key={item.href} {...item} />)}
+            {navItems.map((item) => <NavItem key={item.to} {...item} />)}
           </nav>
           <SettingsMenu trigger={settingsTrigger} footer={settingsFooter} />
         </div>

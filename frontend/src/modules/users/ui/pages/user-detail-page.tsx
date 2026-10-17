@@ -51,7 +51,7 @@ export function UserDetailPage({ id, users, roles, claims, renderAccess, onDelet
     changed()
   })
 
-  const back = { href: `#${USERS_PATH}`, label: t('identity.users.back') }
+  const back = { to: USERS_PATH, label: t('identity.users.back') }
   if (detail.error) {
     return <section><PageHeader back={back} /><ErrorState error={detail.error} onRetry={detail.reload} retrying={detail.loading} /></section>
   }

@@ -1,4 +1,4 @@
-// Hash routes of the Identity app live here so pages never build URLs by hand.
+// Routes of the Identity app live here so pages never build URLs by hand.
 export const IDENTITY_BASE = '/identity'
 export const USERS_PATH = `${IDENTITY_BASE}/users`
 export const ROLES_PATH = `${IDENTITY_BASE}/roles`
@@ -11,12 +11,12 @@ export type IdentityRoute =
   | { page: 'role'; id: string }
   | { page: 'claims' }
 
-export function userHref(id: string): string {
-  return `#${USERS_PATH}/${encodeURIComponent(id)}`
+export function userPath(id: string): string {
+  return `${USERS_PATH}/${encodeURIComponent(id)}`
 }
 
-export function roleHref(id: string): string {
-  return `#${ROLES_PATH}/${encodeURIComponent(id)}`
+export function rolePath(id: string): string {
+  return `${ROLES_PATH}/${encodeURIComponent(id)}`
 }
 
 // Rows created by hand in the sheet may carry non-UUID ids, so accept any short token of safe characters.

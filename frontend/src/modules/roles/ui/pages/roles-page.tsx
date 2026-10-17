@@ -1,5 +1,6 @@
+import { Link } from 'react-router'
 import { useState } from 'react'
-import { roleHref } from '../../../../shared/identity-routes'
+import { rolePath } from '../../../../shared/identity-routes'
 import { useAsyncData } from '../../../../shared/hooks/use-async-data'
 import { useI18n } from '../../../../shared/i18n'
 import { Badge } from '../../../../shared/components/badge'
@@ -28,7 +29,7 @@ export function RolesPage({ roles }: { roles: RoleService }) {
   })
 
   const columns: DataColumn<Role>[] = [
-    { key: 'name', header: t('identity.roles.name'), primary: true, cell: (role) => <a href={roleHref(role.id)}>{role.name}</a> },
+    { key: 'name', header: t('identity.roles.name'), primary: true, cell: (role) => <Link to={rolePath(role.id)}>{role.name}</Link> },
     { key: 'builtIn', header: t('identity.roles.type'), cell: (role) => (isBuiltInRole(role.name) ? <Badge>{t('identity.builtIn')}</Badge> : '') },
     { key: 'claims', header: t('identity.roles.claimsColumn'), cell: (role) => t('identity.roles.claimCount', { count: role.claims.length }) },
     { key: 'description', header: t('identity.roles.description'), cell: (role) => role.description },
