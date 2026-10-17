@@ -37,6 +37,34 @@ The same ID must be used everywhere: both Web Apps check the token `aud` claim a
 6. Copy the Client ID. The client secret is not needed; do not save it.
 7. Go to Audience > Test users > Add users, and add every Google account that must sign in while the app is in Testing.
 
+## Set up the redirect sign-in (existing client)
+
+Needed once per client and per new origin. No code, env var or backend change is required: the app derives the redirect URI from `origin + BASE_URL + auth/callback`.
+
+1. Open [Google Cloud console > APIs & Services > Credentials](https://console.cloud.google.com/apis/credentials) and select the project `nexus-identity`.
+2. Under OAuth 2.0 Client IDs, open `nexus-identity-web` (the Client ID must start with `370199693443-0rlp3k36`).
+3. In **Authorized redirect URIs** (not the JavaScript origins box) click Add URI and enter both values, exactly, with no trailing slash and no spaces:
+   - `https://mivud.github.io/google-apps-script-demo/auth/callback`
+   - `http://localhost:5173/auth/callback`
+4. Click Save, reload the page and check both URIs are still listed. Wait 5 minutes to a few hours for Google to apply it.
+5. Run the app (`http://localhost:5173`, port 5173 exactly) and click "Sign in with Google (redirect)" on the login page. Try an incognito window if an old error page is cached.
+
+The two boxes take different values:
+
+| Box | Format | Example |
+|-----|--------|---------|
+| Authorized JavaScript origins | scheme + host + port only, no path | `https://mivud.github.io` |
+| Authorized redirect URIs | full URL with the path | `https://mivud.github.io/google-apps-script-demo/auth/callback` |
+
+## Troubleshooting
+
+| Message | Cause and fix |
+|---------|---------------|
+| `Invalid Origin: URIs must not contain a path or end with "/"` | A URI with a path was entered in Authorized JavaScript origins. Move it to Authorized redirect URIs. |
+| `Error 400: redirect_uri_mismatch` (Google page "doesn't comply with Google's OAuth 2.0 policy") | The URI sent is not registered on that client. Compare the `redirect_uri` shown in the error details with the list character by character (scheme, port, path, trailing slash), confirm the Client ID in the error matches `VITE_GOOGLE_CLIENT_ID`, and wait for propagation. If Vite started on another port, register that port too. |
+| Access blocked (app in Testing) | The Google account is not a test user. See Rules and limits. |
+| Login page appears again after returning from Google | The callback was rejected (stale or tampered `state`, expired after 10 minutes, or another tab). Start the sign-in again in the same tab. |
+
 ## Rules and limits
 
 - **Testing mode:** only listed test users can complete the Google sign-in (up to 100). Tokens for test users also expire as Google decides for testing apps. Anyone else sees an access-blocked page from Google before reaching the app.
