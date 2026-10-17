@@ -2,7 +2,7 @@
 // deps: { roles, claimCatalog, authorizer, audit }. input: { idToken, roleId, key, value }.
 Roles.Application.AddRoleClaim = {
   execute: function (deps, input) {
-    var actor = deps.authorizer.requireAdmin(input.idToken).email;
+    var actor = deps.authorizer.requireWrite(input.idToken).email;
     var role = Roles.Application.RoleSupportService.requireRole(deps, input.roleId);
     var claim = { key: input.key, value: input.value };
     if (!deps.claimCatalog.exists(claim)) throw DomainError.create(DomainError.CODE.CLAIM_UNKNOWN);

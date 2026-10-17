@@ -1,7 +1,7 @@
 // Use case: create a role. deps: { roles, authorizer, audit, ids }. input: { idToken, name, description }.
 Roles.Application.CreateRole = {
   execute: function (deps, input) {
-    var actor = deps.authorizer.requireAdmin(input.idToken).email;
+    var actor = deps.authorizer.requireWrite(input.idToken).email;
     var role = Roles.Domain.Role.create({
       id: deps.ids.newId(),
       name: input.name,

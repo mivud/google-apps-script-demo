@@ -1,18 +1,13 @@
-// Value object: the legacy-compatible primary role derived from role names: admin, else viewer, else '' (no access).
+// Value object: the primary role shown to clients: `super` when held (exact, case-sensitive), else the first role
+// name in sorted order, else '' (no roles).
 AccessControl.Domain.PrimaryRole = {
-  ADMIN: 'admin',
-  VIEWER: 'viewer',
+  SUPER: 'super',
   NONE: '',
-
-  isBuiltIn: function (name) {
-    var role = AccessControl.Domain.PrimaryRole;
-    return name === role.ADMIN || name === role.VIEWER;
-  },
 
   fromRoleNames: function (roleNames) {
     var role = AccessControl.Domain.PrimaryRole;
-    var lowered = roleNames.map(function (name) { return String(name).toLowerCase(); });
-    if (lowered.indexOf(role.ADMIN) !== -1) return role.ADMIN;
-    return lowered.indexOf(role.VIEWER) !== -1 ? role.VIEWER : role.NONE;
+    if (roleNames.indexOf(role.SUPER) !== -1) return role.SUPER;
+    var sorted = roleNames.slice().sort(ClaimOrder.compareText);
+    return sorted.length > 0 ? sorted[0] : role.NONE;
   }
 };

@@ -1,7 +1,7 @@
 // Use case: make sure the built-in roles exist. Only acts while the roles sheet is empty.
 // deps: { roles, audit, ids }. Rows are created by "system".
 Roles.Application.SeedBuiltInRoles = {
-  DESCRIPTIONS: { admin: 'Full access', viewer: 'Read-only access' },
+  DESCRIPTIONS: { super: 'Full access to everything' },
 
   execute: function (deps) {
     var seed = Roles.Application.SeedBuiltInRoles;

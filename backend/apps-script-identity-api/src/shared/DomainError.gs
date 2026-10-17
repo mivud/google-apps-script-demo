@@ -18,7 +18,7 @@ var DomainError = {
     ROLE_NAME_DUPLICATE: 'role_name_duplicate',
     USER_EMAIL_DUPLICATE: 'user_email_duplicate',
     CLAIM_DUPLICATE: 'claim_duplicate',
-    LAST_ADMIN: 'last_admin',
+    LAST_SUPER: 'last_super',
     SELF_LOCKOUT: 'self_lockout',
     CONFLICT: 'conflict',
     NOT_FOUND: 'not_found',

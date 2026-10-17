@@ -2,7 +2,7 @@
 
 **Purpose:** the catalog of claims (`key` + `value` pairs such as `device.write=true`) that roles and users may hold. Code: [modules/claims](../apps-script-identity-api/src/modules/claims). Setup and envelope: [identity-api](identity-api.md). Related: [roles](roles.md), [users](users.md), [access-control](access-control.md).
 
-**Actions** (admin only; the list is a read action and runs without the write lock):
+**Actions** (`list` needs `identity.read`, create and delete need `identity.write`, or the role `super`; the list is a read action and runs without the write lock):
 
 | Action | Payload | Result |
 |---|---|---|

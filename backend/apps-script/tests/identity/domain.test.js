@@ -54,10 +54,10 @@ test('Email normalizes, and of() rejects bad shapes and over-long values', () =>
 });
 
 test('built-in roles cannot be renamed or deleted but can be re-described', () => {
-  const admin = Roles.Domain.Role.create({ id: 'r1', name: 'admin', description: '', audit: {} });
-  assert.equal(codeOf(() => Roles.Domain.Role.edit(admin, { name: 'boss', description: '', audit: {} })), CODE.ROLE_PROTECTED);
-  assert.equal(codeOf(() => Roles.Domain.Role.assertCanDelete(admin)), CODE.ROLE_PROTECTED);
-  assert.equal(Roles.Domain.Role.edit(admin, { name: 'admin', description: 'Everything', audit: {} }).description, 'Everything');
+  const superRole = Roles.Domain.Role.create({ id: 'r1', name: 'super', description: '', audit: {} });
+  assert.equal(codeOf(() => Roles.Domain.Role.edit(superRole, { name: 'boss', description: '', audit: {} })), CODE.ROLE_PROTECTED);
+  assert.equal(codeOf(() => Roles.Domain.Role.assertCanDelete(superRole)), CODE.ROLE_PROTECTED);
+  assert.equal(Roles.Domain.Role.edit(superRole, { name: 'super', description: 'Everything', audit: {} }).description, 'Everything');
   const custom = Roles.Domain.Role.create({ id: 'r2', name: 'editor', description: '', audit: {} });
   assert.equal(Roles.Domain.Role.edit(custom, { name: 'writer', description: '', audit: {} }).name, 'writer');
   assert.doesNotThrow(() => Roles.Domain.Role.assertCanDelete(custom));
@@ -74,7 +74,7 @@ test('limits: 100 claims per role, 100 own claims and 20 roles per user', () => 
   assert.equal(codeOf(() => Users.Domain.User.create(tooMany)), CODE.LIMIT_EXCEEDED);
 });
 
-const { EffectiveAccess, PrimaryRole, AdminLockoutRule, SessionNonce } = AccessControl.Domain;
+const { EffectiveAccess, PrimaryRole, SuperLockoutRule, SessionNonce } = AccessControl.Domain;
 const claim = (key, value) => ({ key, value });
 const R1 = { id: 'r1', name: 'alpha', claims: [claim('a', '1'), claim('b', '2')] };
 const R2 = { id: 'r2', name: 'beta', claims: [claim('a', '3')] };
@@ -83,7 +83,7 @@ const effective = (user) => plain(EffectiveAccess.resolve(user, [R1, R2]).claims
 
 test('effective claims: contract test vectors', () => {
   assert.deepEqual(effective(userWith({})), [claim('a', '1'), claim('a', '3'), claim('b', '2')]);
-  assert.deepEqual(effective(userWith({ claims: [claim('a', '9')] })), [claim('a', '9'), claim('b', '2')]);
+  assert.deepEqual(effective(userWith({ claims: [claim('a', '9')] })), [claim('a', '1'), claim('a', '3'), claim('a', '9'), claim('b', '2')]);
   assert.deepEqual(effective(userWith({ claims: [claim('b', '2')] })), [claim('a', '1'), claim('a', '3'), claim('b', '2')]);
 });
 
@@ -93,51 +93,43 @@ test('effective claims: duplicates across roles are removed and order is plain s
   assert.deepEqual(plain(access.claims), [claim('B', 'x'), claim('a', '1'), claim('a', '10'), claim('b', '2')]);
 });
 
-test('primary role: admin beats viewer, viewer beats nothing, others give no access', () => {
-  const roles = [{ id: 'a', name: 'admin', claims: [] }, { id: 'v', name: 'viewer', claims: [] }, { id: 'e', name: 'editor', claims: [] }];
+test('primary role: super wins (exact name), else the first name sorted, else empty', () => {
+  const roles = [{ id: 's', name: 'super', claims: [] }, { id: 'v', name: 'zeta', claims: [] }, { id: 'e', name: 'editor', claims: [] },
+    { id: 'c', name: 'Super', claims: [] }];
   const roleOf = (roleIds) => EffectiveAccess.resolve(userWith({ roleIds }), roles).role;
-  assert.equal(roleOf(['a', 'v']), 'admin');
-  assert.equal(roleOf(['v', 'e']), 'viewer');
-  assert.equal(roleOf(['e']), '');
-  assert.deepEqual(plain(EffectiveAccess.resolve(userWith({ roleIds: ['v', 'a'] }), roles).roles), ['admin', 'viewer']);
-  assert.equal(PrimaryRole.fromRoleNames(['Admin']), 'admin');
+  assert.equal(roleOf(['v', 's', 'e']), 'super');
+  assert.equal(roleOf(['v', 'e']), 'editor');
+  assert.equal(roleOf(['c']), 'Super');
+  assert.equal(roleOf([]), '');
+  assert.deepEqual(plain(EffectiveAccess.resolve(userWith({ roleIds: ['v', 's'] }), roles).roles), ['super', 'zeta']);
+  assert.equal(PrimaryRole.fromRoleNames(['Super', 'admin']), 'Super');
 });
 
-test('legacy fallback only applies to users without role assignments', () => {
-  const roles = [{ id: 'a', name: 'admin', claims: [claim('x', '1')] }, { id: 'e', name: 'editor', claims: [] }];
-  const legacy = EffectiveAccess.resolve(userWith({ roleIds: [], legacyRole: ' Admin ' }), roles);
-  assert.equal(legacy.role, 'admin');
-  assert.deepEqual(plain(legacy.roles), ['admin']);
-  assert.deepEqual(plain(legacy.claims), [claim('x', '1')]);
-  assert.equal(EffectiveAccess.resolve(userWith({ roleIds: [], legacyRole: 'owner' }), roles).role, '');
-  assert.deepEqual(plain(EffectiveAccess.resolve(userWith({ roleIds: [], legacyRole: 'owner' }), roles).roles), []);
-  assert.equal(EffectiveAccess.resolve(userWith({ roleIds: ['e'], legacyRole: 'admin' }), roles).role, '');
-  assert.equal(EffectiveAccess.resolve(userWith({ roleIds: [], legacyRole: 'viewer' }), []).role, 'viewer');
+test('the legacy users.role column plays no part in the effective access', () => {
+  const roles = [{ id: 'a', name: 'super', claims: [] }];
+  const access = EffectiveAccess.resolve(userWith({ roleIds: [], legacyRole: 'super' }), roles);
+  assert.deepEqual(plain(access), { email: 'u@x.io', role: '', roles: [], claims: [] });
 });
 
-test('inactive or role-less users cannot sign in', () => {
-  const roles = [{ id: 'a', name: 'admin', claims: [] }];
-  const admin = userWith({ roleIds: ['a'] });
-  assert.equal(EffectiveAccess.canSignIn(admin, EffectiveAccess.resolve(admin, roles)), true);
-  const inactive = userWith({ roleIds: ['a'], active: false });
-  assert.equal(EffectiveAccess.canSignIn(inactive, EffectiveAccess.resolve(inactive, roles)), false);
-  const none = userWith({ roleIds: [] });
-  assert.equal(EffectiveAccess.canSignIn(none, EffectiveAccess.resolve(none, roles)), false);
+test('only inactive users cannot sign in; a user without roles or claims can', () => {
+  assert.equal(EffectiveAccess.canSignIn(userWith({ roleIds: ['r1'] })), true);
+  assert.equal(EffectiveAccess.canSignIn(userWith({ roleIds: [] })), true);
+  assert.equal(EffectiveAccess.canSignIn(userWith({ roleIds: ['r1'], active: false })), false);
 });
 
-test('AdminLockoutRule: last admin and self lockout', () => {
-  const admin = (email) => ({ email, active: true, role: 'admin' });
-  const check = (change) => codeOf(() => AdminLockoutRule.assertAllowed(change));
-  const base = { actorEmail: 'me@x.io', activeAdminCount: 2 };
-  assert.equal(check({ ...base, before: admin('other@x.io'), after: null }), null);
-  assert.equal(check({ ...base, before: admin('other@x.io'), after: { ...admin('other@x.io'), active: false } }), null);
-  assert.equal(check({ ...base, before: admin('me@x.io'), after: null }), CODE.SELF_LOCKOUT);
-  assert.equal(check({ ...base, before: admin('me@x.io'), after: { ...admin('me@x.io'), role: 'viewer' } }), CODE.SELF_LOCKOUT);
-  assert.equal(check({ ...base, before: admin('me@x.io'), after: admin('new@x.io') }), CODE.SELF_LOCKOUT);
-  assert.equal(check({ ...base, activeAdminCount: 1, before: admin('other@x.io'), after: null }), CODE.LAST_ADMIN);
-  assert.equal(check({ ...base, activeAdminCount: 1, before: admin('other@x.io'), after: { ...admin('other@x.io'), role: '' } }), CODE.LAST_ADMIN);
-  const viewer = { email: 'v@x.io', active: true, role: 'viewer' };
-  assert.equal(check({ ...base, activeAdminCount: 1, before: viewer, after: null }), null);
+test('SuperLockoutRule: last super and self lockout', () => {
+  const superUser = (email) => ({ email, active: true, isSuper: true });
+  const check = (change) => codeOf(() => SuperLockoutRule.assertAllowed(change));
+  const base = { actorEmail: 'me@x.io', activeSuperCount: 2 };
+  assert.equal(check({ ...base, before: superUser('other@x.io'), after: null }), null);
+  assert.equal(check({ ...base, before: superUser('other@x.io'), after: { ...superUser('other@x.io'), active: false } }), null);
+  assert.equal(check({ ...base, before: superUser('me@x.io'), after: null }), CODE.SELF_LOCKOUT);
+  assert.equal(check({ ...base, before: superUser('me@x.io'), after: { ...superUser('me@x.io'), isSuper: false } }), CODE.SELF_LOCKOUT);
+  assert.equal(check({ ...base, before: superUser('me@x.io'), after: superUser('new@x.io') }), CODE.SELF_LOCKOUT);
+  assert.equal(check({ ...base, activeSuperCount: 1, before: superUser('other@x.io'), after: null }), CODE.LAST_SUPER);
+  assert.equal(check({ ...base, activeSuperCount: 1, before: superUser('other@x.io'), after: { ...superUser('other@x.io'), isSuper: false } }), CODE.LAST_SUPER);
+  const plainUser = { email: 'v@x.io', active: true, isSuper: false };
+  assert.equal(check({ ...base, activeSuperCount: 1, before: plainUser, after: null }), null);
 });
 
 test('SessionNonce parse and claim matching', () => {

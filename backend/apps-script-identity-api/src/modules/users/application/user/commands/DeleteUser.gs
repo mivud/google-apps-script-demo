@@ -2,7 +2,7 @@
 // deps: { users, lockout, authorizer }. input: { idToken, id }.
 Users.Application.DeleteUser = {
   execute: function (deps, input) {
-    var actor = deps.authorizer.requireAdmin(input.idToken).email;
+    var actor = deps.authorizer.requireWrite(input.idToken).email;
     var user = Users.Application.UserSupportService.requireUser(deps, input.id);
     deps.lockout.assertAllowed({ before: user, after: null, actorEmail: actor });
     deps.users.delete(user.id);

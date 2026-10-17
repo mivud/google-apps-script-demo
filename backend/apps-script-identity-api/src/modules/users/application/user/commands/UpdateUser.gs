@@ -3,7 +3,7 @@
 Users.Application.UpdateUser = {
   execute: function (deps, input) {
     var support = Users.Application.UserSupportService;
-    var actor = deps.authorizer.requireAdmin(input.idToken).email;
+    var actor = deps.authorizer.requireWrite(input.idToken).email;
     var user = support.requireUser(deps, input.id);
     IdentityAuditStamper.assertUnchanged(user.audit, input.expectedLastModified);
     var updated = Users.Domain.User.edit(user, {

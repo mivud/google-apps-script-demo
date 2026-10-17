@@ -1,7 +1,7 @@
 // Entity (aggregate root): a named set of claims. Owns its claim list; built-in roles are protected.
 // Functions are pure and return new objects; audit values are supplied by the caller.
 Roles.Domain.Role = {
-  BUILT_IN_NAMES: ['admin', 'viewer'],
+  BUILT_IN_NAMES: ['super'],
   MAX_CLAIMS: 100,
   MAX_ROLES: 1000,
 

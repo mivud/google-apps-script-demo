@@ -1,4 +1,4 @@
-// Admin-only preview of the effective access of a user. Action names are part of the public API.
+// Preview (identity.read) of the effective access of a user. Action names are part of the public API.
 AccessControl.Endpoints.AccessPreviewEndpoints = {
   ACTION: {
     PREVIEW: 'access-control.access.preview'

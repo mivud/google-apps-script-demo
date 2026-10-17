@@ -2,7 +2,7 @@
 
 **Purpose:** named groups of claims that can be assigned to users. Code: [modules/roles](../apps-script-identity-api/src/modules/roles). Related: [claims](claims.md), [users](users.md), [access-control](access-control.md), [identity-api](identity-api.md).
 
-**Actions** (admin only; `list` and `get` are read actions):
+**Actions** (`list` and `get` need `identity.read` and are read actions; every other action needs `identity.write`; the role `super` passes both):
 
 | Action | Payload | Result |
 |---|---|---|
@@ -17,7 +17,7 @@
 
 **Rules**
 - Name `^[a-z][a-z0-9_-]{1,31}$` (`role_name_invalid`), unique case-insensitively (`role_name_duplicate`); description at most 200 chars (`role_description_invalid`); max 100 claims per role (`limit_exceeded`).
-- Built-in roles `admin` and `viewer` are seeded (created_by `system`) under the write lock while the `roles` sheet is empty ([SeedBuiltInRoles](../apps-script-identity-api/src/modules/roles/application/role/commands/SeedBuiltInRoles.gs)). They cannot be renamed or deleted (`role_protected`).
+- The built-in role `super` (full access) is seeded (created_by `system`) under the write lock while the `roles` sheet is empty ([SeedBuiltInRoles](../apps-script-identity-api/src/modules/roles/application/role/commands/SeedBuiltInRoles.gs)). It cannot be renamed or deleted (`role_protected`).
 - A role assigned to a user cannot be deleted (`role_in_use`). Deleting a role removes its claim rows. Adding a claim needs it in the catalog (`claim_unknown`), duplicates are `claim_duplicate`.
 - Update is optimistic: send the `last_modified` the client saw; a mismatch is `conflict`. Rows created before the audit columns have an empty `last_modified`, so clients send `''`.
 

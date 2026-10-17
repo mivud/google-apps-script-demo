@@ -40,7 +40,7 @@ Snapshot of what is unfinished. Branch: `feature/devices-management`. Done items
   - Verify the Postgres error to `category_*` code mapping (cycle trigger message must contain `category_cycle`) and the `+00:00` datetime format.
   - No automatic migration exists for an already-created Postgres schema.
 - [ ] **Deployment:** enable Pages with source "GitHub Actions", set repo Variables (`VITE_DB_PROVIDER`, `VITE_SHEETS_API_URL`, `VITE_IDENTITY_API_URL`, `VITE_GOOGLE_CLIENT_ID`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`), merge to `main` (the workflow only runs on `main`). Later: move to Cloudflare Pages (`VITE_BASE_PATH=/`) and attach the custom domain.
-- [x] **Authentication:** done. Google sign-in with an email allowlist and `admin` / `viewer` roles; `created_by` / `last_modified_by` hold the resolved email. See `backend/docs/auth.md` and `backend/docs/identity-api.md`. Supabase RLS follows `003_auth.sql`.
+- [x] **Authentication:** done. Google sign-in with an email allowlist, a `super` role and `permission` claims (`identity.*`, `device.mgt.*`, `expense.*`); `created_by` / `last_modified_by` hold the resolved email. See `backend/docs/auth.md` and `backend/docs/identity-api.md`. Supabase RLS follows `003_auth.sql`.
 
 ## Nice to have
 

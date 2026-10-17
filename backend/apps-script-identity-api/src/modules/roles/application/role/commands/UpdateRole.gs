@@ -3,7 +3,7 @@
 Roles.Application.UpdateRole = {
   execute: function (deps, input) {
     var support = Roles.Application.RoleSupportService;
-    var actor = deps.authorizer.requireAdmin(input.idToken).email;
+    var actor = deps.authorizer.requireWrite(input.idToken).email;
     var role = support.requireRole(deps, input.id);
     IdentityAuditStamper.assertUnchanged(role.audit, input.expectedLastModified);
     var updated = Roles.Domain.Role.edit(role, {

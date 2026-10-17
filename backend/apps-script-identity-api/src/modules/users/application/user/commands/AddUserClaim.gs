@@ -2,7 +2,7 @@
 // deps: { users, claimCatalog, authorizer, audit }. input: { idToken, userId, key, value }.
 Users.Application.AddUserClaim = {
   execute: function (deps, input) {
-    var actor = deps.authorizer.requireAdmin(input.idToken).email;
+    var actor = deps.authorizer.requireWrite(input.idToken).email;
     var user = Users.Application.UserSupportService.requireUser(deps, input.userId);
     var claim = { key: input.key, value: input.value };
     if (!deps.claimCatalog.exists(claim)) throw DomainError.create(DomainError.CODE.CLAIM_UNKNOWN);

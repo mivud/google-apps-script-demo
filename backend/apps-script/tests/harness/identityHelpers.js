@@ -3,15 +3,24 @@
 const assert = require('node:assert/strict');
 const { createWorld, uuid } = require('./identityWorld');
 
-const ADMIN = 'ann@example.com';
-const SECOND_ADMIN = 'bob@example.com';
-const ADMIN_ROW_ID = uuid(901);
+const SUPER = 'ann@example.com';
+const SECOND_SUPER = 'bob@example.com';
+const SUPER_ROW_ID = uuid(901);
+const SUPER_ROLE_ID = uuid(900);
 
-// A world whose only user is a legacy admin (users.role = admin, no user_roles rows), like the live sheet today.
-function createLegacyAdminWorld() {
+// A world whose only user holds the `super` role (rows written by hand, like the owner's manual setup).
+function createSuperWorld() {
   const world = createWorld();
-  world.addRow('users', { id: ADMIN_ROW_ID, email: ADMIN, role: 'admin', active: 'TRUE' });
+  world.addRow('roles', { id: SUPER_ROLE_ID, name: 'super', description: 'Full access to everything' });
+  world.addRow('users', { id: SUPER_ROW_ID, email: SUPER, role: '', active: 'TRUE' });
+  world.addRow('user_roles', { user_id: SUPER_ROW_ID, role_id: SUPER_ROLE_ID });
   return world;
+}
+
+// Adds an active user holding one permission claim directly (hand-written rows).
+function addPermissionUser(world, email, value, rowNumber) {
+  world.addRow('users', { id: uuid(rowNumber), email, role: '', active: 'TRUE' });
+  world.addRow('user_claims', { user_id: uuid(rowNumber), key: 'permission', value });
 }
 
 function succeed(response) {
@@ -32,12 +41,14 @@ function failDomain(response, domainCode) {
 
 const roleIdOf = (world, name) => world.rows('roles').find((row) => row.name === name).id;
 
-// Adds a second active admin through the API (the legacy admin assigns the admin role).
-function addSecondAdmin(world) {
-  world.call('claims.claim.list', {}, ADMIN);
-  const created = succeed(world.call('users.user.create', { email: SECOND_ADMIN, active: true }, ADMIN));
-  succeed(world.call('users.userRole.assign', { user_id: created.id, role_id: roleIdOf(world, 'admin') }, ADMIN));
+// Adds a second active super through the API (the first super assigns the super role).
+function addSecondSuper(world) {
+  const created = succeed(world.call('users.user.create', { email: SECOND_SUPER, active: true }, SUPER));
+  succeed(world.call('users.userRole.assign', { user_id: created.id, role_id: SUPER_ROLE_ID }, SUPER));
   return created;
 }
 
-module.exports = { ADMIN, SECOND_ADMIN, ADMIN_ROW_ID, createLegacyAdminWorld, succeed, failWith, failDomain, roleIdOf, addSecondAdmin, uuid };
+module.exports = {
+  SUPER, SECOND_SUPER, SUPER_ROW_ID, SUPER_ROLE_ID, createSuperWorld, addPermissionUser,
+  succeed, failWith, failDomain, roleIdOf, addSecondSuper, uuid
+};

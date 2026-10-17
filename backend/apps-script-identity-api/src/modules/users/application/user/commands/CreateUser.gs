@@ -3,7 +3,7 @@
 Users.Application.CreateUser = {
   execute: function (deps, input) {
     var support = Users.Application.UserSupportService;
-    var actor = deps.authorizer.requireAdmin(input.idToken).email;
+    var actor = deps.authorizer.requireWrite(input.idToken).email;
     var user = Users.Domain.User.create({
       id: deps.ids.newId(),
       email: input.email,

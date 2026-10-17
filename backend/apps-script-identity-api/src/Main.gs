@@ -5,7 +5,7 @@
  * Contract: POST (Content-Type text/plain to avoid a CORS preflight) with
  *   { "idToken": "<Google ID token>", "action": "auth.session.get", "payload": { "nonce": "<raw nonce>" } }
  *   { "idToken": "<Google ID token>", "action": "auth.access.resolve" }   (server-to-server)
- * Admin actions (claims.*, roles.*, users.*, access-control.*) are documented in backend/docs; they need an admin caller.
+ * Admin actions (claims.*, roles.*, users.*, access-control.*) are documented in backend/docs; they need identity.read (reads) or identity.write (writes), or the super role.
  * Response: { "ok": true, "data": { "email", "role", "roles", "claims" } } or { "ok": false, "error": { "code", "message" } }
  * Error codes: VALIDATION (domain rules put the stable code in message), NOT_FOUND, UNAUTHORIZED, FORBIDDEN, INTERNAL.
  * doGet returns { service, version } without authentication.

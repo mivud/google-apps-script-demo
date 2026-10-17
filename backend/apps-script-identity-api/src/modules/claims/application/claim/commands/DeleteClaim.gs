@@ -2,7 +2,7 @@
 // deps: { claims, usage, authorizer }. input: { idToken, key, value }.
 Claims.Application.DeleteClaim = {
   execute: function (deps, input) {
-    deps.authorizer.requireAdmin(input.idToken);
+    deps.authorizer.requireWrite(input.idToken);
     var claim = Claims.Domain.Claim.of(input.key, input.value);
     if (!deps.claims.exists(claim)) throw DomainError.notFound('Claim', claim.key);
     if (deps.usage.isInUse(claim)) throw DomainError.create(DomainError.CODE.CLAIM_IN_USE);

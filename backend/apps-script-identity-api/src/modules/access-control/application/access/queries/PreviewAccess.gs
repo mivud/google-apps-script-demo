@@ -1,8 +1,8 @@
-// Use case: show the effective access of any user (admin only). The target does not need to be active.
+// Use case: show the effective access of any user (needs identity.read). The target does not need to be active.
 // deps: { users, roles, tokenVerifier }. input: { idToken, userId }.
 AccessControl.Application.PreviewAccess = {
   execute: function (deps, input) {
-    AccessControl.Application.AdminAuthorizationService.requireAdmin(deps, input.idToken);
+    AccessControl.Application.PermissionAuthorizationService.requireRead(deps, input.idToken);
     var user = deps.users.findById(input.userId);
     if (!user) throw DomainError.notFound('User', input.userId);
     var access = AccessControl.Domain.EffectiveAccess.resolve(user, deps.roles.list());
