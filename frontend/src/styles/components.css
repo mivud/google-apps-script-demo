@@ -139,6 +139,22 @@
 .data-table td { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; min-width: 0; overflow-wrap: anywhere; }
 .data-table td[data-label]::before { content: attr(data-label); flex: 0 0 40%; color: var(--muted-foreground); font-size: 0.875rem; }
 .data-table-primary { font-weight: 600; }
+.row-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.dialog-body { padding: 0 16px; }
+
+/* Toasts: top on mobile (bottom buttons stay free), bottom-right from 768px. */
+/* Saturated toastr look: solid accent, white text, countdown bar at the bottom, top right. */
+.toast-region { position: fixed; z-index: 1000; top: calc(16px + env(safe-area-inset-top)); right: 16px; width: min(356px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast { --toast-duration: 4000ms; position: relative; overflow: hidden; pointer-events: auto; display: flex; align-items: center; gap: 12px; padding: 16px 48px 16px 16px; border: 0; border-radius: var(--radius-md); color: #fff; font-size: 0.875rem; font-weight: 600; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.2), 0 4px 6px -4px rgb(0 0 0 / 0.2); animation: toast-in var(--duration-fast) var(--ease-standard); }
+.toast::after { content: ""; position: absolute; inset: auto 0 0 0; height: 4px; background: rgb(255 255 255 / 0.6); transform-origin: left; animation: toast-progress var(--toast-duration) linear forwards; }
+.toast-success { background: rgb(16 185 129 / 0.75); }
+.toast-error { background: rgb(239 68 68 / 0.75); }
+.toast-icon { flex: none; display: inline-flex; }
+.toast-message { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.toast-close { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center; width: var(--tap); height: var(--tap); border: 0; border-radius: 50%; background: transparent; color: rgb(255 255 255 / 0.8); font-size: 1.5rem; cursor: pointer; }
+.toast-close:hover { color: #fff; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } }
+@keyframes toast-progress { to { transform: scaleX(0); } }
 .data-table a { display: inline-flex; align-items: center; min-height: var(--tap); }
 .data-table.is-refreshing { opacity: 0.6; }
 @media (min-width: 768px) {

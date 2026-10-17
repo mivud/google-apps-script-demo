@@ -6,13 +6,10 @@ import { useI18n } from '../../../../shared/i18n'
 interface CategoryRowActionsProps {
   category: Category
   canAddChild: boolean
-  confirming: boolean
   pending: boolean
   onAddChild: () => void
   onEdit: () => void
   onAskDelete: () => void
-  onConfirmDelete: () => void
-  onCancelDelete: () => void
 }
 
 // Icon-only on desktop (label stays for screen readers); labelled on mobile.
@@ -32,14 +29,6 @@ export function CategoryRowActions(props: CategoryRowActionsProps) {
   const editName = t('category.editNamed', { name: category.name })
   const deleteName = t('category.deleteNamed', { name: category.name })
 
-  if (props.confirming) {
-    return (
-      <>
-        <LoadingButton size="sm" variant="destructive" loading={pending} onClick={props.onConfirmDelete}>{t('common.confirmDelete')}</LoadingButton>
-        <LoadingButton size="sm" variant="outline" disabled={pending} onClick={props.onCancelDelete}>{t('common.cancel')}</LoadingButton>
-      </>
-    )
-  }
   return (
     <>
       {props.canAddChild && (

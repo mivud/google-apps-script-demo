@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { ActionError } from '../../../../shared/components/action-error'
-import { useAsyncAction } from '../../../../shared/hooks/use-async-action'
+import { useDeleteAction } from '../../../../shared/hooks/use-delete-action'
 import { useAsyncData } from '../../../../shared/hooks/use-async-data'
 import { useI18n } from '../../../../shared/i18n'
 import { EmptyState } from '../../../../shared/components/empty-state'
@@ -18,15 +17,10 @@ export function ClaimsPage({ claims }: { claims: ClaimService }) {
   const { t } = useI18n()
   const list = useAsyncData(() => claims.list(), [claims])
   const [creating, setCreating] = useState(false)
-  const [removingLabel, setRemovingLabel] = useState<string | undefined>(undefined)
-  const remove = useAsyncAction(async (claim: Claim) => {
-    setRemovingLabel(claimLabel(claim))
-    try {
-      await claims.remove(claim)
-      list.reload()
-    } finally {
-      setRemovingLabel(undefined)
-    }
+  const remove = useDeleteAction({
+    getName: claimLabel,
+    remove: (claim: Claim) => claims.remove(claim),
+    onDeleted: list.reload,
   })
 
   return (
@@ -35,7 +29,7 @@ export function ClaimsPage({ claims }: { claims: ClaimService }) {
         title={t('identity.claims.title')}
         actions={<LoadingButton onClick={() => setCreating(true)} disabled={remove.pending}>{t('identity.claims.add')}</LoadingButton>}
       />
-      <ActionError error={remove.error} />
+      {remove.dialog}
       <RefreshIndicator active={list.loading && !!list.data} />
 
       {list.error ? (
@@ -52,7 +46,7 @@ export function ClaimsPage({ claims }: { claims: ClaimService }) {
               <SurfaceListItem
                 key={label}
                 actions={
-                  <LoadingButton variant="destructive" size="sm" loading={removingLabel === label} disabled={remove.pending} aria-label={t('identity.claims.deleteNamed', { name: label })} onClick={() => remove.run(claim)}>
+                  <LoadingButton variant="destructive" size="sm" disabled={remove.pending} aria-label={t('identity.claims.deleteNamed', { name: label })} onClick={() => remove.ask(claim)}>
                     {t('common.delete')}
                   </LoadingButton>
                 }

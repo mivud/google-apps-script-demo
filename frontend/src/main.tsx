@@ -16,6 +16,7 @@ import { AuthGate } from './modules/access-control'
 import { ErrorBoundary } from './shared/components/error-boundary'
 import { I18nProvider } from './shared/i18n'
 import { AppearanceProvider } from './shared/theme'
+import { ToastProvider } from './shared/toast'
 
 const root = createRoot(document.getElementById('root')!)
 
@@ -29,11 +30,13 @@ try {
     <StrictMode>
       <AppearanceProvider>
         <I18nProvider>
-          <ErrorBoundary>
-            <AuthGate auth={auth} renderSignInButton={renderSignInButton}>
-              <Shell deps={{ auth, env, supabase }} />
-            </AuthGate>
-          </ErrorBoundary>
+          <ToastProvider>
+            <ErrorBoundary>
+              <AuthGate auth={auth} renderSignInButton={renderSignInButton}>
+                <Shell deps={{ auth, env, supabase }} />
+              </AuthGate>
+            </ErrorBoundary>
+          </ToastProvider>
         </I18nProvider>
       </AppearanceProvider>
     </StrictMode>,

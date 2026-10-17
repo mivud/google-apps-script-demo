@@ -6,7 +6,6 @@ import { EquipmentCategoryLine, EquipmentQuantityLine } from '../components/equi
 import { Badge } from '../../../../shared/components/badge'
 import { EmptyState } from '../../../../shared/components/empty-state'
 import { ErrorState } from '../../../../shared/components/error-state'
-import { FormError } from '../../../../shared/components/form-error'
 import { ButtonRow } from '../../../../shared/components/layout'
 import { PageHeader } from '../../../../shared/components/page-header'
 import { RefreshIndicator } from '../../../../shared/components/refresh-indicator'
@@ -14,9 +13,9 @@ import { ListSkeleton } from '../../../../shared/components/skeleton'
 import { SurfaceList, SurfaceListItem } from '../../../../shared/components/surface-list'
 import { LoadingButton } from '../../../../shared/components/loading-button'
 import { MaintenanceForm } from '../components/maintenance-form'
-import { useAsyncAction } from '../../../../shared/hooks/use-async-action'
 import { useAsyncData } from '../../../../shared/hooks/use-async-data'
-import { translateError, useI18n } from '../../../../shared/i18n'
+import { useDeleteAction } from '../../../../shared/hooks/use-delete-action'
+import { useI18n } from '../../../../shared/i18n'
 import { MAINTENANCE_LABEL_KEYS, STATUS_LABEL_KEYS, STATUS_TONES, formatDate } from '../labels'
 import { DEVICES_PATH } from '../navigation'
 import { useServices } from '../services-context'
@@ -33,11 +32,11 @@ export function EquipmentDetailPage({ id, onDeleted }: EquipmentDetailPageProps)
   const detail = useAsyncData(() => equipment.get(id), [equipment, id])
   const logs = useAsyncData(() => maintenance.listByEquipment(id), [maintenance, id])
   const [editing, setEditing] = useState(false)
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
-  const remove = useAsyncAction(async () => {
-    await equipment.remove(id)
-    onDeleted()
+  const remove = useDeleteAction({
+    getName: (name: string) => name,
+    remove: () => equipment.remove(id),
+    onDeleted,
   })
 
   const backToList = { href: `#${DEVICES_PATH}`, label: t('equipment.backToList') }
@@ -75,16 +74,9 @@ export function EquipmentDetailPage({ id, onDeleted }: EquipmentDetailPageProps)
 
           {canWrite && <ButtonRow>
             <LoadingButton variant="outline" onClick={() => setEditing(true)} disabled={remove.pending}>{t('common.edit')}</LoadingButton>
-            {confirmingDelete ? (
-              <>
-                <LoadingButton variant="destructive" loading={remove.pending} onClick={() => remove.run()}>{t('common.confirmDelete')}</LoadingButton>
-                <LoadingButton variant="outline" disabled={remove.pending} onClick={() => setConfirmingDelete(false)}>{t('common.cancel')}</LoadingButton>
-              </>
-            ) : (
-              <LoadingButton variant="destructive" onClick={() => setConfirmingDelete(true)}>{t('common.delete')}</LoadingButton>
-            )}
+            <LoadingButton variant="destructive" disabled={remove.pending} onClick={() => remove.ask(detail.data!.name)}>{t('common.delete')}</LoadingButton>
           </ButtonRow>}
-          {remove.error && <FormError message={translateError(remove.error, t)} />}
+          {remove.dialog}
 
           <h2>{t('maintenance.history')}</h2>
           <RefreshIndicator active={logs.loading && !!logs.data} />

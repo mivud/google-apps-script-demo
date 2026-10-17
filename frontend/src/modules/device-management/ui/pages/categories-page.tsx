@@ -2,11 +2,10 @@ import { useMemo, useState } from 'react'
 import type { Category } from '../../domain/category'
 import { buildTree, MAX_CATEGORY_DEPTH, type CategoryNode } from '../../domain/category-tree'
 import { useCanWrite } from '../../../access-control'
-import { translateError, useI18n } from '../../../../shared/i18n'
+import { useI18n } from '../../../../shared/i18n'
 import { useCategories } from '../categories-context'
 import { EmptyState } from '../../../../shared/components/empty-state'
 import { ErrorState } from '../../../../shared/components/error-state'
-import { FormError } from '../../../../shared/components/form-error'
 import { CategoryRowActions } from '../components/category-row-actions'
 import { CategoryFormDialog } from '../components/category-form-dialog'
 import { LoadingButton } from '../../../../shared/components/loading-button'
@@ -14,7 +13,7 @@ import { PageHeader } from '../../../../shared/components/page-header'
 import { RefreshIndicator } from '../../../../shared/components/refresh-indicator'
 import { ListSkeleton } from '../../../../shared/components/skeleton'
 import { TreeList, type TreeNode } from '../../../../shared/components/tree-list'
-import { useAsyncAction } from '../../../../shared/hooks/use-async-action'
+import { useDeleteAction } from '../../../../shared/hooks/use-delete-action'
 import { DEVICES_PATH } from '../navigation'
 import { useServices } from '../services-context'
 
@@ -36,15 +35,14 @@ export function CategoriesPage() {
   const canWrite = useCanWrite()
   const { data, flat, loading, error, reload } = useCategories()
   const [dialog, setDialog] = useState<DialogState | undefined>(undefined)
-  const [confirmingId, setConfirmingId] = useState<string | undefined>(undefined)
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined)
   const [expandedIds, setExpandedIds] = useState<ReadonlySet<string>>(new Set())
   const nodes = useMemo(() => toTreeNodes(buildTree(data ?? [])), [data])
 
-  const remove = useAsyncAction(async (id: string) => {
-    await categories.remove(id)
-    setConfirmingId(undefined)
-    reload()
+  const remove = useDeleteAction({
+    getName: (category: Category) => category.name,
+    remove: (category) => categories.remove(category.id),
+    onDeleted: () => { setSelectedId(undefined); reload() },
   })
 
   function renderActions({ category }: CategoryTreeNode, depth: number) {
@@ -53,14 +51,10 @@ export function CategoriesPage() {
       <CategoryRowActions
         category={category}
         canAddChild={depth < MAX_CATEGORY_DEPTH - 1}
-        confirming={confirmingId === category.id}
         pending={remove.pending}
         onAddChild={() => setDialog({ kind: 'create', parentId: category.id })}
         onEdit={() => setDialog({ kind: 'edit', category })}
-        // Select the row so its actions stay visible while the confirmation is open.
-        onAskDelete={() => { remove.clearError(); setSelectedId(category.id); setConfirmingId(category.id) }}
-        onConfirmDelete={() => remove.run(category.id)}
-        onCancelDelete={() => setConfirmingId(undefined)}
+        onAskDelete={() => remove.ask(category)}
       />
     )
   }
@@ -73,7 +67,7 @@ export function CategoriesPage() {
         actions={canWrite ? <LoadingButton onClick={() => setDialog({ kind: 'create', parentId: '' })} disabled={remove.pending}>{t('category.add')}</LoadingButton> : undefined}
       />
 
-      {remove.error && <FormError message={translateError(remove.error, t)} />}
+      {remove.dialog}
       <RefreshIndicator active={loading && !!data} />
 
       {error ? (
