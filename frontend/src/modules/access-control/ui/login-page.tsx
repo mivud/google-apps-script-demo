@@ -4,7 +4,16 @@ import { FormError } from '../../../shared/components/form-error'
 import { Spinner } from '../../../shared/components/spinner'
 import { ForbiddenError } from '../../../shared/errors'
 import { useI18n } from '../../../shared/i18n'
+import type { MessageKey } from '../../../shared/i18n/en'
+import type { SilentFailure } from '../application/id-token-source'
 import { useAuth, useSignInButton } from './auth-context'
+
+// Shown only when the automatic sign-in could not run; not an error, the button below still works.
+const SILENT_HINT_KEYS = {
+  unavailable: 'auth.silentUnavailable',
+  timeout: 'auth.silentTimeout',
+  load_error: 'auth.silentLoadError',
+} as const satisfies Record<SilentFailure, MessageKey>
 
 export function LoginPage() {
   const auth = useAuth()
@@ -26,6 +35,7 @@ export function LoginPage() {
     renderButton()
   }
 
+  const silentFailure = auth.silentFailure()
   const failure = attempt.status === 'failed' ? attempt.error : undefined
   return (
     <main className="login-page">
@@ -35,6 +45,7 @@ export function LoginPage() {
         {attempt.status === 'pending' && (
           <p className="login-status"><Spinner label={t('auth.signingIn')} />{t('auth.signingIn')}</p>
         )}
+        {!failure && silentFailure && <p className="muted" role="status">{t(SILENT_HINT_KEYS[silentFailure])}</p>}
         {failure instanceof ForbiddenError && <FormError message={t('auth.forbidden')} />}
         {failure && !(failure instanceof ForbiddenError) && <FormError message={t('auth.failed')} />}
         <div className="login-button" ref={buttonRef} hidden={attempt.status === 'pending'} />

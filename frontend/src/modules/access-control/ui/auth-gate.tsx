@@ -17,7 +17,7 @@ function GateContent({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (started.current || !checking) return
     started.current = true
-    void auth.refreshIdToken().finally(() => setChecking(false))
+    void auth.restoreSession().finally(() => setChecking(false))
   }, [auth, checking])
 
   if (session) return <>{children}</>

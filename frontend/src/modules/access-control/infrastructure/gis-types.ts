@@ -7,6 +7,7 @@ export interface GisPromptNotification {
   isNotDisplayed(): boolean
   isSkippedMoment(): boolean
   isDismissedMoment(): boolean
+  getDismissedReason(): string
 }
 
 export interface GisIdConfiguration {

@@ -2,7 +2,7 @@ import { AuthError, ForbiddenError } from '../../../shared/errors'
 import { readIdTokenExpiry } from '../domain/id-token'
 import type { Role } from '../domain/role'
 import type { Session } from '../domain/session'
-import type { IdTokenSource } from './id-token-source'
+import type { IdTokenSource, SilentFailure } from './id-token-source'
 import type { SessionProvider } from './session-provider'
 import type { SessionStore } from './session-store'
 import { SignInAttemptStore } from './sign-in-attempt-store'
@@ -14,6 +14,7 @@ export class AuthService {
   private readonly tokens: IdTokenSource
   private readonly store: SessionStore
   readonly attempts: SignInAttemptStore
+  private lastSilentFailure: SilentFailure | null = null
 
   constructor(sessions: SessionProvider, tokens: IdTokenSource, store: SessionStore, attempts = new SignInAttemptStore()) {
     this.sessions = sessions
@@ -84,5 +85,17 @@ export class AuthService {
     const fresh = idToken ? this.getIdToken() : null
     if (!fresh && this.store.get()) await this.signOut()
     return fresh
+  }
+
+  // Why the last restoreSession found no login; the login page explains it.
+  silentFailure(): SilentFailure | null {
+    return this.lastSilentFailure
+  }
+
+  // Page-load re-login; records why it failed so the login page can explain it.
+  async restoreSession(): Promise<string | null> {
+    const idToken = await this.refreshIdToken()
+    this.lastSilentFailure = idToken ? null : this.tokens.lastFailure()
+    return idToken
   }
 }

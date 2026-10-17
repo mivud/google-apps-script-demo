@@ -17,6 +17,7 @@ function setup() {
   const tokens = {
     start: vi.fn(),
     requestToken: vi.fn().mockResolvedValue(null),
+    lastFailure: vi.fn().mockReturnValue(null),
     onCredential: vi.fn(),
     signOut: vi.fn(),
   }
@@ -131,5 +132,29 @@ describe('AuthService', () => {
     await auth.signIn(FUTURE_TOKEN, 'n')
     expect(tokens.start).toHaveBeenCalled()
     expect(listener).toHaveBeenCalledWith(expect.objectContaining({ email: 'a@b.c' }))
+  })
+
+  describe('restoreSession', () => {
+    it('clears the failure once a token arrives', async () => {
+      const { auth, tokens } = setup()
+      tokens.lastFailure.mockReturnValueOnce('timeout')
+      tokens.requestToken.mockResolvedValueOnce(null)
+      await auth.restoreSession()
+      expect(auth.silentFailure()).toBe('timeout')
+      tokens.requestToken.mockImplementationOnce(async () => {
+        await auth.signIn(FUTURE_TOKEN, 'n')
+        return FUTURE_TOKEN
+      })
+      expect(await auth.restoreSession()).toBe(FUTURE_TOKEN)
+      expect(auth.silentFailure()).toBeNull()
+    })
+
+    it('reports the cause once and does not retry', async () => {
+      const { auth, tokens } = setup()
+      tokens.lastFailure.mockReturnValue('unavailable')
+      expect(await auth.restoreSession()).toBeNull()
+      expect(tokens.requestToken).toHaveBeenCalledTimes(1)
+      expect(auth.silentFailure()).toBe('unavailable')
+    })
   })
 })
