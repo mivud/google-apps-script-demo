@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { CallbackResult, AuthRuntime } from '../modules/access-control'
-import { consumeAuthCallback } from './consume-auth-callback'
+import { consumeAuthCallback, isAuthCallbackPath } from './consume-auth-callback'
 
 const BASE = '/app/'
 
@@ -37,5 +37,15 @@ describe('consumeAuthCallback', () => {
     expect(signIn).not.toHaveBeenCalled()
     expect(attempts.set).toHaveBeenCalledWith(expect.objectContaining({ status: 'failed' }))
     expect(win.history.replaceState).toHaveBeenCalledWith(null, '', BASE)
+  })
+})
+
+describe('isAuthCallbackPath', () => {
+  const at = (pathname: string) => ({ location: { pathname } }) as unknown as Window
+
+  it('is true only on the callback path under the base url', () => {
+    expect(isAuthCallbackPath(at('/app/auth/callback'), BASE)).toBe(true)
+    expect(isAuthCallbackPath(at('/app/devices'), BASE)).toBe(false)
+    expect(isAuthCallbackPath(at('/auth/callback'), BASE)).toBe(false)
   })
 })

@@ -9,7 +9,8 @@ import './styles/controls.css'
 import './styles/components.css'
 import { buildAuth } from './app/build-auth'
 import { buildSupabaseClient } from './app/build-supabase-client'
-import { consumeAuthCallback } from './app/consume-auth-callback'
+import { AuthCallbackLoading } from './app/auth-callback-loading'
+import { consumeAuthCallback, isAuthCallbackPath } from './app/consume-auth-callback'
 import { readEnv } from './app/env'
 import { resetRouteOnSignOut } from './app/reset-route-on-sign-out'
 import { buildRouter } from './app/router'
@@ -29,6 +30,16 @@ async function start() {
     const runtime = buildAuth(env, supabase)
     const { auth, renderSignInButton, redirectLogin } = runtime
     // Before the router and the gate exist, so a redirect result is exchanged before any silent restore starts.
+    if (isAuthCallbackPath(window)) {
+      // The exchange can take a moment; show a spinner instead of a blank page.
+      root.render(
+        <AppearanceProvider>
+          <I18nProvider>
+            <AuthCallbackLoading />
+          </I18nProvider>
+        </AppearanceProvider>,
+      )
+    }
     await consumeAuthCallback(runtime, window)
     const router = buildRouter({ auth, env, supabase })
     resetRouteOnSignOut(auth, router)

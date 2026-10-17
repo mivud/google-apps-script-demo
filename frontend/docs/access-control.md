@@ -35,6 +35,8 @@ Google sign-in, the signed-in caller's roles and claims, and the admin access pr
 
 ## Redirect sign-in (fallback to One Tap)
 
+On `/auth/callback`, [main.tsx](../src/main.tsx) first renders [AuthCallbackLoading](../src/app/auth-callback-loading.tsx) (a centered spinner), because the token exchange runs before the router and the gate exist; a blank page would show otherwise.
+
 Shown on the login page under the Google button (emphasized with a hint when the silent sign-in failed). It works where One Tap cannot (third-party sign-in blocked, dismissed prompt). Code: [GoogleRedirectClient](../src/modules/access-control/infrastructure/google-redirect-client.ts) behind the `RedirectLogin` port; the button is [google-redirect-button.tsx](../src/modules/access-control/ui/google-redirect-button.tsx). It copies the look of Google's own button (white outline, G logo, 15rem wide, `.btn-google` in [components.css](../src/styles/components.css)). The Google button is drawn by Google in an iframe and keeps its own width; a fixed `width` option stretches the personalized variant and pushes its logo away from the text, so none is set.
 
 ```mermaid
