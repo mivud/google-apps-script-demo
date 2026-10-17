@@ -1,6 +1,6 @@
 ---
 name: review-security-frontend
-description: Security review of frontend changes (React/Vite, adapters, env config, deploy files). Use after frontend coding, before the user's review, and whenever a change touches rendering of data, env vars, storage, URLs or dependencies.
+description: Security review of frontend changes (React/Vite, adapters, env config, deploy files). Run only when the user asks.
 ---
 
 # Frontend security review

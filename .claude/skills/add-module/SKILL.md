@@ -19,4 +19,4 @@ Read CLAUDE.md ("Modules (the primary unit)") first. A module must be addable wi
    - Same behavior on Sheets and Supabase (ordering, pagination, error codes); stable error `code`s translated through i18n.
    - UI uses `useAsyncData` / `useAsyncAction` / `LoadingButton`; mobile-first, tap targets >= 44px.
    - No imports from another module's internals; no circular dependencies.
-6. **Verify:** `npx tsc -b`, `node --check` on every `.gs` (temp copies) and a stubbed concatenated load in `filePushOrder` order to catch load-order errors. Do not run tests until the user asks. Then run `review-solid`, stop for the user's review, and commit only when asked.
+6. **Verify:** `npx tsc -b`, `node --check` on every `.gs` (temp copies) and a stubbed concatenated load in `filePushOrder` order to catch load-order errors. Do not run tests until the user asks. Do not run the reviews (`review-solid`, security) unless the user asks; stop for the user's review, and commit only when asked.
