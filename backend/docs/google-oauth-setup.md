@@ -56,6 +56,17 @@ The two boxes take different values:
 | Authorized JavaScript origins | scheme + host + port only, no path | `https://mivud.github.io` |
 | Authorized redirect URIs | full URL with the path | `https://mivud.github.io/google-apps-script-demo/auth/callback` |
 
+## Add a custom domain
+
+Needed once when the site moves to a custom domain (this repo: `nexus.vdminh.blog`). Keep the `github.io` values if that URL stays in use. Do the same steps as above, with these values:
+
+| Box | Value |
+|-----|-------|
+| Authorized JavaScript origins | `https://nexus.vdminh.blog` |
+| Authorized redirect URIs | `https://nexus.vdminh.blog/auth/callback` |
+
+The path has no repo name because a custom domain serves the site at `/` (see [deploy](../../frontend/docs/deploy.md)). Wait 5 minutes to a few hours for Google to apply it.
+
 ## Troubleshooting
 
 | Message | Cause and fix |
