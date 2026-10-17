@@ -11,6 +11,17 @@ Setup:
 
 The workflow builds with `VITE_BASE_PATH=/` unless the repository variable `VITE_BASE_PATH` is set. A custom domain (for example `nexus.vdminh.blog`) serves the site at `/`, so a `/<repo>/` base makes every asset 404 there; set the variable to `/<repo>/` only when using the plain `github.io/<repo>/` URL. After switching to a custom domain add it to the Google OAuth client: Authorized JavaScript origins `https://<domain>` and redirect URI `https://<domain>/auth/callback` (see [google-oauth-setup](../../backend/docs/google-oauth-setup.md)). Pages has no rewrites, so the build also emits [404.html](../404.html) as the SPA fallback (see [launcher](launcher.md)): deep links and refreshes work on the clean URLs.
 
+### Deploy scripts
+
+Two PowerShell scripts in [scripts](../../scripts) set the repository variable `VITE_BASE_PATH` and start the workflow on `main` with `gh` (sign in once with `gh auth login`; add `-Watch` to follow the run):
+
+| Script | Base path | Use for |
+|---|---|---|
+| `scripts/deploy-custom-domain.ps1` | `/` | `https://nexus.vdminh.blog/` |
+| `scripts/deploy-github-pages.ps1` | `/<repo>/` | `https://<user>.github.io/<repo>/` |
+
+The workflow file and the code on `main` are what get built, so merge changes first.
+
 ## Cloudflare Pages (planned)
 
 Build command `npm run build`, root `frontend`, output `dist`, with `VITE_BASE_PATH=/` and the same `VITE_*` vars. Client-side routes need the SPA fallback `public/_redirects` (`/* /index.html 200`), which is already in the repo.
