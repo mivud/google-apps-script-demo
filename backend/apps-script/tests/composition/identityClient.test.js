@@ -38,7 +38,13 @@ function createClient({ url = URL, response } = {}) {
   return { client, store, fetches };
 }
 
-const OK = { body: { ok: true, data: { email: 'ann@example.com', role: 'admin' } } };
+const ACCESS = {
+  email: 'ann@example.com',
+  role: 'reader',
+  roles: ['reader'],
+  claims: [{ key: 'permission', value: 'device.mgt.read' }]
+};
+const OK = { body: { ok: true, data: { ...ACCESS, claims: [...ACCESS.claims, { key: 1 }, null, { key: 'x', value: 2 }] } } };
 const refusal = (code) => ({ body: { ok: false, error: { code, message: 'x' } } });
 
 function codeOf(work) {
@@ -48,7 +54,7 @@ function codeOf(work) {
 
 test('a miss calls identity-api once with the token in the body, then caches the access for 60 s', () => {
   const { client, store, fetches } = createClient({ response: OK });
-  assert.deepEqual(plain(client.resolve(TOKEN)), { email: 'ann@example.com', role: 'admin' });
+  assert.deepEqual(plain(client.resolve(TOKEN)), ACCESS);
   assert.equal(fetches.length, 1);
   assert.equal(fetches[0].target, URL);
   assert.equal(fetches[0].target.includes(TOKEN), false);
@@ -60,7 +66,7 @@ test('a miss calls identity-api once with the token in the body, then caches the
 test('a hit returns the cached access without any call', () => {
   const { client, fetches } = createClient({ response: OK });
   client.resolve(TOKEN);
-  assert.deepEqual(plain(client.resolve(TOKEN)), { email: 'ann@example.com', role: 'admin' });
+  assert.deepEqual(plain(client.resolve(TOKEN)), ACCESS);
   assert.equal(fetches.length, 1);
 });
 
@@ -83,7 +89,10 @@ test('an unavailable identity-api is a generic INTERNAL error and is not cached'
     { response: { code: 500, body: {} } },
     { response: { body: 'not json' } },
     { response: { body: { ok: false, error: { code: 'INTERNAL' } } } },
-    { response: { body: { ok: true, data: { email: 'a@b.c' } } } }
+    { response: { body: { ok: true, data: { email: 'a@b.c' } } } },
+    { response: { body: { ok: true, data: { email: 'a@b.c', role: 'x' } } } },
+    { response: { body: { ok: true, data: { email: 'a@b.c', role: 'x', roles: 'super' } } } },
+    { response: { body: { ok: true, data: { email: 'a@b.c', role: 'x', roles: [1] } } } }
   ];
   cases.forEach(({ response }) => {
     const { client, store } = createClient({ response });
@@ -135,19 +144,34 @@ test('the access is never cached longer than the token is valid', () => {
   assert.equal(store.entries.get(`access:${sha(shortLived)}`).ttl, 5);
 });
 
-test('AccessControl: admin may read and write', () => {
-  assert.doesNotThrow(() => AccessControl.assertCanRead('admin'));
-  assert.doesNotThrow(() => AccessControl.assertCanWrite('admin'));
+const access = (extra) => ({ email: 'a@b.c', role: '', roles: [], claims: [], ...extra });
+const permission = (value) => ({ key: 'permission', value });
+
+test('AccessControl: the super role (primary or in roles) may read and write', () => {
+  [access({ role: 'super' }), access({ roles: ['reader', 'super'] })].forEach((who) => {
+    assert.doesNotThrow(() => AccessControl.assertCanRead(who));
+    assert.doesNotThrow(() => AccessControl.assertCanWrite(who));
+  });
 });
 
-test('AccessControl: viewer may read but not write', () => {
-  assert.doesNotThrow(() => AccessControl.assertCanRead('viewer'));
-  assert.equal(codeOf(() => AccessControl.assertCanWrite('viewer')), 'FORBIDDEN');
+test('AccessControl: the read permission reads but does not write', () => {
+  const who = access({ claims: [permission('device.mgt.read')] });
+  assert.doesNotThrow(() => AccessControl.assertCanRead(who));
+  assert.equal(codeOf(() => AccessControl.assertCanWrite(who)), 'FORBIDDEN');
 });
 
-test('AccessControl: unknown or missing roles are denied everything', () => {
-  ['', 'owner', 'ADMIN', undefined, null].forEach((role) => {
-    assert.equal(codeOf(() => AccessControl.assertCanRead(role)), 'FORBIDDEN', String(role));
-    assert.equal(codeOf(() => AccessControl.assertCanWrite(role)), 'FORBIDDEN', String(role));
+test('AccessControl: the write permission writes', () => {
+  assert.doesNotThrow(() => AccessControl.assertCanWrite(access({ claims: [permission('device.mgt.write')] })));
+});
+
+test('AccessControl: missing, near-miss or other claims are denied everything', () => {
+  const denied = [
+    undefined, null, access(), access({ role: 'editor', roles: ['editor', 'reader'] }),
+    access({ claims: [permission('Device.Mgt.Read'), permission('expense.read'), { key: 'perm', value: 'device.mgt.read' }] }),
+    { email: 'a@b.c', role: 'reader' }
+  ];
+  denied.forEach((who) => {
+    assert.equal(codeOf(() => AccessControl.assertCanRead(who)), 'FORBIDDEN');
+    assert.equal(codeOf(() => AccessControl.assertCanWrite(who)), 'FORBIDDEN');
   });
 });

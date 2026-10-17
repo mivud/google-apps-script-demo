@@ -1,4 +1,4 @@
-// Resolves { email, role, claims: [{ key, value }] } for an ID token through the identity-api Web App
+// Resolves { email, role, roles, claims: [{ key, value }] } for an ID token through the identity-api Web App
 // by calling the identity-api Web App.
 // deps: { settings, http (UrlFetchApp), store (CacheService script cache), hasher, clock, decodeBase64Url(text): string }.
 // identity-api is the only place that verifies the token with Google (it checks audience, issuer, expiry), so this
@@ -71,8 +71,13 @@ IdentityClient.prototype.resolveRemotely = function (idToken, hash, secondsLeft)
 
 IdentityClient.prototype.fetchAccess = function (idToken) {
   var body = this.callIdentityApi(idToken);
-  if (body && body.ok === true && body.data && typeof body.data.email === 'string' && typeof body.data.role === 'string') {
-    return { email: body.data.email, role: body.data.role, claims: IdentityClient.sanitizeClaims(body.data.claims) };
+  if (IdentityClient.isValidAccess(body)) {
+    return {
+      email: body.data.email,
+      role: body.data.role,
+      roles: body.data.roles.slice(),
+      claims: IdentityClient.sanitizeClaims(body.data.claims)
+    };
   }
   var code = body && body.error ? body.error.code : '';
   if (code === ErrorCode.UNAUTHORIZED) throw ApiError.unauthorized();
@@ -96,6 +101,14 @@ IdentityClient.prototype.callIdentityApi = function (idToken) {
   } catch (err) {
     throw IdentityClient.unavailable();
   }
+};
+
+// A successful answer must carry email, role and a roles array of strings; anything else counts as unavailable.
+IdentityClient.isValidAccess = function (body) {
+  if (!body || body.ok !== true || !body.data) return false;
+  var data = body.data;
+  return typeof data.email === 'string' && typeof data.role === 'string' && Array.isArray(data.roles) &&
+    data.roles.every(function (name) { return typeof name === 'string'; });
 };
 
 // Keeps only well-formed { key, value } string pairs; anything else is dropped (fails closed).

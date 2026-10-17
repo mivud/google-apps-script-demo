@@ -43,7 +43,7 @@ Before the rename the tab was `money_sources` and the columns `money_source_id`;
 
 ## Access
 
-The token is verified by identity-api (`auth.access.resolve`, answer cached about 60 s). The result `{ email, role, claims }` is checked here: reads need claim `permission=expense.read`, every other action needs `permission=expense.write` (key and value match exactly, case-sensitive); role `admin` passes both. The frontend shows the expense app when the user holds `permission=expense.read`, and allows edits with `permission=expense.write`.
+The token is verified by identity-api (`auth.access.resolve`, answer cached about 60 s). The result `{ email, role, roles, claims }` (claims sanitized, bad shape fails closed) is checked here: reads need claim `permission=expense.read`, every other action needs `permission=expense.write` (key and value match exactly, case-sensitive); the `super` role (primary role or in `roles`) passes both. The frontend shows the expense app when the user holds `permission=expense.read`, and allows edits with `permission=expense.write`.
 
 Claims to seed in identity-api (`claims.claim.create`), then add to roles or users:
 

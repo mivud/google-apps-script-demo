@@ -5,7 +5,7 @@
  * Contract: POST (Content-Type text/plain to avoid a CORS preflight) with
  *   { "idToken": "<Google ID token>", "action": "expense-tracking.expense.list", "payload": { "statement_month": "2026-10" } }
  * Every action needs a Google ID token; the user, role and claims are resolved by identity-api (IDENTITY_API_URL).
- * Reads need the claim permission=expense.read, every other action permission=expense.write (admin passes both).
+ * Reads need the claim permission=expense.read, every other action permission=expense.write (super passes both).
  * Response: { "ok": true, "data": ... } or { "ok": false, "error": { "code": "...", "message": "..." } }
  * Error codes: VALIDATION (domain rules put the stable code in message), NOT_FOUND, UNAUTHORIZED, FORBIDDEN, INTERNAL.
  * doGet returns { service, version } without authentication.

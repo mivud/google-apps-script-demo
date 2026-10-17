@@ -3,8 +3,8 @@
  *
  * Contract: POST (Content-Type text/plain to avoid a CORS preflight) with
  *   { "idToken": "<Google ID token>", "action": "device-management.equipment.list", "payload": { ... } }
- * Every action needs a Google ID token; the user and role are resolved by identity-api (IDENTITY_API_URL).
- * Reads work for admin and viewer; every other action needs admin.
+ * Every action needs a Google ID token; the user, roles and claims are resolved by identity-api (IDENTITY_API_URL).
+ * Reads need the claim permission=device.mgt.read, every other action permission=device.mgt.write (super passes both).
  * Response: { "ok": true, "data": ... } or { "ok": false, "error": { "code": "...", "message": "..." } }
  * Version: doGet returns { service, version } without authentication.
  * Error codes: NOT_FOUND, VALIDATION, UNAUTHORIZED, FORBIDDEN, INTERNAL.
@@ -36,7 +36,7 @@ function doPost(event) {
     var access = app.accessResolver.resolve(request.idToken);
     app.currentUser.signIn(access.email);
     var readOnly = app.router.isReadOnly(request.action);
-    if (readOnly) AccessControl.assertCanRead(access.role); else AccessControl.assertCanWrite(access.role);
+    if (readOnly) AccessControl.assertCanRead(access); else AccessControl.assertCanWrite(access);
     // The schema is checked under the lock only when its signature changed; normally this is one property read.
     if (!app.schemaInstaller.isCurrent()) {
       app.lockGuard.runExclusive(function () { app.schemaInstaller.ensureSchema(); });
