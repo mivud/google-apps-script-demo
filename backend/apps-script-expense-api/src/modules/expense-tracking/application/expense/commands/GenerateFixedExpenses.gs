@@ -22,9 +22,14 @@ ExpenseTracking.Application.GenerateFixedExpenses = {
 
   generate: function (deps, input, template, month) {
     var domain = ExpenseTracking.Domain;
-    var expense = domain.Expense.fromTemplate(template, month, { id: deps.ids.newId(), audit: deps.audit.created(input.actor) });
+    var recorded = domain.FixedExpenseTemplate.recordGenerated(template, deps.audit.modified(template.audit, input.actor));
+    var expense = domain.Expense.fromTemplate(template, month, {
+      id: deps.ids.newId(),
+      description: domain.FixedExpenseTemplate.describeInstallment(recorded),
+      audit: deps.audit.created(input.actor)
+    });
     deps.expenses.insert(expense);
-    deps.templates.update(domain.FixedExpenseTemplate.recordGenerated(template, deps.audit.modified(template.audit, input.actor)));
+    deps.templates.update(recorded);
     return expense;
   }
 };

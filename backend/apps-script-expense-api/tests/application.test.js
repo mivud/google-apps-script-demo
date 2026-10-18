@@ -97,3 +97,24 @@ test('GenerateFixedExpenses stops once totalMonths is reached', () => {
   assert.equal(next.items.length, 0);
   assert.equal(next.skipped, 1);
 });
+
+test('GenerateFixedExpenses adds [n/total] to limited templates only', () => {
+  const deps = createDeps();
+  addTemplate(deps, { id: 't1', description: 'tra gop', amount: 1000, totalMonths: 6 });
+  addTemplate(deps, { id: 't2', description: 'Rent', amount: 1000 });
+  deps.templateRows[0].monthsAdded = 1;
+  const run = (month) => app.GenerateFixedExpenses.execute(deps, { actor: ACTOR, statementMonth: month });
+  const descriptionsOf = (result) => result.items.map((e) => e.description);
+  assert.deepEqual(descriptionsOf(run('2026-03')), ['tra gop [2/6]', 'Rent']);
+  deps.templateRows[0].monthsAdded = 5;
+  assert.deepEqual(descriptionsOf(run('2026-04')), ['tra gop [6/6]', 'Rent']);
+});
+
+test('describeInstallment truncates the base text to fit the description limit', () => {
+  const max = domain.ExpenseDescription.MAX_LENGTH;
+  const template = { description: 'x'.repeat(max), totalMonths: 12, monthsAdded: 3 };
+  const text = domain.FixedExpenseTemplate.describeInstallment(template);
+  assert.equal(text.length, max);
+  assert.ok(text.endsWith('x [3/12]'));
+  assert.equal(domain.FixedExpenseTemplate.describeInstallment({ ...template, description: 'Loan', totalMonths: null }), 'Loan');
+});

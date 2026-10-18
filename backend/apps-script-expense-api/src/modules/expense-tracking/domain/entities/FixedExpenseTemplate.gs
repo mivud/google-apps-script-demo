@@ -32,5 +32,14 @@ ExpenseTracking.Domain.FixedExpenseTemplate = {
 
   recordGenerated: function (template, audit) {
     return Object.assign({}, template, { monthsAdded: template.monthsAdded + 1, audit: audit });
+  },
+
+  // Description of the expense a template just generated; pass the template AFTER recordGenerated.
+  // Limited templates get " [n/total]"; the base text is cut so the result still fits ExpenseDescription.
+  describeInstallment: function (template) {
+    if (template.totalMonths === null) return template.description;
+    var suffix = ' [' + template.monthsAdded + '/' + template.totalMonths + ']';
+    var room = ExpenseTracking.Domain.ExpenseDescription.MAX_LENGTH - suffix.length;
+    return template.description.slice(0, Math.max(room, 0)).trim() + suffix;
   }
 };

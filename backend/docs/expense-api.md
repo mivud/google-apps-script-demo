@@ -1,6 +1,6 @@
 # expense-api
 
-**Purpose:** standalone Apps Script Web App for personal expense tracking (module `expense-tracking`: payment methods, fixed expense templates, expenses). Code: [apps-script-expense-api](../apps-script-expense-api). Users, roles and claims come from [identity-api](identity-api.md); the shared building blocks come from the `SharedKernelLibrary` library pinned to version 6 ([shared-library](shared-library.md)). Version `1.0.0-beta.2` ([package.json](../apps-script-expense-api/package.json), `API_VERSION` in [SystemEndpoints.gs](../apps-script-expense-api/src/composition/SystemEndpoints.gs)).
+**Purpose:** standalone Apps Script Web App for personal expense tracking (module `expense-tracking`: payment methods, fixed expense templates, expenses). Code: [apps-script-expense-api](../apps-script-expense-api). Users, roles and claims come from [identity-api](identity-api.md); the shared building blocks come from the `SharedKernelLibrary` library pinned to version 6 ([shared-library](shared-library.md)). Version `1.0.0-beta.3` ([package.json](../apps-script-expense-api/package.json), `API_VERSION` in [SystemEndpoints.gs](../apps-script-expense-api/src/composition/SystemEndpoints.gs)).
 
 ## Contract
 
@@ -37,7 +37,7 @@ Before the rename the tab was `money_sources` and the columns `money_source_id`;
 - Payment method id: sent by the client on create, trimmed, 1-40 chars, only `a-z 0-9 _ -` (`payment_method_id_invalid`; uppercase is rejected, never converted). Immutable after create. Compared ignoring case, a duplicate fails with `payment_method_id_taken`; the check and the insert run under the same write lock. Expenses and templates reference it as `payment_method_id` (this string).
 - Payment method name: trimmed, 1-60 chars (`payment_method_name_invalid`), unique ignoring case (`payment_method_name_taken`). Deleting one referenced by any expense or template fails with `payment_method_in_use`. Expenses and templates must reference an existing payment method (`payment_method_not_found`).
 - Templates: `total_months` is optional: missing, null, empty or 0 means unlimited (stored as a blank cell, returned as `null`); when set it is an integer from 1 to 1200 (`total_months_invalid`). `months_added` starts at 0, is server-owned and never read from the payload. When set, `total_months` cannot go below `months_added` (`total_months_below_added`).
-- `expense.generateFixed`: for each active template that is unlimited or has `months_added < total_months` and no expense yet for (`template_id`, `statement_month`), creates one `is_fixed` expense (`spent_on` = first day of the month) and adds 1 to `months_added`, all inside the write lock. `skipped` counts the active templates that created nothing (already generated for the month or completed). Re-running a month changes nothing. Deleting a generated expense does not decrement the counter. The expense is saved before the counter, so a failure midway never counts a month without an expense. Known limit: if an expense exists for the month but the counter was not incremented (a failure between the two writes), nothing self-heals; the template is skipped and `months_added` stays one low until corrected by hand.
+- `expense.generateFixed`: for each active template that is unlimited or has `months_added < total_months` and no expense yet for (`template_id`, `statement_month`), creates one `is_fixed` expense (`spent_on` = first day of the month) and adds 1 to `months_added`, all inside the write lock. A template with `total_months` (not null) puts the new counter in the description as a suffix ` [n/total]` (for example `trả góp` with 6 months and 1 already added gives `trả góp [2/6]`); unlimited templates keep the description unchanged, and an overlong description is truncated so the result stays within 200 characters. `skipped` counts the active templates that created nothing (already generated for the month or completed). Re-running a month changes nothing. Deleting a generated expense does not decrement the counter. The expense is saved before the counter, so a failure midway never counts a month without an expense. Known limit: if an expense exists for the month but the counter was not incremented (a failure between the two writes), nothing self-heals; the template is skipped and `months_added` stays one low until corrected by hand.
 - `template_id` is set only by `generateFixed`; clients cannot send it. Updates use optimistic concurrency: a stale `expected_last_modified` gives `conflict`.
 - All authenticated users with read access see all rows.
 
@@ -82,7 +82,13 @@ Values below are real for this repository (none is a secret). Each step says whe
 After step 7, `GET` on the URL returns `{service, version}` (before the consent it returns an HTML error page). A POST with a missing or fake `idToken` returns `UNAUTHORIZED`. Call `system.version.get` with a valid token; the first valid request creates the three tabs.
 
 ### After every change
-Push, `clasp create-version "<text>"`, then `clasp redeploy AKfycbx-RuR866SuMDlaX4f4LWaG6QWH-7N3ELbwogOryx5whzFzoRv3d_gz4DCD0Dm4hsCy -V <version>` so the URL stays the same. A library change also needs a new library version pinned in `appsscript.json`.
+Run [cicd-expense-api.ps1](../../scripts/cicd-expense-api.ps1) (needs `clasp login` done once, and the environment variable `EXPENSE_API_DEPLOYMENT_ID` set to the deployment id above):
+
+- `./scripts/cicd-expense-api.ps1` (default `PushDeploy`), or `-Action Push|Deploy|Config`; `-Description "<text>"` names the version.
+- It runs `clasp push --force`, `clasp create-version`, then `clasp redeploy <id> -V <version>` so the URL stays the same.
+- To reuse it for another API, copy it as `cicd-<api>.ps1` and change only the Config block at the top.
+
+By hand it is: push, `clasp create-version "<text>"`, then `clasp redeploy AKfycbx-RuR866SuMDlaX4f4LWaG6QWH-7N3ELbwogOryx5whzFzoRv3d_gz4DCD0Dm4hsCy -V <version>`. A library change also needs a new library version pinned in `appsscript.json`.
 
 ## Limits
 

@@ -1,6 +1,6 @@
 {
   "name": "expense-api-apps-script",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "private": true,
   "scripts": {
     "test": "node --test tests/"

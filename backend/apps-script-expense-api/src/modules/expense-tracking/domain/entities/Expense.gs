@@ -46,10 +46,11 @@ ExpenseTracking.Domain.Expense = {
   },
 
   // The expense a template contributes to a statement month; spent on the first day of that month.
+  // identity: { id, description, audit }; the description is decided by the caller (installment suffix).
   fromTemplate: function (template, statementMonth, identity) {
     return ExpenseTracking.Domain.Expense.create({
       id: identity.id,
-      description: template.description,
+      description: identity.description,
       amount: template.amount,
       paymentMethodId: template.paymentMethodId,
       spentOn: ExpenseTracking.Domain.CalendarDate.firstDayOf(statementMonth),

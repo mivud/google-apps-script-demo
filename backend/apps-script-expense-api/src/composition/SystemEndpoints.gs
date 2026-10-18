@@ -1,7 +1,7 @@
 // Cross-cutting actions that belong to no module. Action names are part of the public API.
 var SystemEndpoints = {
   // Must equal "version" in ../../package.json; beta number goes up once per release.
-  API_VERSION: '1.0.0-beta.2',
+  API_VERSION: '1.0.0-beta.3',
 
   ACTION: {
     VERSION: 'system.version.get'
