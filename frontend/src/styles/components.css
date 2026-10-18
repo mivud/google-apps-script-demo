@@ -65,7 +65,8 @@
   padding: 0;
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
-  overflow: visible;
+  /* Scrolls when taller than the viewport; visible overflow left the sticky actions bar hanging below the card on iOS. */
+  overflow-y: auto;
   overscroll-behavior: contain;
   /* Solid on purpose: the sticky title and actions bars repeat this color, and stacked translucent layers would not match it. */
   background: var(--popover);
@@ -91,9 +92,6 @@
   background: var(--popover);
   border-bottom-left-radius: var(--radius-xl);
   border-bottom-right-radius: var(--radius-xl);
-}
-@media (max-height: 520px) {
-  .dialog { overflow-y: auto; }
 }
 
 /* Loading effects */

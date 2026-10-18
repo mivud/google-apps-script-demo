@@ -24,10 +24,20 @@ input, select, textarea {
   transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
 }
 textarea { padding-block: 8px; resize: vertical; }
+/* iOS Safari ignores min-height on native selects and draws its own compact control; appearance: none gives the same box as inputs. */
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-inline-end: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
 input::placeholder, textarea::placeholder { color: var(--muted-foreground); }
 /* A muted fill and text color (not opacity) keep disabled text above AA contrast. */
 input:disabled, select:disabled, textarea:disabled {
-  background: color-mix(in oklch, var(--input) 50%, transparent);
+  background-color: color-mix(in oklch, var(--input) 50%, transparent);
   color: var(--muted-foreground);
   cursor: not-allowed;
 }
@@ -39,8 +49,8 @@ input[aria-invalid='true'], select[aria-invalid='true'], textarea[aria-invalid='
   border-color: var(--destructive);
   box-shadow: 0 0 0 2px color-mix(in oklch, var(--destructive) 20%, transparent);
 }
-:root[data-color-scheme='dark'] :is(input, select, textarea) { background: color-mix(in oklch, var(--input) 30%, transparent); }
-:root[data-color-scheme='dark'] :is(input, select, textarea):disabled { background: color-mix(in oklch, var(--input) 50%, transparent); }
+:root[data-color-scheme='dark'] :is(input, select, textarea) { background-color: color-mix(in oklch, var(--input) 30%, transparent); }
+:root[data-color-scheme='dark'] :is(input, select, textarea):disabled { background-color: color-mix(in oklch, var(--input) 50%, transparent); }
 :root[data-color-scheme='dark'] :is(input, select, textarea)[aria-invalid='true'] { border-color: color-mix(in oklch, var(--destructive) 50%, transparent); box-shadow: 0 0 0 2px color-mix(in oklch, var(--destructive) 40%, transparent); }
 .language-switcher { width: auto; min-width: 120px; flex-shrink: 0; }
 
