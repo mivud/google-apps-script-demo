@@ -215,7 +215,8 @@
 .login-card { width: 100%; max-width: 24rem; display: flex; flex-direction: column; gap: 12px; }
 .login-card h1 { margin: 0; }
 /* The Google button iframe is 44px tall with a focus ring; the padding leaves room so the ring is not clipped. */
-.login-button { min-height: 48px; padding: 2px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; max-width: 100%; overflow-x: auto; }
+/* color-scheme: light matches the Google iframe's own scheme; with a dark page the browser would paint an opaque white backdrop around the button. */
+.login-button { color-scheme: light; min-height: 48px; padding: 2px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; max-width: 100%; overflow-x: auto; }
 /* display:flex above would otherwise override the [hidden] attribute while a sign-in is pending. */
 .login-button[hidden] { display: none; }
 .login-redirect { display: flex; flex-direction: column; gap: 8px; }
