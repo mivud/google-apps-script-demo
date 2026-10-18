@@ -223,6 +223,8 @@
 /* Mirrors Google's own outline button (drawn in an iframe, width set in google-sign-in-button.ts) so both sign-in buttons match. */
 .btn-google { width: 15rem; max-width: 100%; min-height: 44px; justify-content: center; gap: 10px; background: #fff; color: #3c4043; border: 1px solid #dadce0; border-radius: 4px; font: 500 14px/20px Roboto, Arial, sans-serif; }
 .btn-google:hover:not(:disabled) { background: #f8f9fa; border-color: #d2e3fc; }
+/* Dark mode keeps the themed .btn-outline fill; only the text needs a light color to stay readable on it. */
+:root[data-color-scheme='dark'] .btn-google { color: var(--foreground); }
 .btn-google > span { display: inline-flex; align-items: center; gap: 10px; }
 .btn-google .google-logo { flex: none; }
 .login-status { display: flex; align-items: center; gap: 8px; margin: 0; }
