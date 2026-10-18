@@ -20,7 +20,7 @@ Monthly expense tracking: expenses per statement month, payment methods and fixe
 ## Public behavior
 
 - One repository per aggregate ([application](../src/modules/expense-tracking/application)); services validate input and delegate. `update(id, patch, expectedLastModified)` fails with `conflict` when stale.
-- `generateFixed(month)` returns `{created, skipped}`: the backend creates one expense per active, not completed template that has none for the month and raises `monthsAdded` by 1; running it twice adds nothing. The UI toasts both counts.
+- `generateFixed(month)` returns `{created, skipped}`: the backend creates one expense per active, not completed template that has none for the month and raises `monthsAdded` by 1; running it twice adds nothing. A template with `totalMonths` names its expense `<description> [n/total]` (`n` = `monthsAdded` after the increment, e.g. `Loan [2/6]`); unlimited templates keep the plain description. The UI toasts both counts.
 - Stable error codes (`payment_method_in_use`, `payment_method_id_invalid`, `payment_method_id_taken`, `payment_method_name_taken`, `payment_method_not_found`, `statement_month_invalid`, `expense_*`, `total_months_*`) are translated through [translateError](../src/shared/i18n/translate-error.ts) (en + vi).
 - Deletes use the shared confirm dialog + toast flow.
 
