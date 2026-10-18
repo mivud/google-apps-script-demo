@@ -1,6 +1,7 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react'
 import { Button } from '../../../shared/components/button'
 import { FormError } from '../../../shared/components/form-error'
+import { SettingsMenu } from '../../../shared/components/settings-menu'
 import { Spinner } from '../../../shared/components/spinner'
 import { ForbiddenError } from '../../../shared/errors'
 import { RedirectLoginError } from '../domain/redirect-callback'
@@ -46,6 +47,7 @@ export function LoginPage() {
   const failure = attempt.status === 'failed' ? attempt.error : undefined
   return (
     <main className="login-page">
+      <div className="login-settings"><SettingsMenu /></div>
       <section className="surface surface-pad login-card" aria-labelledby="login-title">
         <h1 id="login-title">{t('auth.title')}</h1>
         <p className="muted">{t('auth.description')}</p>
