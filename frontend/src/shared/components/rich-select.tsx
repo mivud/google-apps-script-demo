@@ -1,9 +1,9 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { Field, type FieldLayoutProps } from './field'
 import { Icon } from './icon'
+import { measurePlacement, type ListPlacement } from './rich-select-placement'
 
 const TYPEAHEAD_RESET_MS = 700
-
 export interface RichOption {
   value: string
   // Plain text: used for type-ahead and as the fallback name.
@@ -32,6 +32,7 @@ export function RichSelect({ label, value, options, onChange, renderOption, erro
   const [open, setOpen] = useState(false)
   const selectedIndex = Math.max(0, options.findIndex((option) => option.value === value))
   const [activeIndex, setActiveIndex] = useState(selectedIndex)
+  const [placement, setPlacement] = useState<ListPlacement | null>(null)
   const optionId = (index: number) => `${listId}-option-${index}`
   const selected = options.find((option) => option.value === value) ?? options[0]
 
@@ -49,6 +50,12 @@ export function RichSelect({ label, value, options, onChange, renderOption, erro
     // optionId is derived from listId and the index only.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [open, activeIndex])
+
+  // Size and place the list inside the room around the button (dialog or viewport) so it scrolls itself
+  // instead of stretching the scrollable area of the dialog that contains it.
+  useLayoutEffect(() => {
+    if (open && rootRef.current) setPlacement(measurePlacement(rootRef.current))
+  }, [open])
 
   function openList() {
     setActiveIndex(selectedIndex)
@@ -118,7 +125,7 @@ export function RichSelect({ label, value, options, onChange, renderOption, erro
             <Icon name="expandAll" />
           </button>
           {open && (
-            <ul id={listId} role="listbox" aria-label={label} className="rich-select-list">
+            <ul id={listId} role="listbox" aria-label={label} className={placement?.above ? 'rich-select-list is-above' : 'rich-select-list'} style={placement ? { maxHeight: placement.maxHeight } : undefined}>
               {options.map((option, index) => (
                 <li
                   key={option.value}
