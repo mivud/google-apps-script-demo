@@ -49,7 +49,7 @@ frontend/
     config/      # provider factory, env parsing
   docs/          # frontend docs, one file per module
 backend/
-  apps-script/   # .clasp.json + src/ (Main.gs, composition/, shared/, modules/device-management/...); pushed with clasp
+  apps-script-device-api/   # .clasp.json + src/ (Main.gs, composition/, shared/, modules/device-management/...); pushed with clasp
   supabase/      # SQL migrations, RLS policies
   docs/          # backend docs, one file per module
 ```
