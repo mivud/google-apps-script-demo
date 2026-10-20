@@ -1,8 +1,17 @@
 # Supabase
 
-**Purpose:** Postgres storage for equipment and maintenance logs.
+**Setup guide:** [supabase-setup](supabase-setup.md).
 
-**Files:** [001_init.sql](../supabase/migrations/001_init.sql), [002_rls_policies.sql](../supabase/migrations/002_rls_policies.sql), [003_auth.sql](../supabase/migrations/003_auth.sql) (Google login, `users` allowlist, role policies)
+**Purpose:** Postgres storage for identity (users, roles, claims), equipment and maintenance logs, and expense tracking.
+
+**Scripts** (run in order in the SQL editor; each is idempotent and describes the final state, no incremental history)
+1. [001_api.sql](../supabase/migrations/001_api.sql): shared layer. `caller_email`, `is_google_login`, `set_audit_columns`, access resolution (`identity_*`), `current_app_role`, `has_role`, `has_claim`, RPCs `current_identity` and `preview_access`.
+2. [002_users.sql](../supabase/migrations/002_users.sql): `users`, `roles`, `claims`, `user_roles`, `role_claims`, `user_claims`, lockout rules, RLS (`identity.read` / `identity.write`), seed of the `super` role and the six permission claims. The header shows how to add the first super user.
+3. [003_device_management.sql](../supabase/migrations/003_device_management.sql): `categories`, `equipment`, `maintenance_logs` (`device.mgt.read` / `device.mgt.write`).
+4. [004_expense_tracking.sql](../supabase/migrations/004_expense_tracking.sql): `payment_methods`, `fixed_expense_templates`, `expenses`, `generate_fixed_expenses` (`expense.read` / `expense.write`).
+5. [005_fixed_expense_payment_day.sql](../supabase/migrations/005_fixed_expense_payment_day.sql): `fixed_expense_templates.payment_day` (smallint 1..31 or null, code `payment_day_invalid`), `expenses.paid_at` (only for fixed expenses, else `expense_not_fixed`); `generate_fixed_expenses` now sets `spent_on` to the payment day (capped to the month length, the 1st when null) while `statement_month` stays the requested month. Existing grants and RLS cover the new columns.
+
+The previous incremental scripts (001-009 and phase 2) are kept in [legacy](../supabase/legacy) for reference; an existing database that already ran them does not need the new scripts.
 
 **Schema**
 - `categories`: id, parent_id (nullable self FK, `on delete restrict`; NULL = root), name (non-blank), plus audit columns.
@@ -21,17 +30,11 @@
 - Trigger `categories_reject_cycle` raises `category_cycle` (check violation) for a self-parent or a descendant parent.
 - Delete is blocked by `on delete restrict` (foreign key violation) when the category has children (`category_has_children`) or equipment (`category_in_use`); the adapter tells them apart.
 - Indexes: `categories_parent_id_idx`, `equipment_category_id_idx`. `categories` has the audit trigger and the v1 anon policy.
-- Migration note: `001_init.sql` was edited in place (`equipment.category` text replaced by `category_id`). For an existing database, create `categories`, insert one root row per distinct old name, update `equipment.category_id`, then drop `category`; or recreate the tables if the data is disposable.
 
 **Rules**
 - Column names are identical to the Google Sheet headers.
-- Apply the migrations in order in the Supabase SQL editor.
-- The v1 policies in `002` gave `anon` full access; the anon key ships in the frontend bundle. Apply `003_auth.sql` so access requires a Google login and an allowlisted role (see the next point).
-- `003_auth.sql` only trusts Google logins: `current_app_role()` and the `users` policy require `app_metadata.provider = 'google'` and a verified email in the JWT. Still disable every other Supabase auth provider and email signup (Authentication > Providers), so nobody can register with an allowlisted email.
+- No `anon` access anywhere: access requires a Google login (`is_google_login()`: provider `google` and a verified email in the JWT), an active row in `users`, and the matching permission claim. Still disable every other Supabase auth provider and email signup (Authentication > Providers), so nobody can register with an allowlisted email.
 - Never put the `service_role` key in the frontend.
-
-**Permission access ([009_permission_access.sql](../supabase/migrations/009_permission_access.sql))**
-- Replaces the admin/viewer policies of 003-007: only the `super` role bypasses; `viewer` is dropped (its rows stay as plain data, `admin` assignments are copied to `super`).
-- Identity tables need claim `permission=identity.read` / `identity.write`; device tables (`categories`, `equipment`, `maintenance_logs`) need `device.mgt.read` / `device.mgt.write`; expense tables keep `expense.read` / `expense.write`. `users` keeps its own-row read.
-- Helpers: `has_role(text)`, `has_claim(key, value)` (super bypass); `preview_access` needs `identity.read`. Effective claims merge additively; a role claim is dropped only when the user owns the same (key, value). No `users.role` fallback.
-- Lockout codes: `last_super` (was `last_admin`) and `self_lockout`. Grant the permission claims to roles before applying, otherwise only `super` users keep access.
+- Only the `super` role bypasses permission checks. Effective claims merge additively: a role claim is dropped only when the user owns the same (key, value). `users` also has an own-row read policy.
+- Lockout codes: `last_super` and `self_lockout`. Other stable codes: `role_protected`, `role_in_use`, `claim_in_use`, `claim_unknown`, `limit_exceeded`, `user_email_duplicate`.
+- Device-management tables keep `created_at` / `modified_at` audit names (see Audit autofill); identity and expense tables use `created` / `last_modified` filled from the JWT email.

@@ -80,7 +80,7 @@ Values below are real for this repository (none is a secret). Each step says whe
 | 7 | Authorize once: in the editor open `Main.gs`, pick the function **`authorizeScopes`** (not `doGet`) and press Run, Review permissions, tick **both** permissions (Sheets and "Connect to an external service"), Allow | **You** (consent screen) |
 | 8 | In identity-api, seed the two claims above and grant them to the right roles or users | **You** |
 | 9 | Frontend: set `VITE_EXPENSE_API_URL` in `frontend/.env.local` and in GitHub (Settings > Secrets and variables > Actions > Variables), then run the Pages workflow again | **You** |
-| 10 | Supabase only: run `backend/supabase/migrations/004_expense_tracking.sql` | **You** (only for `VITE_DB_PROVIDER=supabase`) |
+| 10 | Supabase only: run `backend/supabase/migrations/004_expense_tracking.sql` then `005_fixed_expense_payment_day.sql` | **You** (only for `VITE_DB_PROVIDER=supabase`) |
 
 After step 7, `GET` on the URL returns `{service, version}` (before the consent it returns an HTML error page). A POST with a missing or fake `idToken` returns `UNAUTHORIZED`. Call `system.version.get` with a valid token; the first valid request creates the three tabs.
 
