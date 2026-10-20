@@ -4,6 +4,7 @@ import { validateCategoryName } from '../domain/category'
 import { assertNoCategoryCycle } from '../domain/category-tree'
 import type { Category, NewCategory } from '../domain/category'
 import { validateNewEquipment, type Equipment, type NewEquipment } from '../domain/equipment'
+import { computeWarrantyExpiry } from '../domain/warranty'
 import { validateNewMaintenanceLog, type MaintenanceLog, type NewMaintenanceLog } from '../domain/maintenance'
 import type { DataService } from '../application/data-service'
 import type { EquipmentQuery } from '../application/equipment-repository'
@@ -54,15 +55,16 @@ export class InMemoryDataService implements DataService {
   async create(input: NewEquipment): Promise<Equipment> {
     const valid = validateNewEquipment(input)
     this.requireCategory(valid.categoryId)
-    const created: Equipment = { ...valid, id: this.nextId(), ...this.audit() }
+    const created: Equipment = { ...valid, warrantyExpiryDate: computeWarrantyExpiry(valid.purchaseDate, valid.warrantyMonths), id: this.nextId(), ...this.audit() }
     this.equipment.set(created.id, created)
     return created
   }
 
   async update(id: string, patch: Partial<NewEquipment>): Promise<Equipment> {
     const current = this.requireEquipment(id)
-    const { id: _id, createdAt: _c, modifiedAt: _m, createdBy: _cb, lastModifiedBy: _lb, ...fields } = current
-    const next = { ...current, ...validateNewEquipment({ ...fields, ...patch }) }
+    const { id: _id, createdAt: _c, modifiedAt: _m, createdBy: _cb, lastModifiedBy: _lb, warrantyExpiryDate: _w, ...fields } = current
+    const valid = validateNewEquipment({ ...fields, ...patch })
+    const next = { ...current, ...valid, warrantyExpiryDate: computeWarrantyExpiry(valid.purchaseDate, valid.warrantyMonths) }
     this.requireCategory(next.categoryId)
     const updated = { ...next, modifiedAt: this.now() }
     this.equipment.set(id, updated)

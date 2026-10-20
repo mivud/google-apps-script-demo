@@ -1,62 +1,73 @@
 import { useState } from 'react'
-import type { EquipmentStatus } from '../../domain/equipment'
-import { EQUIPMENT_STATUSES } from '../../domain/equipment'
+import type { Page } from '../../../../shared/page'
+import { MAX_PAGE_SIZE } from '../../application/equipment-service'
+import { EQUIPMENT_STATUSES, type Equipment } from '../../domain/equipment'
+import { getDescendantIds } from '../../domain/category-tree'
 import { useCanWriteDevices } from '../use-can-write-devices'
-import { CategorySelect } from '../components/category-select'
+import { useCategories } from '../categories-context'
 import { EquipmentFormDialog } from '../components/equipment-form-dialog'
 import { EquipmentTable } from '../components/equipment-table'
 import { EmptyState } from '../../../../shared/components/empty-state'
 import { ErrorState } from '../../../../shared/components/error-state'
-import { FilterBar } from '../../../../shared/components/layout'
 import { LoadingButton } from '../../../../shared/components/loading-button'
 import { PageHeader } from '../../../../shared/components/page-header'
-import { Pager } from '../../../../shared/components/pager'
-import { SearchInput } from '../../../../shared/components/search-input'
-import { Select } from '../../../../shared/components/select'
-import { TableSkeleton } from '../../../../shared/components/skeleton'
 import { RefreshIndicator } from '../../../../shared/components/refresh-indicator'
+import { ListSkeleton } from '../../../../shared/components/skeleton'
 import { useAsyncData } from '../../../../shared/hooks/use-async-data'
-import { useDebounced } from '../../../../shared/hooks/use-debounced'
+import { useReloadAction } from '../../../../shared/hooks/use-reload-action'
 import { useI18n } from '../../../../shared/i18n'
-import { STATUS_LABEL_KEYS } from '../labels'
+import { ALL_VALUE, type DataTableToolbar, type FilterDefinition } from '../../../../shared/table-filters'
+import { STATUS_LABEL_KEYS, WARRANTY_LABEL_KEYS, getWarrantyStatus, localToday, type WarrantyStatus } from '../labels'
 import { useServices } from '../services-context'
+
+const WARRANTY_STATUSES: WarrantyStatus[] = ['active', 'expiring', 'expired']
 
 export function EquipmentListPage() {
   const { equipment } = useServices()
   const { t } = useI18n()
   const canWrite = useCanWriteDevices()
-  const [search, setSearch] = useState('')
-  const [categoryId, setCategoryId] = useState('')
-  const [status, setStatus] = useState<EquipmentStatus | ''>('')
-  const [page, setPage] = useState(1)
+  const categories = useCategories()
   const [adding, setAdding] = useState(false)
 
-  const debouncedSearch = useDebounced(search, 300)
+  // The whole list is loaded once (like expenses) so search and filters run in the browser.
+  const list = useAsyncData(() => loadAllEquipment((query) => equipment.list(query)), [equipment])
+  const reloadAction = useReloadAction(list)
+  const rows = list.data
+  // Read once per render so every row of one paint is judged against the same day.
+  const today = localToday()
 
-  // Pending debounce means the visible results are already stale.
-  const debouncing = search !== debouncedSearch
-
-  const list = useAsyncData(
-    () =>
-      equipment.list({
-        search: debouncedSearch || undefined,
-        categoryId: categoryId || undefined,
-        status: status || undefined,
-        page,
-      }),
-    [equipment, debouncedSearch, categoryId, status, page],
-  )
-
-  const totalPages = list.data ? Math.max(1, Math.ceil(list.data.total / list.data.pageSize)) : 1
-
-  const rangeStart = list.data ? (list.data.page - 1) * list.data.pageSize + 1 : 0
-
-  // Any filter change returns to page 1 so the user never lands on an empty page.
-  function withPageReset<T>(setter: (value: T) => void) {
-    return (value: T) => {
-      setter(value)
-      setPage(1)
-    }
+  const filters: FilterDefinition<Equipment>[] = [
+    {
+      key: 'category',
+      label: t('equipment.categoryFilter'),
+      kind: 'select',
+      options: [{ value: ALL_VALUE, label: t('category.all') }, ...categories.flat.map(({ category, path }) => ({ value: category.id, label: path }))],
+      // Selecting a parent includes its subcategories, like the server-side filter did.
+      predicate: (item, value) => item.categoryId === value || getDescendantIds(categories.data ?? [], value).includes(item.categoryId),
+    },
+    {
+      key: 'status',
+      label: t('equipmentForm.status'),
+      kind: 'select',
+      options: [{ value: ALL_VALUE, label: t('equipment.allStatuses') }, ...EQUIPMENT_STATUSES.map((value) => ({ value, label: t(STATUS_LABEL_KEYS[value]) }))],
+      predicate: (item, value) => item.status === value,
+    },
+    {
+      key: 'warranty',
+      label: t('warranty.filter'),
+      kind: 'select',
+      options: [{ value: ALL_VALUE, label: t('warranty.filter.all') }, ...WARRANTY_STATUSES.map((value) => ({ value, label: t(WARRANTY_LABEL_KEYS[value]) }))],
+      predicate: (item, value) => getWarrantyStatus(item.warrantyExpiryDate, today) === value,
+    },
+  ]
+  const toolbar: DataTableToolbar<Equipment> = {
+    searchLabel: t('equipment.searchPlaceholder'),
+    searchFields: (item) => [item.name, item.description, item.vendor ?? ''],
+    filters,
+    itemsName: t('equipment.items'),
+    urlSync: true,
+    exportFileName: 'equipment',
+    actions: [reloadAction],
   }
 
   return (
@@ -66,42 +77,22 @@ export function EquipmentListPage() {
         actions={canWrite ? <LoadingButton onClick={() => setAdding(true)}>{t('equipment.add')}</LoadingButton> : undefined}
       />
 
-      <FilterBar>
-        <SearchInput label={t('equipment.searchPlaceholder')} placeholder={t('equipment.searchPlaceholder')} value={search} onChange={(e) => withPageReset(setSearch)(e.target.value)} />
-        <CategorySelect label={t('equipment.categoryFilter')} hideLabel value={categoryId} onChange={withPageReset(setCategoryId)} noneLabel={t('category.all')} />
-        <Select label={t('equipmentForm.status')} hideLabel value={status} onChange={(e) => withPageReset(setStatus)(e.target.value as EquipmentStatus | '')}>
-          <option value="">{t('equipment.allStatuses')}</option>
-          {EQUIPMENT_STATUSES.map((value) => (
-            <option key={value} value={value}>{t(STATUS_LABEL_KEYS[value])}</option>
-          ))}
-        </Select>
-      </FilterBar>
-
-      <RefreshIndicator active={(list.loading && !!list.data) || debouncing} />
+      <RefreshIndicator active={list.loading && !!rows} />
 
       {list.error ? (
         <ErrorState error={list.error} onRetry={list.reload} retrying={list.loading} />
-      ) : !list.data ? (
-        <TableSkeleton />
-      ) : list.data.items.length === 0 ? (
+      ) : !rows ? (
+        <ListSkeleton count={4} />
+      ) : rows.length === 0 ? (
         <EmptyState message={t('equipment.empty')} />
       ) : (
-        <>
-          <p className="muted" aria-live="polite">{t('common.showing', { from: rangeStart, to: rangeStart + list.data.items.length - 1, total: list.data.total })}</p>
-          <EquipmentTable items={list.data.items} refreshing={list.loading || debouncing} />
-        </>
-      )}
-
-      {list.data && totalPages > 1 && (
-        <Pager page={page} totalPages={totalPages} onChange={setPage} disabled={list.loading} />
+        <EquipmentTable items={rows} toolbar={toolbar} today={today} refreshing={list.loading} />
       )}
 
       {adding && (
         <EquipmentFormDialog
           onSubmit={async (input) => {
             const created = await equipment.create(input)
-            // Page 1 holds the newest item (modifiedAt DESC); reload covers the case where page is already 1.
-            setPage(1)
             list.reload()
             return created
           }}
@@ -110,4 +101,15 @@ export function EquipmentListPage() {
       )}
     </section>
   )
+}
+
+// Pages through the service (its page size is capped) and returns rows ordered by modifiedAt DESC.
+async function loadAllEquipment(listPage: (query: { page: number; pageSize: number }) => Promise<Page<Equipment>>): Promise<Equipment[]> {
+  const items: Equipment[] = []
+  for (let page = 1; ; page += 1) {
+    const result = await listPage({ page, pageSize: MAX_PAGE_SIZE })
+    items.push(...result.items)
+    if (result.items.length === 0 || items.length >= result.total) break
+  }
+  return items.sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt))
 }

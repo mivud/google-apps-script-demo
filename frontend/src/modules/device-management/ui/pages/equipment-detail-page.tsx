@@ -10,13 +10,14 @@ import { ButtonRow } from '../../../../shared/components/layout'
 import { PageHeader } from '../../../../shared/components/page-header'
 import { RefreshIndicator } from '../../../../shared/components/refresh-indicator'
 import { ListSkeleton } from '../../../../shared/components/skeleton'
-import { SurfaceList, SurfaceListItem } from '../../../../shared/components/surface-list'
+import { EquipmentExtraDetails } from '../components/equipment-extra-details'
+import { MaintenanceTable } from '../components/maintenance-table'
 import { LoadingButton } from '../../../../shared/components/loading-button'
 import { MaintenanceForm } from '../components/maintenance-form'
 import { useAsyncData } from '../../../../shared/hooks/use-async-data'
 import { useDeleteAction } from '../../../../shared/hooks/use-delete-action'
 import { useI18n } from '../../../../shared/i18n'
-import { MAINTENANCE_LABEL_KEYS, STATUS_LABEL_KEYS, STATUS_TONES, formatDate } from '../labels'
+import { STATUS_LABEL_KEYS, STATUS_TONES } from '../labels'
 import { DEVICES_PATH } from '../navigation'
 import { useServices } from '../services-context'
 
@@ -27,7 +28,7 @@ interface EquipmentDetailPageProps {
 
 export function EquipmentDetailPage({ id, onDeleted }: EquipmentDetailPageProps) {
   const { equipment, maintenance } = useServices()
-  const { t, language } = useI18n()
+  const { t } = useI18n()
   const canWrite = useCanWriteDevices()
   const detail = useAsyncData(() => equipment.get(id), [equipment, id])
   const logs = useAsyncData(() => maintenance.listByEquipment(id), [maintenance, id])
@@ -65,6 +66,7 @@ export function EquipmentDetailPage({ id, onDeleted }: EquipmentDetailPageProps)
           <EquipmentCategoryLine categoryId={detail.data.categoryId} />
           <p>{detail.data.description || t('equipment.noDescription')}</p>
           <EquipmentQuantityLine quantity={detail.data.quantity} />
+          <EquipmentExtraDetails equipment={detail.data} />
           <AuditInfo
             createdAt={detail.data.createdAt}
             createdBy={detail.data.createdBy}
@@ -87,15 +89,7 @@ export function EquipmentDetailPage({ id, onDeleted }: EquipmentDetailPageProps)
           ) : logs.data.length === 0 ? (
             <EmptyState message={t('maintenance.empty')} />
           ) : (
-            <SurfaceList refreshing={logs.loading}>
-              {logs.data.map((log) => (
-                <SurfaceListItem key={log.id}>
-                  <strong>{t(MAINTENANCE_LABEL_KEYS[log.type])}</strong>
-                  <span className="muted"> &middot; {formatDate(log.performedAt, language)}</span>
-                  {log.note && <p>{log.note}</p>}
-                </SurfaceListItem>
-              ))}
-            </SurfaceList>
+            <MaintenanceTable logs={logs.data} refreshing={logs.loading} />
           )}
 
           {canWrite && (

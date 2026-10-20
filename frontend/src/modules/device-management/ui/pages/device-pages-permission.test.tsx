@@ -15,7 +15,7 @@ setupDomTests()
 
 const audit = { createdAt: '', modifiedAt: '', createdBy: '', lastModifiedBy: '' }
 const category = { id: 'c1', parentId: '', name: 'Laptops', ...audit }
-const device = { id: 'e1', categoryId: 'c1', name: 'ThinkPad', description: 'd', status: 'active', quantity: 1, ...audit }
+const device = { id: 'e1', categoryId: 'c1', name: 'ThinkPad', description: 'd', status: 'active', quantity: 1, purchaseDate: null, warrantyMonths: null, warrantyExpiryDate: null, note: null, vendor: null, ...audit }
 
 const categories: CategoriesState = {
   data: [category], flat: flattenTree(buildTree([category])), pathOf: () => 'Laptops',

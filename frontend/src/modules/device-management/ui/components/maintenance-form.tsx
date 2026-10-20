@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { MAINTENANCE_TYPES, isMaintenanceType, maintenanceDateToIso, type MaintenanceType, type NewMaintenanceLog } from '../../domain/maintenance'
 import { useAsyncAction } from '../../../../shared/hooks/use-async-action'
 import { translateError, useI18n } from '../../../../shared/i18n'
+import { VENDOR_MAX_LENGTH } from '../../domain/optional-text'
 import { MAINTENANCE_LABEL_KEYS } from '../labels'
 import { FormError } from '../../../../shared/components/form-error'
 import { GlassSurface } from '../../../../shared/components/glass-surface'
@@ -29,6 +30,7 @@ export function MaintenanceForm({ equipmentId, onSubmit, onSaved }: MaintenanceF
   const [type, setType] = useState<MaintenanceType>('maintenance')
   const [date, setDate] = useState(today)
   const [note, setNote] = useState('')
+  const [vendor, setVendor] = useState('')
   const { t } = useI18n()
   // Conversion lives inside the action so a bad date becomes a displayed error, not an uncaught throw.
   const submit = useAsyncAction(async (input: Omit<NewMaintenanceLog, 'performedAt'> & { date: string }) => {
@@ -43,9 +45,11 @@ export function MaintenanceForm({ equipmentId, onSubmit, onSaved }: MaintenanceF
       type,
       date,
       note,
+      vendor,
     })
     if (result !== undefined) {
       setNote('')
+      setVendor('')
       onSaved()
     }
   }
@@ -61,6 +65,7 @@ export function MaintenanceForm({ equipmentId, onSubmit, onSaved }: MaintenanceF
         </Select>
         <TextInput label={t('maintenance.date')} type="date" required value={date} disabled={submit.pending} onChange={(e) => setDate(e.target.value)} />
       </FieldRow>
+      <TextInput label={t('maintenance.vendor')} maxLength={VENDOR_MAX_LENGTH} value={vendor} disabled={submit.pending} onChange={(e) => setVendor(e.target.value)} />
       <Textarea label={t('maintenance.note')} rows={2} value={note} disabled={submit.pending} onChange={(e) => setNote(e.target.value)} />
       {submit.error && <FormError message={translateError(submit.error, t)} />}
       <ButtonRow>

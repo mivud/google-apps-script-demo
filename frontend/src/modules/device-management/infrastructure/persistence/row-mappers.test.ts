@@ -25,6 +25,34 @@ describe('rowToEquipment', () => {
   })
 })
 
+describe('optional equipment details', () => {
+  const base = { id: '1', category_id: null, name: 'n', description: '', status: 'active', quantity: 1, ...audit }
+
+  it('maps empty or missing cells to null', () => {
+    const empty = { purchaseDate: null, warrantyMonths: null, warrantyExpiryDate: null, note: null, vendor: null }
+    expect(rowToEquipment(base)).toMatchObject(empty)
+    expect(rowToEquipment({ ...base, purchase_date: '', warranty_months: '', warranty_expiry_date: '', note: ' ', vendor: '' })).toMatchObject(empty)
+  })
+
+  it('maps filled values and keeps only the date part', () => {
+    expect(
+      rowToEquipment({
+        ...base, purchase_date: '2024-01-31T00:00:00.000Z', warranty_months: '12', warranty_expiry_date: '2025-01-31', note: 'n', vendor: 'Acme',
+      }),
+    ).toMatchObject({ purchaseDate: '2024-01-31', warrantyMonths: 12, warrantyExpiryDate: '2025-01-31', note: 'n', vendor: 'Acme' })
+  })
+
+  it('never writes the derived expiry date and nulls blanks', () => {
+    const row = equipmentPatchToRow({ purchaseDate: ' ', warrantyMonths: 0, note: null, vendor: 'V', warrantyExpiryDate: 'x' } as never)
+    expect(row).toEqual({ purchase_date: null, warranty_months: 0, note: null, vendor: 'V' })
+  })
+
+  it('maps the maintenance vendor', () => {
+    expect(rowToMaintenanceLog({ id: 'l', equipment_id: 'e', type: 'new', performed_at: '2026-03-01T00:00:00Z', note: '', vendor: '', ...audit }).vendor).toBeNull()
+    expect(maintenanceInputToRow({ equipmentId: 'e', type: 'new', performedAt: '2026-03-01T00:00:00Z', note: '', vendor: ' S ' }).vendor).toBe('S')
+  })
+})
+
 describe('equipmentPatchToRow', () => {
   it('maps only provided fields and keeps falsy values', () => {
     expect(equipmentPatchToRow({ quantity: 0, categoryId: '' })).toEqual({ quantity: 0, category_id: '' })
@@ -42,7 +70,7 @@ describe('maintenance mappers', () => {
 
   it('maps input to a row with normalized performed_at', () => {
     expect(maintenanceInputToRow({ equipmentId: 'e', type: 'new', performedAt: '2026-03-01T07:00:00+07:00', note: 'x' })).toEqual({
-      equipment_id: 'e', type: 'new', performed_at: '2026-03-01T00:00:00.000+00:00', note: 'x',
+      equipment_id: 'e', type: 'new', performed_at: '2026-03-01T00:00:00.000+00:00', note: 'x', vendor: null,
     })
   })
 })

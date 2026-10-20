@@ -63,6 +63,28 @@ export function runDataServiceContract(label: string, createService: () => DataS
       expect(await service.get(created.id)).toEqual(created)
     })
 
+    it('returns null optional details for old-style rows and normalizes blanks', async () => {
+      const created = await track(sample('Contract Blank Details', { note: '  ', vendor: '', purchaseDate: ' ' }))
+      expect(created).toMatchObject({ purchaseDate: null, warrantyMonths: null, warrantyExpiryDate: null, note: null, vendor: null })
+    })
+
+    it('derives the warranty expiry with end-of-month clamping', async () => {
+      const created = await track(sample('Contract Warranty', { purchaseDate: '2024-01-31', warrantyMonths: 1, vendor: 'Acme', note: 'n' }))
+      expect(created).toMatchObject({ purchaseDate: '2024-01-31', warrantyMonths: 1, warrantyExpiryDate: '2024-02-29', vendor: 'Acme', note: 'n' })
+      const zero = await service.update(created.id, { warrantyMonths: 0 })
+      expect(zero.warrantyExpiryDate).toBe('2024-01-31')
+      const cleared = await service.update(created.id, { warrantyMonths: null })
+      expect(cleared.warrantyExpiryDate).toBeNull()
+      expect(await service.get(created.id)).toEqual(cleared)
+    })
+
+    it('rejects invalid warranty input', async () => {
+      await expect(service.create(sample('Contract Bad Warranty', { warrantyMonths: 12 }))).rejects.toBeInstanceOf(ValidationError)
+      await expect(
+        service.create(sample('Contract Bad Months', { purchaseDate: '2024-01-01', warrantyMonths: 601 })),
+      ).rejects.toBeInstanceOf(ValidationError)
+    })
+
     it('returns null for a missing or malformed id', async () => {
       expect(await service.get(MISSING_ID)).toBeNull()
       expect(await service.get(MALFORMED_ID)).toBeNull()

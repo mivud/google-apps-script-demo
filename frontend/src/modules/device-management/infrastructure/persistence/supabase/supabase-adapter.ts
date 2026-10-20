@@ -32,6 +32,11 @@ const RAISED_CATEGORY_CODES: ValidationCode[] = [
   'category_cycle',
   'category_in_use',
   'category_has_children',
+  'purchase_date_invalid',
+  'warranty_months_invalid',
+  'warranty_requires_purchase_date',
+  'note_too_long',
+  'vendor_too_long',
 ]
 
 function toDomainError(error: SupabaseError): Error {

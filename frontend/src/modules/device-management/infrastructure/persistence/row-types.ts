@@ -6,6 +6,13 @@ export interface EquipmentRow {
   description: string
   status: string
   quantity: number
+  // Sheets may return '' for an empty cell; mappers normalize it to null.
+  purchase_date?: string | null
+  warranty_months?: number | string | null
+  // Derived server-side; read-only for clients.
+  warranty_expiry_date?: string | null
+  note?: string | null
+  vendor?: string | null
   created_at: string
   modified_at: string
   created_by: string
@@ -18,6 +25,7 @@ export interface MaintenanceLogRow {
   type: string
   performed_at: string
   note: string
+  vendor?: string | null
   created_at: string
   modified_at: string
   created_by: string

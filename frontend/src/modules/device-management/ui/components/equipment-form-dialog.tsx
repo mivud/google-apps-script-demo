@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react'
-import { EQUIPMENT_STATUSES, type Equipment, type NewEquipment } from '../../domain/equipment'
+import { EQUIPMENT_STATUSES, WARRANTY_MONTHS_MAX, type Equipment, type NewEquipment } from '../../domain/equipment'
 import { useServices } from '../services-context'
 import { useCategories } from '../categories-context'
 import { useAsyncAction } from '../../../../shared/hooks/use-async-action'
 import { translateError, useI18n } from '../../../../shared/i18n'
-import { STATUS_LABEL_KEYS } from '../labels'
+import { NOTE_MAX_LENGTH, VENDOR_MAX_LENGTH } from '../../domain/optional-text'
+import { computeWarrantyExpiry } from '../../domain/warranty'
+import { STATUS_LABEL_KEYS, formatDateOnly } from '../labels'
 import { CategoryFormDialog } from './category-form-dialog'
 import { CategorySelect } from './category-select'
 import { FormError } from '../../../../shared/components/form-error'
@@ -30,7 +32,11 @@ export function EquipmentFormDialog({ initial, onSubmit, onClose }: EquipmentFor
   })
   // Raw text so an empty field is reported instead of silently becoming 0.
   const [quantityText, setQuantityText] = useState(String(initial?.quantity ?? 1))
-  const { t } = useI18n()
+  const [purchaseDate, setPurchaseDate] = useState(initial?.purchaseDate ?? '')
+  const [warrantyText, setWarrantyText] = useState(initial?.warrantyMonths === null || initial?.warrantyMonths === undefined ? '' : String(initial.warrantyMonths))
+  const [vendor, setVendor] = useState(initial?.vendor ?? '')
+  const [note, setNote] = useState(initial?.note ?? '')
+  const { t, language } = useI18n()
   const submit = useAsyncAction(onSubmit)
   const { categories } = useServices()
   const { reload: reloadCategories } = useCategories()
@@ -40,10 +46,15 @@ export function EquipmentFormDialog({ initial, onSubmit, onClose }: EquipmentFor
     event.preventDefault()
     // NaN fails the service's integer check, which reports quantity_invalid.
     const quantity = quantityText.trim() === '' ? Number.NaN : Number(quantityText)
-    const result = await submit.run({ ...form, quantity })
+    // Blank optional fields become null; invalid numbers (NaN) are reported by the service.
+    const warrantyMonths = warrantyText.trim() === '' ? null : Number(warrantyText)
+    const result = await submit.run({ ...form, quantity, purchaseDate: purchaseDate || null, warrantyMonths, vendor, note })
     // run() resolves to undefined on failure, in which case the dialog stays open with the error.
     if (result !== undefined) onClose()
   }
+
+  const previewMonths = warrantyText.trim() === '' ? null : Number(warrantyText)
+  const expiryPreview = computeWarrantyExpiry(purchaseDate || null, previewMonths !== null && Number.isInteger(previewMonths) ? previewMonths : null)
 
   const title = initial ? t('equipment.edit') : t('equipment.add')
 
@@ -68,6 +79,13 @@ export function EquipmentFormDialog({ initial, onSubmit, onClose }: EquipmentFor
           </Select>
           <TextInput label={t('equipmentForm.quantity')} type="number" min={0} step={1} value={quantityText} disabled={submit.pending} onChange={(e) => setQuantityText(e.target.value)} />
         </FieldRow>
+        <FieldRow>
+          <TextInput label={t('equipmentForm.purchaseDate')} type="date" value={purchaseDate} disabled={submit.pending} onChange={(e) => setPurchaseDate(e.target.value)} />
+          <TextInput label={t('equipmentForm.warrantyMonths')} type="number" min={0} max={WARRANTY_MONTHS_MAX} step={1} value={warrantyText} disabled={submit.pending} onChange={(e) => setWarrantyText(e.target.value)} />
+        </FieldRow>
+        <TextInput label={t('equipmentForm.warrantyExpiry')} readOnly value={formatDateOnly(expiryPreview, language)} />
+        <TextInput label={t('equipmentForm.vendor')} maxLength={VENDOR_MAX_LENGTH} value={vendor} disabled={submit.pending} onChange={(e) => setVendor(e.target.value)} />
+        <Textarea label={t('equipmentForm.note')} rows={3} maxLength={NOTE_MAX_LENGTH} value={note} disabled={submit.pending} onChange={(e) => setNote(e.target.value)} />
 
         {submit.error && <FormError message={translateError(submit.error, t)} />}
 
