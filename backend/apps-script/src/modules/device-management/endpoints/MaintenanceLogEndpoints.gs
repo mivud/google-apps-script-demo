@@ -21,7 +21,7 @@ DeviceManagement.Endpoints.MaintenanceLogEndpoints = {
     // The add payload is a snake_case row, same shape as the other actions.
     handlers[action.ADD] = function (p) {
       return app.AddMaintenanceLog.execute(deps, {
-        equipmentId: p.equipment_id, type: p.type, performedAt: p.performed_at, note: p.note
+        equipmentId: p.equipment_id, type: p.type, performedAt: p.performed_at, note: p.note, vendor: p.vendor
       });
     };
     return handlers;

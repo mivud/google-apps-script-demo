@@ -39,7 +39,11 @@ DeviceManagement.Endpoints.EquipmentEndpoints = {
       name: p.name,
       description: p.description,
       status: p.status,
-      quantity: p.quantity
+      quantity: p.quantity,
+      purchaseDate: p.purchase_date,
+      warrantyMonths: p.warranty_months,
+      note: p.note,
+      vendor: p.vendor
     };
   }
 };

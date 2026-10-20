@@ -8,6 +8,8 @@
     "src/modules/device-management/domain/entities/Equipment.gs",
     "src/modules/device-management/domain/entities/MaintenanceLog.gs",
     "src/modules/device-management/domain/values/EquipmentCriteria.gs",
+    "src/modules/device-management/domain/values/OptionalText.gs",
+    "src/modules/device-management/domain/values/WarrantyPeriod.gs",
     "src/modules/device-management/application/category/CategorySupportService.gs",
     "src/modules/device-management/application/equipment/EquipmentSupportService.gs",
     "src/modules/device-management/application/category/commands/CreateCategory.gs",

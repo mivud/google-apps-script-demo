@@ -6,13 +6,15 @@ DeviceManagement.Application.AddMaintenanceLog = {
     MaintenanceLog.assertType(input.type);
     var performedAt = MaintenanceLog.normalizePerformedAt(input.performedAt, deps.audit.nowUtc());
     MaintenanceLog.assertNote(input.note);
+    var vendor = MaintenanceLog.normalizeVendor(input.vendor);
     var equipmentId = deps.equipmentLookup.requireExistingId(input.equipmentId);
     var row = MaintenanceLog.newRow({
       id: deps.idGenerator.newId(),
       equipmentId: equipmentId,
       type: input.type,
       performedAt: performedAt,
-      note: input.note
+      note: input.note,
+      vendor: vendor
     }, deps.audit.forCreate());
     deps.repository.append(row);
     return row;

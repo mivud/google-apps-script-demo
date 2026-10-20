@@ -1,6 +1,7 @@
 // Pure maintenance-log rules: no Google API, no ports.
 DeviceManagement.Domain.MaintenanceLog = {
   TYPES: ['new', 'repair', 'replacement', 'maintenance'],
+  VENDOR_LIMIT: { max: 200, code: 'vendor_too_long' },
   MESSAGE: {
     INVALID_TYPE: 'invalid maintenance type',
     INVALID_DATE: 'invalid date',
@@ -13,9 +14,20 @@ DeviceManagement.Domain.MaintenanceLog = {
       equipment_id: attrs.equipmentId,
       type: attrs.type,
       performed_at: attrs.performedAt,
-      note: attrs.note === undefined ? '' : attrs.note
+      note: attrs.note === undefined ? '' : attrs.note,
+      vendor: Values.isNil(attrs.vendor) ? null : attrs.vendor
     };
     return Object.assign(row, auditFields);
+  },
+
+  // Service provider; blank becomes null.
+  normalizeVendor: function (vendor) {
+    return DeviceManagement.Domain.OptionalText.normalize(vendor, 'vendor', DeviceManagement.Domain.MaintenanceLog.VENDOR_LIMIT);
+  },
+
+  // Existing rows have an empty vendor cell; expose it as null.
+  fromStored: function (row) {
+    return Object.assign({}, row, { vendor: DeviceManagement.Domain.OptionalText.fromStored(row.vendor) });
   },
 
   assertType: function (type) {

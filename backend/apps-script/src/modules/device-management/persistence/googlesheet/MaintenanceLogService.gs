@@ -2,7 +2,7 @@
 DeviceManagement.Persistence.GoogleSheet.MaintenanceLogService = {
   SCHEMA: {
     sheetName: 'maintenance_logs',
-    headers: ['id', 'equipment_id', 'type', 'performed_at', 'note',
+    headers: ['id', 'equipment_id', 'type', 'performed_at', 'note', 'vendor',
       'created_at', 'modified_at', 'created_by', 'last_modified_by'],
     numericColumns: []
   },

@@ -2,7 +2,10 @@
 DeviceManagement.Persistence.GoogleSheet.EquipmentService = {
   SCHEMA: {
     sheetName: 'equipment',
+    // Optional columns are read as text ('' when empty) and mapped by Equipment.fromStored; SheetUpgrade adds
+    // them to existing sheets by header name, and row writes keep the plain-text format so dates stay strings.
     headers: ['id', 'category_id', 'name', 'description', 'status', 'quantity',
+      'purchase_date', 'warranty_months', 'warranty_expiry_date', 'note', 'vendor',
       'created_at', 'modified_at', 'created_by', 'last_modified_by'],
     numericColumns: ['quantity']
   },

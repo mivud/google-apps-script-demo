@@ -59,6 +59,39 @@ test('update null category_id clears the category; invalid values are rejected',
   assert.throws(() => execute(world, 'UpdateEquipment', { id: created.id, patch: 5 }), expectApiError('VALIDATION', 'patch must be an object'));
 });
 
+test('create derives the warranty expiry and ignores a client-supplied one', () => {
+  const world = createWorld();
+  const created = world.createEquipment({
+    purchaseDate: '2026-01-31', warrantyMonths: 1, warrantyExpiryDate: '1999-01-01', note: ' n ', vendor: ' Acme '
+  });
+  assert.equal(created.warranty_expiry_date, '2026-02-28');
+  assert.equal(created.note, 'n');
+  assert.equal(created.vendor, 'Acme');
+  assert.equal(world.createEquipment({ purchaseDate: '2026-01-31' }).warranty_expiry_date, null);
+  assert.throws(() => world.createEquipment({ warrantyMonths: 6 }), expectApiError('VALIDATION'));
+});
+
+test('update recomputes the expiry and cannot patch it directly', () => {
+  const world = createWorld();
+  const created = world.createEquipment({ purchaseDate: '2026-01-15', warrantyMonths: 12 });
+  const patched = execute(world, 'UpdateEquipment', { id: created.id, patch: { warranty_months: 24, warranty_expiry_date: '1999-01-01' } });
+  assert.equal(patched.warranty_expiry_date, '2028-01-15');
+  assert.throws(() => execute(world, 'UpdateEquipment', { id: created.id, patch: { purchase_date: null } }), expectApiError('VALIDATION'));
+  const cleared = execute(world, 'UpdateEquipment', { id: created.id, patch: { purchase_date: null, warranty_months: null } });
+  assert.equal(cleared.warranty_expiry_date, null);
+});
+
+test('get and list expose stored empty optional cells as null', () => {
+  const world = createWorld();
+  const created = world.createEquipment({});
+  world.repositories.equipment.rows[0].purchase_date = '';
+  world.repositories.equipment.rows[0].warranty_months = '';
+  const got = execute(world, 'GetEquipment', { id: created.id });
+  assert.equal(got.purchase_date, null);
+  assert.equal(got.warranty_months, null);
+  assert.equal(execute(world, 'ListEquipment', {}).items[0].vendor, null);
+});
+
 test('get returns the row or null', () => {
   const world = createWorld();
   const created = world.createEquipment({});

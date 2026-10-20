@@ -33,6 +33,24 @@ test('add validates type, date and note, then the equipment', () => {
   assert.equal(world.repositories.maintenance.rows.length, 0);
 });
 
+test('add stores a trimmed vendor, null for blank, and rejects bad vendors', () => {
+  const world = createWorld();
+  const equipment = world.createEquipment({});
+  assert.equal(world.addLog({ equipmentId: equipment.id, vendor: ' Fix It ' }).vendor, 'Fix It');
+  assert.equal(world.addLog({ equipmentId: equipment.id, vendor: '  ' }).vendor, null);
+  assert.equal(world.addLog({ equipmentId: equipment.id }).vendor, null);
+  assert.throws(() => world.addLog({ equipmentId: equipment.id, vendor: 'x'.repeat(201) }), expectApiError('VALIDATION', 'vendor_too_long'));
+  assert.throws(() => world.addLog({ equipmentId: equipment.id, vendor: 4 }), expectApiError('VALIDATION', 'vendor must be a string'));
+});
+
+test('listByEquipment exposes an empty stored vendor as null', () => {
+  const world = createWorld();
+  const equipment = world.createEquipment({});
+  world.addLog({ equipmentId: equipment.id });
+  world.repositories.maintenance.rows[0].vendor = '';
+  assert.equal(listLogs(world, equipment.id)[0].vendor, null);
+});
+
 test('listByEquipment returns only that equipment, newest performed_at first', () => {
   const world = createWorld();
   const equipment = world.createEquipment({});

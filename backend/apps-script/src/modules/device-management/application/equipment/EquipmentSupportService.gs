@@ -6,6 +6,7 @@ DeviceManagement.Application.EquipmentSupportService = {
     Equipment.validate(row);
     row.category_id = DeviceManagement.Application.EquipmentSupportService.resolveCategoryId(deps, row.category_id);
     Equipment.trimText(row);
+    Equipment.deriveWarrantyExpiry(row);
   },
 
   // Returns the normalized category id ('' when uncategorized); the lookup port throws NOT_FOUND.

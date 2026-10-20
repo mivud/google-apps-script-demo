@@ -5,7 +5,7 @@ DeviceManagement.Application.UpdateEquipment = {
     var Equipment = DeviceManagement.Domain.Equipment;
     var found = Support.requireExisting(deps, input.id);
     PatchSupport.assertObjectOrAbsent(input.patch);
-    var row = found.row;
+    var row = Equipment.fromStored(found.row);
     PatchSupport.apply(row, input.patch, {
       keys: Equipment.PATCHABLE_FIELDS,
       nullAsEmpty: Equipment.NULLABLE_PATCH_FIELDS
