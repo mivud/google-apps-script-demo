@@ -88,3 +88,65 @@ test('StatementCycle: closing day is inclusive, short months cap it, December ro
   assert.equal(resolve('2026-01-01', 1), '2026-01');
   assert.equal(resolve('2026-01-02', 1), '2026-02');
 });
+
+test('PaymentDay accepts 1..31 and treats empty as null', () => {
+  [1, 15, 31].forEach((day) => assert.equal(domain.PaymentDay.parse(day), day));
+  [undefined, null, ''].forEach((empty) => assert.equal(domain.PaymentDay.parse(empty), null));
+  [0, 32, -1, 1.5, '5', NaN, true].forEach((bad) => {
+    assert.equal(codeOf(() => domain.PaymentDay.parse(bad)), 'payment_day_invalid', String(bad));
+  });
+});
+
+test('CalendarDate.dayOf clamps the day to the month length', () => {
+  assert.equal(domain.CalendarDate.dayOf('2026-03', 5), '2026-03-05');
+  assert.equal(domain.CalendarDate.dayOf('2026-03', 31), '2026-03-31');
+  assert.equal(domain.CalendarDate.dayOf('2026-04', 31), '2026-04-30');
+  assert.equal(domain.CalendarDate.dayOf('2026-02', 31), '2026-02-28');
+  assert.equal(domain.CalendarDate.dayOf('2024-02', 31), '2024-02-29');
+  assert.equal(domain.CalendarDate.dayOf('2024-02', 29), '2024-02-29');
+  assert.equal(domain.CalendarDate.dayOf('2026-12', 31), '2026-12-31');
+});
+
+const PAY_AUDIT = { created: 'c', createdBy: 'a', lastModified: 'm', lastModifiedBy: 'a' };
+
+test('FixedExpenseTemplate stores paymentDay on create and edit', () => {
+  const create = (fields) => domain.FixedExpenseTemplate.create({ id: 't', description: 'Rent', audit: PAY_AUDIT, ...fields });
+  const template = create({ paymentDay: 15 });
+  assert.equal(template.paymentDay, 15);
+  assert.equal(create({}).paymentDay, null);
+  assert.equal(codeOf(() => create({ paymentDay: 40 })), 'payment_day_invalid');
+  const edit = (patch) => domain.FixedExpenseTemplate.edit(template, patch, PAY_AUDIT);
+  assert.equal(edit({ paymentDay: 31 }).paymentDay, 31);
+  assert.equal(edit({ paymentDay: null }).paymentDay, null);
+  assert.equal(edit({ description: 'Flat' }).paymentDay, 15);
+  assert.equal(codeOf(() => edit({ paymentDay: 0 })), 'payment_day_invalid');
+});
+
+test('Expense.fromTemplate uses paymentDay for spentOn and keeps statementMonth', () => {
+  const build = (paymentDay) => domain.FixedExpenseTemplate.create({
+    id: 't', description: 'Rent', amount: 100, paymentMethodId: 'cash', paymentDay, audit: PAY_AUDIT
+  });
+  const from = (template, month) => domain.Expense.fromTemplate(template, month, { id: 'e', description: 'Rent', audit: PAY_AUDIT });
+  const withDay = from(build(31), '2026-02');
+  assert.equal(withDay.spentOn, '2026-02-28');
+  assert.equal(withDay.statementMonth, '2026-02');
+  assert.equal(from(build(10), '2026-03').spentOn, '2026-03-10');
+  const without = from(build(null), '2026-03');
+  assert.equal(without.spentOn, '2026-03-01');
+  assert.equal(without.statementMonth, '2026-03');
+  assert.equal(without.isFixed, true);
+  assert.equal(without.paidAt, null);
+});
+
+test('Expense.markPaid / markUnpaid work on fixed expenses only', () => {
+  const base = { description: 'Rent', amount: 1, paymentMethodId: 'cash', spentOn: '2026-03-01', audit: PAY_AUDIT };
+  const fixed = domain.Expense.create({ ...base, id: 'e', isFixed: true });
+  const paid = domain.Expense.markPaid(fixed, '2026-03-05T00:00:00.000+00:00', PAY_AUDIT);
+  assert.equal(paid.paidAt, '2026-03-05T00:00:00.000+00:00');
+  assert.equal(fixed.paidAt, null);
+  assert.equal(domain.Expense.markUnpaid(paid, PAY_AUDIT).paidAt, null);
+  const manual = domain.Expense.create({ ...base, id: 'm', paidAt: 'x' });
+  assert.equal(manual.paidAt, null);
+  assert.equal(codeOf(() => domain.Expense.markPaid(manual, 'x', PAY_AUDIT)), 'expense_not_fixed');
+  assert.equal(codeOf(() => domain.Expense.markUnpaid(manual, PAY_AUDIT)), 'expense_not_fixed');
+});

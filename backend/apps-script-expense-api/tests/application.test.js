@@ -20,6 +20,7 @@ function createDeps() {
   return {
     methods, templateRows, expenseRows,
     audit: { created: () => ({ ...AUDIT }), modified: (audit) => ({ ...audit }) },
+    clock: { now: () => new Date("2026-03-05T10:00:00.000Z") },
     ids: { newId: () => `id-${++counter}` },
     paymentMethods: {
       findById: (id) => methods.find((m) => sameText(m.id, id)) || null,
@@ -29,9 +30,13 @@ function createDeps() {
     },
     templates: {
       list: () => templateRows.slice(),
+      findById: (id) => templateRows.find((t) => t.id === id) || null,
+      insert: (t) => { templateRows.push(t); },
       update: (t) => { templateRows[templateRows.findIndex((x) => x.id === t.id)] = t; }
     },
     expenses: {
+      findById: (id) => expenseRows.find((e) => e.id === id) || null,
+      update: (e) => { expenseRows[expenseRows.findIndex((x) => x.id === e.id)] = e; },
       listByStatementMonth: (month) => expenseRows.filter((e) => e.statementMonth === month),
       insert: (e) => { expenseRows.push(e); }
     },
@@ -117,4 +122,66 @@ test('describeInstallment truncates the base text to fit the description limit',
   assert.equal(text.length, max);
   assert.ok(text.endsWith('x [3/12]'));
   assert.equal(domain.FixedExpenseTemplate.describeInstallment({ ...template, description: 'Loan', totalMonths: null }), 'Loan');
+});
+
+test('GenerateFixedExpenses spends on the template payment day, clamped to the month', () => {
+  const deps = createDeps();
+  addTemplate(deps, { id: 't1', description: 'Rent', amount: 1000, paymentDay: 31 });
+  addTemplate(deps, { id: 't2', description: 'Gym', amount: 1000 });
+  const run = (month) => app.GenerateFixedExpenses.execute(deps, { actor: ACTOR, statementMonth: month });
+  const spentOn = (result) => result.items.map((e) => e.spentOn).join(',');
+  assert.equal(spentOn(run('2026-02')), '2026-02-28,2026-02-01');
+  assert.equal(spentOn(run('2026-04')), '2026-04-30,2026-04-01');
+  assert.ok(deps.expenseRows.every((e) => e.statementMonth === e.spentOn.slice(0, 7)));
+});
+
+test('Create/UpdateFixedTemplate handle paymentDay', () => {
+  const deps = createDeps();
+  const created = app.CreateFixedTemplate.execute(deps, { actor: ACTOR, fields: { description: 'Rent', paymentDay: 20 } });
+  assert.equal(created.paymentDay, 20);
+
+  const update = (patch) => app.UpdateFixedTemplate.execute(deps, { actor: ACTOR, id: created.id, patch, expectedLastModified: 'm' });
+  assert.equal(update({ paymentDay: 5 }).paymentDay, 5);
+  assert.equal(codeOf(() => update({ paymentDay: 99 })), 'payment_day_invalid');
+});
+
+function addExpenses(deps) {
+  const base = { description: 'Rent', amount: 1, paymentMethodId: 'cash', spentOn: '2026-03-01', audit: AUDIT };
+  deps.expenseRows.push(domain.Expense.create({ ...base, id: 'fx', isFixed: true }));
+  deps.expenseRows.push(domain.Expense.create({ ...base, id: 'mn' }));
+}
+
+test('MarkExpensePaid / MarkExpenseUnpaid update fixed expenses and reject others', () => {
+  const deps = createDeps();
+  addExpenses(deps);
+  const input = (id) => ({ actor: ACTOR, id });
+  const paid = app.MarkExpensePaid.execute(deps, input('fx'));
+  assert.equal(paid.paidAt, '2026-03-05T10:00:00.000+00:00');
+  assert.equal(deps.expenseRows[0].paidAt, paid.paidAt);
+  assert.equal(app.MarkExpenseUnpaid.execute(deps, input('fx')).paidAt, null);
+  assert.equal(deps.expenseRows[0].paidAt, null);
+  assert.equal(codeOf(() => app.MarkExpensePaid.execute(deps, input('mn'))), 'expense_not_fixed');
+  assert.equal(codeOf(() => app.MarkExpenseUnpaid.execute(deps, input('mn'))), 'expense_not_fixed');
+  assert.equal(codeOf(() => app.MarkExpensePaid.execute(deps, input('nope'))), 'not_found');
+  assert.equal(codeOf(() => app.MarkExpenseUnpaid.execute(deps, input('nope'))), 'not_found');
+});
+
+test('markPaid / markUnpaid endpoints return paid_at and map errors; template JSON has payment_day', () => {
+  const deps = createDeps();
+  addExpenses(deps);
+  const endpoints = context.ExpenseTracking.Endpoints;
+  const actions = endpoints.ExpenseEndpoints.ACTION;
+  const handlers = endpoints.ExpenseEndpoints.build(deps);
+  const call = (action, id) => handlers[action]({ actor: ACTOR, payload: { id } });
+  const errorOf = (fn) => { try { fn(); } catch (error) { return error; } return null; };
+
+  assert.equal(call(actions.MARK_PAID, 'fx').paid_at, '2026-03-05T10:00:00.000+00:00');
+  assert.equal(call(actions.MARK_UNPAID, 'fx').paid_at, null);
+  assert.equal(errorOf(() => call(actions.MARK_PAID, 'mn')).message, 'expense_not_fixed');
+  assert.equal(errorOf(() => call(actions.MARK_UNPAID, 'mn')).message, 'expense_not_fixed');
+  assert.match(errorOf(() => call(actions.MARK_PAID, 'nope')).message, /not found/);
+
+  const templateEndpoints = endpoints.FixedTemplateEndpoints;
+  const create = templateEndpoints.build(deps)[templateEndpoints.ACTION.CREATE];
+  assert.equal(create({ actor: ACTOR, payload: { description: 'Rent', payment_day: 12 } }).payment_day, 12);
 });

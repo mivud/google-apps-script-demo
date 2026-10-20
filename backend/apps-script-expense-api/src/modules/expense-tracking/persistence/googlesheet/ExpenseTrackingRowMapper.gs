@@ -6,6 +6,13 @@ ExpenseTracking.Persistence.GoogleSheet.ExpenseTrackingRowMapper = {
     return count >= 1 ? count : null;
   },
 
+  // A blank or out-of-range cell reads as "no payment day" (null).
+  paymentDay: function (cell) {
+    var day = String(cell).trim() === '' ? NaN : Number(cell);
+    var range = ExpenseTracking.Domain.PaymentDay;
+    return Number.isInteger(day) && day >= range.MIN && day <= range.MAX ? day : null;
+  },
+
   // A blank cell is null; a positive integer is itself; anything else is invalid data (NaN).
   parseAmountCell: function (cell) {
     if (String(cell).trim() === '') return null;
@@ -49,6 +56,7 @@ ExpenseTracking.Persistence.GoogleSheet.ExpenseTrackingRowMapper = {
         amount: ExpenseTracking.Persistence.GoogleSheet.ExpenseTrackingRowMapper.templateAmount(row.amount),
         paymentMethodId: String(row.payment_method_id).toLowerCase(),
         totalMonths: ExpenseTracking.Persistence.GoogleSheet.ExpenseTrackingRowMapper.optionalCount(row.total_months),
+        paymentDay: ExpenseTracking.Persistence.GoogleSheet.ExpenseTrackingRowMapper.paymentDay(row.payment_day),
         monthsAdded: row.months_added,
         active: SheetFlag.parse(row.active),
         audit: AuditColumns.fromRow(row)
@@ -61,6 +69,7 @@ ExpenseTracking.Persistence.GoogleSheet.ExpenseTrackingRowMapper = {
         amount: template.amount === null ? '' : template.amount,
         payment_method_id: template.paymentMethodId,
         total_months: template.totalMonths === null ? '' : template.totalMonths,
+        payment_day: template.paymentDay === null ? '' : template.paymentDay,
         months_added: template.monthsAdded,
         active: SheetFlag.format(template.active)
       }, AuditColumns.toRow(template.audit));
@@ -84,6 +93,7 @@ ExpenseTracking.Persistence.GoogleSheet.ExpenseTrackingRowMapper = {
         statementMonth: row.statement_month,
         isFixed: SheetFlag.parse(row.is_fixed),
         templateId: templateId,
+        paidAt: String(row.paid_at).trim() === '' ? null : String(row.paid_at),
         audit: AuditColumns.fromRow(row)
       };
     },
@@ -96,7 +106,8 @@ ExpenseTracking.Persistence.GoogleSheet.ExpenseTrackingRowMapper = {
         spent_on: expense.spentOn,
         statement_month: expense.statementMonth,
         is_fixed: SheetFlag.format(expense.isFixed),
-        template_id: expense.templateId
+        template_id: expense.templateId,
+        paid_at: expense.paidAt === null ? '' : expense.paidAt
       }, AuditColumns.toRow(expense.audit));
     }
   }

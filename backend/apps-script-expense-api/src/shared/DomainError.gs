@@ -18,6 +18,8 @@ var DomainError = {
     PAYMENT_METHOD_CLOSING_DAY_INVALID: 'payment_method_closing_day_invalid',
     TOTAL_MONTHS_INVALID: 'total_months_invalid',
     TOTAL_MONTHS_BELOW_ADDED: 'total_months_below_added',
+    PAYMENT_DAY_INVALID: 'payment_day_invalid',
+    EXPENSE_NOT_FIXED: 'expense_not_fixed',
     SPENT_ON_INVALID: 'spent_on_invalid',
     STATEMENT_MONTH_INVALID: 'statement_month_invalid',
     CONFLICT: 'conflict',

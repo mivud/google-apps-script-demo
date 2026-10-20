@@ -2,7 +2,7 @@
 ExpenseTracking.Persistence.GoogleSheet.ExpenseRepository = {
   SCHEMA: {
     sheetName: 'expenses',
-    headers: ['id', 'description', 'amount', 'payment_method_id', 'spent_on', 'statement_month', 'is_fixed', 'template_id']
+    headers: ['id', 'description', 'amount', 'payment_method_id', 'spent_on', 'statement_month', 'is_fixed', 'template_id', 'paid_at']
       .concat(AuditColumns.HEADERS),
     numericColumns: []
   },

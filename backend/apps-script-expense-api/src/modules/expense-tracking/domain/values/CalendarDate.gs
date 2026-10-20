@@ -21,5 +21,14 @@ ExpenseTracking.Domain.CalendarDate = {
 
   firstDayOf: function (statementMonth) {
     return statementMonth + '-01';
+  },
+
+  // The given day of a month (YYYY-MM), clamped to the month's last day (31 in February -> 28 or 29).
+  dayOf: function (statementMonth, day) {
+    var year = Number(statementMonth.slice(0, 4)), month = Number(statementMonth.slice(5, 7));
+    // Day 0 of the next month is the last day of this one.
+    var lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    var padded = String(Math.min(day, lastDay));
+    return statementMonth + '-' + (padded.length < 2 ? '0' + padded : padded);
   }
 };

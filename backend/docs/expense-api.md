@@ -13,8 +13,9 @@
 | `expense-tracking.expense.update` | write | `id`, patch fields, `expected_last_modified` | Expense |
 | `expense-tracking.expense.delete` | write | `id` | `{}` |
 | `expense-tracking.expense.generateFixed` | write | `statement_month` | `{ items: [created Expense], skipped }` |
+| `expense-tracking.expense.markPaid` / `.markUnpaid` | write (same as update) | `id` | Expense (`paid_at` set to now, or `null`) |
 | `expense-tracking.paymentMethod.list/create/update/delete` | read / write | create: `id`, `name`, `active?`, `statement_closing_day?`, `color?`; update: `id`, `name?`, `active?`, `statement_closing_day?`, `color?`, `expected_last_modified` (the id is never changed) | PaymentMethod / `{ items }` / `{}` |
-| `expense-tracking.fixedTemplate.list/create/update/delete` | read / write | `description`, `amount?`, `payment_method_id?`, `total_months?`, `active?` (update adds `id`, `expected_last_modified`) | Template / `{ items }` / `{}` |
+| `expense-tracking.fixedTemplate.list/create/update/delete` | read / write | `description`, `amount?`, `payment_method_id?`, `total_months?`, `payment_day?`, `active?` (update adds `id`, `expected_last_modified`) | Template / `{ items }` / `{}` |
 | `system.version.get` | any signed-in user | none | `{ version }` |
 
 ## Data
@@ -22,10 +23,10 @@
 Sheets (columns equal the Postgres columns; the four audit columns `created, created_by, last_modified, last_modified_by` come last; booleans are `TRUE`/`FALSE` text; created by the installer on the first valid request):
 
 - `payment_methods`: `id, name, active, statement_closing_day, color` (`id` is a client-chosen text key, not a UUID; the other entities keep UUID ids)
-- `fixed_expense_templates`: `id, description, amount (blank = none yet), payment_method_id (blank = none yet), total_months (blank = unlimited), months_added, active`
-- `expenses`: `id, description, amount (blank only on rows with a template_id), payment_method_id (blank only on rows with a template_id), spent_on, statement_month, is_fixed, template_id`
+- `fixed_expense_templates`: `id, description, amount (blank = none yet), payment_method_id (blank = none yet), total_months (blank = unlimited), payment_day (blank = none), months_added, active`
+- `expenses`: `id, description, amount (blank only on rows with a template_id), payment_method_id (blank only on rows with a template_id), spent_on, statement_month, is_fixed, template_id, paid_at (blank = not paid; UTC time)`
 
-Before the rename the tab was `money_sources` and the columns `money_source_id`; on the first request after the upgrade the installer renames the tab and those headers by name (data kept). Older tabs are upgraded by header name: new columns are added with blank cells (a blank `total_months` reads as unlimited, a blank `months_added` as 0, a blank `statement_closing_day` as no cycle).
+Before the rename the tab was `money_sources` and the columns `money_source_id`; on the first request after the upgrade the installer renames the tab and those headers by name (data kept). Older tabs are upgraded by header name: new columns are added with blank cells (a blank `total_months` reads as unlimited, a blank `months_added` as 0, a blank `payment_day` as none, a blank `paid_at` as not paid, a blank `statement_closing_day` as no cycle).
 
 ## Rules
 
@@ -37,7 +38,9 @@ Before the rename the tab was `money_sources` and the columns `money_source_id`;
 - Payment method id: sent by the client on create, trimmed, 1-40 chars, only `a-z 0-9 _ -` (`payment_method_id_invalid`; uppercase is rejected, never converted). Immutable after create. Compared ignoring case, a duplicate fails with `payment_method_id_taken`; the check and the insert run under the same write lock. Expenses and templates reference it as `payment_method_id` (this string).
 - Payment method name: trimmed, 1-60 chars (`payment_method_name_invalid`), unique ignoring case (`payment_method_name_taken`). Deleting one referenced by any expense or template fails with `payment_method_in_use`. Expenses and templates must reference an existing payment method (`payment_method_not_found`).
 - Templates: `total_months` is optional: missing, null, empty or 0 means unlimited (stored as a blank cell, returned as `null`); when set it is an integer from 1 to 1200 (`total_months_invalid`). `months_added` starts at 0, is server-owned and never read from the payload. When set, `total_months` cannot go below `months_added` (`total_months_below_added`).
-- `expense.generateFixed`: for each active template that is unlimited or has `months_added < total_months` and no expense yet for (`template_id`, `statement_month`), creates one `is_fixed` expense (`spent_on` = first day of the month) and adds 1 to `months_added`, all inside the write lock. A template with `total_months` (not null) puts the new counter in the description as a suffix ` [n/total]` (for example `trả góp` with 6 months and 1 already added gives `trả góp [2/6]`); unlimited templates keep the description unchanged, and an overlong description is truncated so the result stays within 200 characters. `skipped` counts the active templates that created nothing (already generated for the month or completed). Re-running a month changes nothing. Deleting a generated expense does not decrement the counter. The expense is saved before the counter, so a failure midway never counts a month without an expense. Known limit: if an expense exists for the month but the counter was not incremented (a failure between the two writes), nothing self-heals; the template is skipped and `months_added` stays one low until corrected by hand.
+- `expense.generateFixed`: for each active template that is unlimited or has `months_added < total_months` and no expense yet for (`template_id`, `statement_month`), creates one `is_fixed` expense (`spent_on` = the template's `payment_day` clamped to the month length, e.g. 31 in February gives the 28th/29th, or the first day of the month when the template has none; `statement_month` is always the requested month) and adds 1 to `months_added`, all inside the write lock. A template with `total_months` (not null) puts the new counter in the description as a suffix ` [n/total]` (for example `trả góp` with 6 months and 1 already added gives `trả góp [2/6]`); unlimited templates keep the description unchanged, and an overlong description is truncated so the result stays within 200 characters. `skipped` counts the active templates that created nothing (already generated for the month or completed). Re-running a month changes nothing. Deleting a generated expense does not decrement the counter. The expense is saved before the counter, so a failure midway never counts a month without an expense. Known limit: if an expense exists for the month but the counter was not incremented (a failure between the two writes), nothing self-heals; the template is skipped and `months_added` stays one low until corrected by hand.
+- Templates: `payment_day` is optional: missing, null or empty means none; when set it is an integer 1-31 (`payment_day_invalid`). It only affects expenses generated afterwards.
+- `paid_at` (UTC `YYYY-MM-DD HH:mm:ss` style audit format, or `null`) is server-owned and never read from create/update payloads. `markPaid` sets it to now (calling again moves the time), `markUnpaid` clears it; both reject expenses that are not `is_fixed` with `expense_not_fixed`, and unknown ids give `not_found`. They update `last_modified` and do not use `expected_last_modified`. A non-fixed expense always reads `paid_at: null`.
 - `template_id` is set only by `generateFixed`; clients cannot send it. Updates use optimistic concurrency: a stale `expected_last_modified` gives `conflict`.
 - All authenticated users with read access see all rows.
 
@@ -77,7 +80,7 @@ Values below are real for this repository (none is a secret). Each step says whe
 | 7 | Authorize once: in the editor open `Main.gs`, pick the function **`authorizeScopes`** (not `doGet`) and press Run, Review permissions, tick **both** permissions (Sheets and "Connect to an external service"), Allow | **You** (consent screen) |
 | 8 | In identity-api, seed the two claims above and grant them to the right roles or users | **You** |
 | 9 | Frontend: set `VITE_EXPENSE_API_URL` in `frontend/.env.local` and in GitHub (Settings > Secrets and variables > Actions > Variables), then run the Pages workflow again | **You** |
-| 10 | Supabase only: run `backend/supabase/migrations/008_expense_tracking.sql` | **You** (only for `VITE_DB_PROVIDER=supabase`) |
+| 10 | Supabase only: run `backend/supabase/migrations/004_expense_tracking.sql` | **You** (only for `VITE_DB_PROVIDER=supabase`) |
 
 After step 7, `GET` on the URL returns `{service, version}` (before the consent it returns an HTML error page). A POST with a missing or fake `idToken` returns `UNAUTHORIZED`. Call `system.version.get` with a valid token; the first valid request creates the three tabs.
 

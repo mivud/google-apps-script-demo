@@ -1,5 +1,5 @@
 // Entity (aggregate root): one spending. Shape: { id, description, amount, paymentMethodId, spentOn, statementMonth,
-// isFixed, templateId ('' when none), audit }. statementMonth defaults to the month of spentOn.
+// isFixed, templateId ('' when none), paidAt (UTC string or null), audit }. statementMonth defaults to the month of spentOn.
 // amount and paymentMethodId ('' = none) are empty only for rows generated from a template that lacks them; manual expenses have both.
 ExpenseTracking.Domain.Expense = {
   create: function (fields) {
@@ -15,8 +15,26 @@ ExpenseTracking.Domain.Expense = {
       statementMonth: hasMonth ? domain.StatementMonth.parse(fields.statementMonth) : domain.CalendarDate.monthOf(spentOn),
       isFixed: fields.isFixed === true,
       templateId: fields.templateId || '',
+      // Only fixed expenses can be paid; paidAt is server-owned (markPaid / markUnpaid).
+      paidAt: fields.isFixed === true && fields.paidAt ? fields.paidAt : null,
       audit: fields.audit
     };
+  },
+
+  markPaid: function (expense, paidAt, audit) {
+    var entity = ExpenseTracking.Domain.Expense;
+    entity.assertFixed(expense);
+    return Object.assign({}, expense, { paidAt: paidAt, audit: audit });
+  },
+
+  markUnpaid: function (expense, audit) {
+    var entity = ExpenseTracking.Domain.Expense;
+    entity.assertFixed(expense);
+    return Object.assign({}, expense, { paidAt: null, audit: audit });
+  },
+
+  assertFixed: function (expense) {
+    if (!expense.isFixed) throw DomainError.create(DomainError.CODE.EXPENSE_NOT_FIXED);
   },
 
   // Manual expenses need a positive amount; template-generated ones may still be waiting for it.
@@ -45,7 +63,8 @@ ExpenseTracking.Domain.Expense = {
     return edited;
   },
 
-  // The expense a template contributes to a statement month; spent on the first day of that month.
+  // The expense a template contributes to a statement month; spent on the template's payment day (clamped
+  // to the month length) or, without one, on the first day of that month.
   // identity: { id, description, audit }; the description is decided by the caller (installment suffix).
   fromTemplate: function (template, statementMonth, identity) {
     return ExpenseTracking.Domain.Expense.create({
@@ -53,12 +72,17 @@ ExpenseTracking.Domain.Expense = {
       description: identity.description,
       amount: template.amount,
       paymentMethodId: template.paymentMethodId,
-      spentOn: ExpenseTracking.Domain.CalendarDate.firstDayOf(statementMonth),
+      spentOn: ExpenseTracking.Domain.Expense.spentOnFor(template, statementMonth),
       statementMonth: statementMonth,
       isFixed: true,
       templateId: template.id,
       audit: identity.audit
     });
+  },
+
+  spentOnFor: function (template, statementMonth) {
+    var date = ExpenseTracking.Domain.CalendarDate;
+    return template.paymentDay ? date.dayOf(statementMonth, template.paymentDay) : date.firstDayOf(statementMonth);
   },
 
   // Newest spending first; ties broken by creation time.

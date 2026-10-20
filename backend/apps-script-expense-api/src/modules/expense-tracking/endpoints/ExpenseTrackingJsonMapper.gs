@@ -17,6 +17,7 @@ ExpenseTracking.Endpoints.ExpenseTrackingJsonMapper = {
       amount: template.amount,
       payment_method_id: template.paymentMethodId === '' ? null : template.paymentMethodId,
       total_months: template.totalMonths,
+      payment_day: template.paymentDay,
       months_added: template.monthsAdded,
       active: template.active
     }, AuditColumns.toRow(template.audit));
@@ -31,7 +32,8 @@ ExpenseTracking.Endpoints.ExpenseTrackingJsonMapper = {
       spent_on: expense.spentOn,
       statement_month: expense.statementMonth,
       is_fixed: expense.isFixed,
-      template_id: expense.templateId === '' ? null : expense.templateId
+      template_id: expense.templateId === '' ? null : expense.templateId,
+      paid_at: expense.paidAt
     }, AuditColumns.toRow(expense.audit));
   },
 

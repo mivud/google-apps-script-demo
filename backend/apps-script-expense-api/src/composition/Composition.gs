@@ -34,7 +34,8 @@ var Composition = {
       expense: Object.assign({
         expenses: repositories.expenses,
         templates: repositories.templates,
-        paymentMethods: repositories.paymentMethods
+        paymentMethods: repositories.paymentMethods,
+        clock: core.clock
       }, common)
     };
   },
@@ -54,6 +55,7 @@ var Composition = {
     var clock = new SystemClock();
     return {
       settings: settings,
+      clock: clock,
       source: new SpreadsheetSource(settings),
       rowCache: new ScriptRowCache(CacheService.getScriptCache()),
       ids: new UuidIdGenerator(),

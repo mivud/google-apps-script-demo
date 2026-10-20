@@ -1,6 +1,6 @@
 // Entity (aggregate root): a recurring expense that generates one expense per statement month, totalMonths times (null = unlimited).
 // amount and paymentMethodId ('' = none) are optional; generated expenses then start without them.
-// Shape: { id, description, amount, paymentMethodId, totalMonths, monthsAdded, active, audit }.
+// Shape: { id, description, amount, paymentMethodId, totalMonths, paymentDay (1..31 or null), monthsAdded, active, audit }.
 // monthsAdded is server-owned: it starts at 0 and only recordGenerated changes it.
 ExpenseTracking.Domain.FixedExpenseTemplate = {
   create: function (fields) {
@@ -11,6 +11,7 @@ ExpenseTracking.Domain.FixedExpenseTemplate = {
       amount: domain.MoneyAmount.parseOptional(fields.amount),
       paymentMethodId: fields.paymentMethodId || '',
       totalMonths: domain.TotalMonths.parse(fields.totalMonths),
+      paymentDay: domain.PaymentDay.parse(fields.paymentDay),
       monthsAdded: 0,
       active: fields.active !== false,
       audit: fields.audit

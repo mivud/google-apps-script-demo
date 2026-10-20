@@ -1,9 +1,9 @@
 // Sheet-backed repository of FixedExpenseTemplate aggregates (sheet `fixed_expense_templates`).
-// total_months (blank = unlimited, so not a numeric column) and months_added sit before the audit columns; the installer adds them to older tabs with blank cells.
+// total_months (blank = unlimited, so not a numeric column), payment_day (blank = none) and months_added sit before the audit columns; the installer adds them to older tabs with blank cells.
 ExpenseTracking.Persistence.GoogleSheet.FixedExpenseTemplateRepository = {
   SCHEMA: {
     sheetName: 'fixed_expense_templates',
-    headers: ['id', 'description', 'amount', 'payment_method_id', 'total_months', 'months_added', 'active'].concat(AuditColumns.HEADERS),
+    headers: ['id', 'description', 'amount', 'payment_method_id', 'total_months', 'payment_day', 'months_added', 'active'].concat(AuditColumns.HEADERS),
     numericColumns: ['months_added']
   },
 

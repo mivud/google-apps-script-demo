@@ -13,6 +13,7 @@ ExpenseTracking.Endpoints.FixedTemplateEndpoints = {
     { from: 'amount', to: 'amount', type: 'raw' },
     { from: 'payment_method_id', to: 'paymentMethodId', type: 'optionalReference' },
     { from: 'total_months', to: 'totalMonths', type: 'raw' },
+    { from: 'payment_day', to: 'paymentDay', type: 'raw' },
     { from: 'active', to: 'active', type: 'boolean' }
   ],
 

@@ -1,12 +1,14 @@
 // Expense actions. Handler input: { actor, payload }.
-// template_id and the audit columns are server-owned and deliberately absent from FIELDS.
+// template_id, paid_at (set only by markPaid / markUnpaid) and the audit columns are server-owned and deliberately absent from FIELDS.
 ExpenseTracking.Endpoints.ExpenseEndpoints = {
   ACTION: {
     LIST: 'expense-tracking.expense.list',
     CREATE: 'expense-tracking.expense.create',
     UPDATE: 'expense-tracking.expense.update',
     DELETE: 'expense-tracking.expense.delete',
-    GENERATE_FIXED: 'expense-tracking.expense.generateFixed'
+    GENERATE_FIXED: 'expense-tracking.expense.generateFixed',
+    MARK_PAID: 'expense-tracking.expense.markPaid',
+    MARK_UNPAID: 'expense-tracking.expense.markUnpaid'
   },
 
   FIELDS: [
@@ -31,6 +33,8 @@ ExpenseTracking.Endpoints.ExpenseEndpoints = {
     builder.add(endpoints.ACTION.CREATE, endpoints.readCreate, application.CreateExpense, mapper.expense);
     builder.add(endpoints.ACTION.UPDATE, endpoints.readUpdate, application.UpdateExpense, mapper.expense);
     builder.add(endpoints.ACTION.DELETE, endpoints.readId, application.DeleteExpense, function (result) { return result; });
+    builder.add(endpoints.ACTION.MARK_PAID, endpoints.readActorId, application.MarkExpensePaid, mapper.expense);
+    builder.add(endpoints.ACTION.MARK_UNPAID, endpoints.readActorId, application.MarkExpenseUnpaid, mapper.expense);
     builder.add(endpoints.ACTION.GENERATE_FIXED, endpoints.readMonth, application.GenerateFixedExpenses, function (result) {
       return { items: result.items.map(mapper.expense), skipped: result.skipped };
     });
@@ -43,6 +47,10 @@ ExpenseTracking.Endpoints.ExpenseEndpoints = {
 
   readId: function (input) {
     return { id: PayloadReader.requireId(input.payload, 'id', ExpenseTracking.Application.ExpenseSupportService.LABEL) };
+  },
+
+  readActorId: function (input) {
+    return Object.assign(ExpenseTracking.Endpoints.ExpenseEndpoints.readId(input), { actor: input.actor });
   },
 
   readCreate: function (input) {
