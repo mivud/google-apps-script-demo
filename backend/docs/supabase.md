@@ -10,6 +10,7 @@
 3. [003_device_management.sql](../supabase/migrations/003_device_management.sql): `categories`, `equipment`, `maintenance_logs` (`device.mgt.read` / `device.mgt.write`).
 4. [004_expense_tracking.sql](../supabase/migrations/004_expense_tracking.sql): `payment_methods`, `fixed_expense_templates`, `expenses`, `generate_fixed_expenses` (`expense.read` / `expense.write`).
 5. [005_fixed_expense_payment_day.sql](../supabase/migrations/005_fixed_expense_payment_day.sql): `fixed_expense_templates.payment_day` (smallint 1..31 or null, code `payment_day_invalid`), `expenses.paid_at` (only for fixed expenses, else `expense_not_fixed`); `generate_fixed_expenses` now sets `spent_on` to the payment day (capped to the month length, the 1st when null) while `statement_month` stays the requested month. Existing grants and RLS cover the new columns.
+6. [006_device_vendor_warranty.sql](../supabase/migrations/006_device_vendor_warranty.sql): nullable `equipment.purchase_date`, `warranty_months` (0..600), `warranty_expiry_date` (set by a trigger from purchase date + months, month end clamped), `note`, `vendor`, and `maintenance_logs.vendor`; blank strings are normalized to null. Codes: `purchase_date_invalid`, `warranty_months_invalid`, `warranty_requires_purchase_date`, `note_too_long`, `vendor_too_long`.
 
 The previous incremental scripts (001-009 and phase 2) are kept in [legacy](../supabase/legacy) for reference; an existing database that already ran them does not need the new scripts.
 

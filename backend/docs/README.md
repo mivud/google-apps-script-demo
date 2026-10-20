@@ -23,7 +23,7 @@ Two interchangeable storage backends behind one API contract: a Google Apps Scri
 
 - Apps Script code lives in [backend/apps-script/src](../apps-script/src): `Main.gs` entry points, `composition/` wiring, `modules/device-management`. The identity modules (`claims`, `roles`, `users`, `access-control`) live in [backend/apps-script-identity-api](../apps-script-identity-api) (a separate Web App). The `shared/` building blocks (one file per class) are a separate library project in [backend/apps-script-shared-kernel-library](../apps-script-shared-kernel-library), see [shared-library](shared-library.md).
 - Each module has `domain`, `application`, `endpoints` and `persistence/googlesheet` layers; dependencies point inward and parts talk only through ports.
-- Supabase SQL lives in [backend/supabase/migrations](../supabase/migrations), one script per area, run in order: `001_api.sql` (shared helpers, access resolution, RPCs), `002_users.sql` (users, roles, claims), `003_device_management.sql`, `004_expense_tracking.sql`, `005_fixed_expense_payment_day.sql`. The old incremental scripts are kept in [legacy](../supabase/legacy) for reference only.
+- Supabase SQL lives in [backend/supabase/migrations](../supabase/migrations), one script per area, run in order: `001_api.sql` (shared helpers, access resolution, RPCs), `002_users.sql` (users, roles, claims), `003_device_management.sql`, `004_expense_tracking.sql`, `005_fixed_expense_payment_day.sql`, `006_device_vendor_warranty.sql`. The old incremental scripts are kept in [legacy](../supabase/legacy) for reference only.
 - Both backends give the same ordering, pagination, validation codes and server-filled audit fields.
 
 Frontend side: see [frontend docs](../../frontend/docs/README.md).

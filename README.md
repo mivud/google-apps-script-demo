@@ -57,7 +57,7 @@ Other scripts: `npm run build`, `npm run lint`, `npm test`.
 Details: [backend/docs/apps-script.md](backend/docs/apps-script.md).
 
 **Supabase**
-Run `backend/supabase/migrations/001_api.sql` to `004_expense_tracking.sql` in order in the SQL editor, add the first super user (see the header of `002_users.sql`), then set the project URL and anon key in the frontend `.env`. Details: [backend/docs/supabase.md](backend/docs/supabase.md).
+Run `backend/supabase/migrations/001_api.sql` to `006_device_vendor_warranty.sql` in order in the SQL editor, add the first super user (see the header of `002_users.sql`), then set the project URL and anon key in the frontend `.env`. Details: [backend/docs/supabase.md](backend/docs/supabase.md).
 
 ## Deployment
 

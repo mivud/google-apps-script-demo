@@ -37,6 +37,7 @@ Open **SQL Editor > New query**, paste one file at a time from [backend/supabase
 | 3 | [003_device_management.sql](../supabase/migrations/003_device_management.sql) | `categories`, `equipment`, `maintenance_logs` |
 | 4 | [004_expense_tracking.sql](../supabase/migrations/004_expense_tracking.sql) | `payment_methods`, `fixed_expense_templates`, `expenses`, `generate_fixed_expenses` |
 | 5 | [005_fixed_expense_payment_day.sql](../supabase/migrations/005_fixed_expense_payment_day.sql) | `payment_day` on templates, `paid_at` on expenses, `generate_fixed_expenses` uses the payment day |
+| 6 | [006_device_vendor_warranty.sql](../supabase/migrations/006_device_vendor_warranty.sql) | `equipment`: `purchase_date`, `warranty_months`, `warranty_expiry_date` (trigger-derived), `note`, `vendor`; `maintenance_logs.vendor` |
 
 - Every script is idempotent: running it again is safe.
 - If the editor warns about a "destructive operation" it is only the `drop trigger/policy if exists` lines; confirm.
