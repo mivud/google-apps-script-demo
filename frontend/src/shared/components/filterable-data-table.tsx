@@ -1,7 +1,9 @@
 import { useMemo } from 'react'
 import { useLocalTableQuery, useUrlTableQuery } from '../hooks/use-table-query'
+import { csvFileName, downloadCsv, toCsv } from '../csv-export'
 import { useI18n } from '../i18n'
 import { applyFilters, hasChoiceFilters, isDefaultQuery, type DataTableToolbar } from '../table-filters'
+import { ActionGroup, type ActionConfig } from './action-group'
 import { ClearableSearch } from './clearable-search'
 import { DataTableView, type DataTableViewProps } from './data-table-view'
 import { EmptyState } from './empty-state'
@@ -20,11 +22,19 @@ export function FilterableDataTable<T>({ toolbar, ...view }: FilterableDataTable
   const query = (toolbar.urlSync ? useUrlTableQuery : useLocalTableQuery)(definitions)
   const visible = useMemo(() => applyFilters(view.rows, query, toolbar), [view.rows, query, toolbar])
   const filtered = !isDefaultQuery(definitions, query)
+  const exportVisible = () => {
+    if (!toolbar.exportFileName) return
+    downloadCsv(csvFileName(toolbar.exportFileName), toCsv(view.columns, visible))
+  }
+  const exportAction: ActionConfig[] = toolbar.exportFileName
+    ? [{ id: 'export', icon: 'download', label: t('table.exportCsvLabel'), onClick: exportVisible, disabled: visible.length === 0 }]
+    : []
+  const actions = [...(toolbar.actions ?? []), ...exportAction]
 
   return (
     <>
       <div className="table-toolbar">
-        {toolbar.actions && <div className="table-actions-row">{toolbar.actions}</div>}
+        {actions.length > 0 && <div className="table-actions-row"><ActionGroup size="sm" label={t('table.actions')} actions={actions} /></div>}
         <div className="table-inputs">
           <ClearableSearch label={toolbar.searchLabel} value={query.search} onChange={query.setSearch} />
           <SelectFilters definitions={definitions} values={query.values} onChange={query.setValue} />

@@ -4,7 +4,7 @@ import { useAsyncData } from '../../../../shared/hooks/use-async-data'
 import { useDeleteAction } from '../../../../shared/hooks/use-delete-action'
 import { translateError, useI18n } from '../../../../shared/i18n'
 import { useToast } from '../../../../shared/toast'
-import { ReloadButton } from '../../../../shared/components/reload-button'
+import { useReloadAction } from '../../../../shared/hooks/use-reload-action'
 import { ALL_VALUE, type DataTableToolbar, type FilterDefinition } from '../../../../shared/table-filters'
 import { Badge } from '../../../../shared/components/badge'
 import { DataTable, type DataColumn } from '../../../../shared/components/data-table'
@@ -15,11 +15,13 @@ import { PageHeader } from '../../../../shared/components/page-header'
 import { RefreshIndicator } from '../../../../shared/components/refresh-indicator'
 import { RowActions } from '../../../../shared/components/row-actions'
 import { ListSkeleton } from '../../../../shared/components/skeleton'
-import type { Expense } from '../../domain/expense'
+import { getPaymentAlert, isPaid, type Expense } from '../../domain/expense'
 import { currentStatementMonth } from '../../domain/statement-month'
 import { ExpenseFormDialog } from '../components/expense-form-dialog'
 import { PaymentMethodBadgeById } from '../components/payment-method-badge'
 import { ExpenseStatistics } from '../components/expense-statistics'
+import { PaymentStatusCell } from '../components/payment-status-cell'
+import { PAYMENT_STATUS_MESSAGE, paymentStatusKey } from '../payment-status'
 import { PendingField } from '../components/pending-field'
 import { MonthPicker } from '../components/month-picker'
 import { useExpenseTrackingServices } from '../services-context'
@@ -44,7 +46,7 @@ function todayIsoDate(): string {
 }
 
 export function ExpensesPage() {
-  const { expenses, paymentMethods } = useExpenseTrackingServices()
+  const { expenses, paymentMethods, templates } = useExpenseTrackingServices()
   const { t } = useI18n()
   const toast = useToast()
   const canWrite = useCanWriteExpenses()
@@ -58,6 +60,11 @@ export function ExpensesPage() {
   const rows = list.data?.month === month ? list.data.items : undefined
   const monthLoading = list.loading && !rows
   const methods = useAsyncData(() => paymentMethods.list(), [paymentMethods])
+  const templateList = useAsyncData(() => templates.list(), [templates])
+  const reloadAction = useReloadAction(list, { onReload: () => { list.reload(); methods.reload(); templateList.reload() }, loading: list.loading || methods.loading || templateList.loading })
+  // Read once per render so every row of one paint is judged against the same day.
+  const today = todayIsoDate()
+  const alertOf = (e: Expense) => getPaymentAlert(e, (templateList.data ?? []).find((x) => x.id === e.templateId) ?? null, today)
   const remove = useDeleteAction({
     getName: (expense: Expense) => expense.description,
     remove: (expense) => expenses.remove(expense.id),
@@ -82,12 +89,13 @@ export function ExpensesPage() {
   }
 
   const columns: DataColumn<Expense>[] = [
-    { key: 'description', header: t('expense.description'), primary: true, cell: (e) => e.description },
-    { key: 'amount', header: t('expense.amount'), cell: (e) => (e.amount === null ? <PendingField label={t('expense.amountNeeded')} canWrite={canWrite} onFill={() => openEditor(e, 'amount')} /> : format(e.amount)) },
-    { key: 'method', header: t('expense.paymentMethod'), cell: (e) => (e.paymentMethodId === null ? <PendingField label={t('expense.methodNeeded')} canWrite={canWrite} onFill={() => openEditor(e, 'paymentMethod')} /> : <PaymentMethodBadgeById id={e.paymentMethodId} methods={methods.data ?? []} />) },
-    { key: 'spentOn', header: t('expense.spentOn'), cell: (e) => e.spentOn },
-    { key: 'type', header: t('expense.type'), cell: (e) => <Badge tone={e.isFixed ? 'warning' : 'neutral'}>{e.isFixed ? t('expense.fixedBadge') : t('expense.variableBadge')}</Badge> },
-    { key: 'createdBy', header: t('expense.createdBy'), cell: (e) => creatorLabel(creatorKey(e)) },
+    { key: 'description', header: t('expense.description'), primary: true, cell: (e) => e.description, exportValue: (e) => e.description },
+    { key: 'amount', header: t('expense.amount'), cell: (e) => (e.amount === null ? <PendingField label={t('expense.amountNeeded')} canWrite={canWrite} onFill={() => openEditor(e, 'amount')} /> : format(e.amount)), exportValue: (e) => e.amount },
+    { key: 'method', header: t('expense.paymentMethod'), cell: (e) => (e.paymentMethodId === null ? <PendingField label={t('expense.methodNeeded')} canWrite={canWrite} onFill={() => openEditor(e, 'paymentMethod')} /> : <PaymentMethodBadgeById id={e.paymentMethodId} methods={methods.data ?? []} />), exportValue: (e) => (methods.data ?? []).find((m) => m.id === e.paymentMethodId)?.name ?? '' },
+    { key: 'spentOn', header: t('expense.spentOn'), cell: (e) => e.spentOn, exportValue: (e) => e.spentOn },
+    { key: 'type', header: t('expense.type'), cell: (e) => <Badge tone={e.isFixed ? 'warning' : 'neutral'}>{e.isFixed ? t('expense.fixedBadge') : t('expense.variableBadge')}</Badge>, exportValue: (e) => (e.isFixed ? t('expense.fixedBadge') : t('expense.variableBadge')) },
+    { key: 'createdBy', header: t('expense.createdBy'), cell: (e) => creatorLabel(creatorKey(e)), exportValue: (e) => creatorLabel(creatorKey(e)) },
+    { key: 'payment', header: t('expense.payment.title'), cell: (e) => <PaymentStatusCell expense={e} alert={alertOf(e)} />, exportValue: (e) => (e.isFixed ? t(PAYMENT_STATUS_MESSAGE[paymentStatusKey(e, alertOf(e))]) : '') },
     ...(canWrite ? [{ key: 'actions', header: t('common.actions'), align: 'end' as const, cell: (e: Expense) => <RowActions itemName={e.description} disabled={remove.pending} onEdit={() => openEditor(e, undefined)} onDelete={() => remove.ask(e)} /> }] : []),
   ]
 
@@ -99,8 +107,9 @@ export function ExpensesPage() {
     { key: 'type', label: t('expense.type'), kind: 'radio', options: [{ value: ALL_VALUE, label: t('expense.filter.allTypes') }, { value: 'fixed', label: t('expense.fixedBadge') }, { value: 'variable', label: t('expense.variableBadge') }], predicate: (e, v) => e.isFixed === (v === 'fixed') },
     { key: 'needsAmount', label: t('expense.filter.needsAmount'), kind: 'toggle', predicate: (e) => e.amount === null },
     { key: 'needsMethod', label: t('expense.filter.needsMethod'), kind: 'toggle', predicate: (e) => e.paymentMethodId === null },
+    { key: 'needsPayment', label: t('expense.filter.needsPayment'), kind: 'toggle', predicate: (e) => alertOf(e) !== 'none' },
   ]
-  const toolbar: DataTableToolbar<Expense> = { searchLabel: t('expense.search'), searchFields: (e) => [e.description], filters, itemsName: t('expense.items'), toggleGroupLabel: t('expense.filter.attention'), urlSync: true, renderAbove: (visible) => <ExpenseStatistics monthExpenses={rows ?? []} visibleExpenses={visible} methods={methods.data ?? []} />, actions: <ReloadButton source={list} onReload={() => { list.reload(); methods.reload() }} loading={list.loading || methods.loading} /> }
+  const toolbar: DataTableToolbar<Expense> = { searchLabel: t('expense.search'), searchFields: (e) => [e.description], filters, itemsName: t('expense.items'), toggleGroupLabel: t('expense.filter.attention'), urlSync: true, exportFileName: 'expenses', renderAbove: (visible) => <ExpenseStatistics monthExpenses={rows ?? []} visibleExpenses={visible} methods={methods.data ?? []} />, actions: [reloadAction] }
 
   const dialogProps = { methods: methods.data ?? [], defaultMonth: month, today: todayIsoDate() }
 
@@ -139,10 +148,15 @@ export function ExpensesPage() {
           {...dialogProps}
           initial={editing}
           focusField={focusField}
-          onSubmit={async (input) => {
-            const updated = await expenses.update(editing.id, input, editing.lastModified)
-            list.reload()
-            return updated
+          onSubmit={async (input, paid) => {
+            try {
+              const updated = await expenses.update(editing.id, input, editing.lastModified)
+              // Only a changed flag costs a second call; the update has already saved the other fields.
+              if (editing.isFixed && paid !== isPaid(editing)) return await expenses.setPaid(editing.id, paid)
+              return updated
+            } finally {
+              list.reload()
+            }
           }}
           onRefresh={() => { list.reload(); setEditing(undefined) }}
           onClose={() => setEditing(undefined)}

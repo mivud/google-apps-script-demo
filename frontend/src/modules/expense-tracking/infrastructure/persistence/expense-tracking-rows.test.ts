@@ -23,12 +23,18 @@ describe('integer parsing', () => {
 
 describe('expense rows', () => {
   it('maps a row to an expense', () => {
-    expect(rowToExpense(expenseRow)).toEqual({ id: 'e1', description: 'Coffee', amount: 50000, paymentMethodId: 'cash', spentOn: '2026-05-10', statementMonth: '2026-05', isFixed: false, templateId: null, created: 'c', createdBy: 'u', lastModified: 'm', lastModifiedBy: 'v' })
+    expect(rowToExpense(expenseRow)).toEqual({ id: 'e1', description: 'Coffee', amount: 50000, paymentMethodId: 'cash', spentOn: '2026-05-10', statementMonth: '2026-05', isFixed: false, templateId: null, paidAt: null, created: 'c', createdBy: 'u', lastModified: 'm', lastModifiedBy: 'v' })
   })
 
   it('maps empty amount and payment method to null', () => {
     const expense = rowToExpense({ ...expenseRow, amount: '', payment_method_id: null, template_id: 't1', is_fixed: true })
     expect(expense).toMatchObject({ amount: null, paymentMethodId: null, templateId: 't1', isFixed: true })
+  })
+
+  it('maps paid_at, treating empty as unpaid', () => {
+    expect(rowToExpense({ ...expenseRow, paid_at: '2026-05-11T00:00:00Z' }).paidAt).toBe('2026-05-11T00:00:00Z')
+    expect(rowToExpense({ ...expenseRow, paid_at: '' }).paidAt).toBeNull()
+    expect(rowToExpense({ ...expenseRow, paid_at: null }).paidAt).toBeNull()
   })
 
   it('rejects malformed rows', () => {
@@ -63,6 +69,14 @@ describe('template rows', () => {
   it('rejects malformed rows', () => {
     expect(() => rowToTemplate({ ...row, months_added: 'x' })).toThrow(NetworkError)
     expect(() => rowToTemplate({ ...row, id: 1 as unknown as string })).toThrow(NetworkError)
+  })
+
+  it('maps payment_day, treating empty as no day', () => {
+    expect(rowToTemplate({ ...row, payment_day: '15' }).paymentDay).toBe(15)
+    expect(rowToTemplate({ ...row, payment_day: '' }).paymentDay).toBeNull()
+    expect(rowToTemplate(row).paymentDay).toBeNull()
+    expect(templatePatchToRow({ paymentDay: 5 })).toEqual({ payment_day: 5 })
+    expect(templatePatchToRow({ paymentDay: null })).toEqual({ payment_day: null })
   })
 
   it('never sends months_added', () => {

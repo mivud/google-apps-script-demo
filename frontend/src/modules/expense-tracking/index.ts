@@ -1,8 +1,8 @@
 export { EXPENSE_READ_PERMISSION, EXPENSE_WRITE_PERMISSION, PERMISSION_CLAIM_KEY } from './permissions'
 // Public API of the expense-tracking module; other code imports only from here (UI from ./ui).
-export type { Expense, ExpenseInput, ExpensePatch } from './domain/expense'
+export { getPaymentAlert, isPaid, type Expense, type ExpenseInput, type ExpensePatch, type PaymentAlert } from './domain/expense'
 export type { NewPaymentMethod, PaymentMethod, PaymentMethodInput } from './domain/payment-method'
-export type { FixedExpenseTemplate, FixedExpenseTemplateInput } from './domain/fixed-expense-template'
+export type { FixedExpenseTemplate, FixedExpenseTemplateInput, FixedExpenseTemplatePatch } from './domain/fixed-expense-template'
 export { summarizeExpenses, type ExpenseSummary } from './domain/expense-summary'
 export type { ExpenseRepository, GenerateFixedResult } from './application/expense-repository'
 export type { PaymentMethodRepository } from './application/payment-method-repository'

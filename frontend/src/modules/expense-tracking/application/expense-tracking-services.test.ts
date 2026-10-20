@@ -39,7 +39,7 @@ describe('PaymentMethodService', () => {
     await expenses.create(expenseInput)
     await expect(methods.remove('visa')).rejects.toThrow(code('payment_method_in_use'))
     await methods.create({ ...newMethod, id: 'cash', name: 'Cash' })
-    await templates.create({ description: 'Rent', amount: null, paymentMethodId: 'cash', active: true, totalMonths: null })
+    await templates.create({ description: 'Rent', amount: null, paymentMethodId: 'cash', active: true, totalMonths: null, paymentDay: null })
     await expect(methods.remove('cash')).rejects.toThrow(code('payment_method_in_use'))
   })
 
@@ -81,10 +81,38 @@ describe('ExpenseService', () => {
   })
 })
 
+describe('ExpenseService.setPaid', () => {
+  it('marks a fixed expense paid and unpaid', async () => {
+    await templates.create({ description: 'Rent', amount: 1000, paymentMethodId: 'visa', active: true, totalMonths: null, paymentDay: null })
+    const [fixed] = (await expenses.generateFixed('2026-05')).created
+    const paid = await expenses.setPaid(fixed.id, true)
+    expect(paid.paidAt).not.toBeNull()
+    expect((await expenses.setPaid(fixed.id, false)).paidAt).toBeNull()
+  })
+
+  it('refuses non-fixed expenses and unknown ids', async () => {
+    const plain = await expenses.create(expenseInput)
+    await expect(expenses.setPaid(plain.id, true)).rejects.toThrow(code('expense_not_fixed'))
+    await expect(expenses.setPaid('missing', true)).rejects.toThrow()
+  })
+})
+
 describe('generateFixed', () => {
+  it('uses the payment day as the spent date, clamped to the month length', async () => {
+    const base = { amount: 1, paymentMethodId: 'visa', active: true, totalMonths: null }
+    await templates.create({ ...base, description: 'A', paymentDay: 15 })
+    await templates.create({ ...base, description: 'B', paymentDay: 31 })
+    await templates.create({ ...base, description: 'C', paymentDay: null })
+    const { created } = await expenses.generateFixed('2026-02')
+    const dateOf = (name: string) => created.find((e) => e.description === name)?.spentOn
+    expect(dateOf('A')).toBe('2026-02-15')
+    expect(dateOf('B')).toBe('2026-02-28')
+    expect(dateOf('C')).toBe('2026-02-01')
+  })
+
   it('creates one expense per active template and is idempotent per month', async () => {
-    await templates.create({ description: 'Rent', amount: 1000, paymentMethodId: 'visa', active: true, totalMonths: null })
-    await templates.create({ description: 'Paused', amount: 1, paymentMethodId: null, active: false, totalMonths: null })
+    await templates.create({ description: 'Rent', amount: 1000, paymentMethodId: 'visa', active: true, totalMonths: null, paymentDay: null })
+    await templates.create({ description: 'Paused', amount: 1, paymentMethodId: null, active: false, totalMonths: null, paymentDay: null })
     const first = await expenses.generateFixed('2026-05')
     expect(first.created).toHaveLength(1)
     expect(first.created[0]).toMatchObject({ isFixed: true, statementMonth: '2026-05', amount: 1000 })
@@ -95,13 +123,13 @@ describe('generateFixed', () => {
   })
 
   it('stops once a template reached its total months', async () => {
-    await templates.create({ description: 'Loan', amount: 5, paymentMethodId: null, active: true, totalMonths: 1 })
+    await templates.create({ description: 'Loan', amount: 5, paymentMethodId: null, active: true, totalMonths: 1, paymentDay: null })
     expect((await expenses.generateFixed('2026-05')).created).toHaveLength(1)
     expect(await expenses.generateFixed('2026-06')).toMatchObject({ created: [], skipped: 1 })
   })
 
   it('creates pending expenses from templates without an amount', async () => {
-    await templates.create({ description: 'Power', amount: null, paymentMethodId: null, active: true, totalMonths: null })
+    await templates.create({ description: 'Power', amount: null, paymentMethodId: null, active: true, totalMonths: null, paymentDay: null })
     const { created } = await expenses.generateFixed('2026-05')
     expect(created[0]).toMatchObject({ amount: null, paymentMethodId: null })
   })
@@ -113,12 +141,12 @@ describe('generateFixed', () => {
 
 describe('FixedExpenseTemplateService', () => {
   it('validates input and unknown payment methods', async () => {
-    await expect(templates.create({ description: '', amount: null, paymentMethodId: null, active: true, totalMonths: null })).rejects.toThrow(code('expense_description_invalid'))
-    await expect(templates.create({ description: 'x', amount: null, paymentMethodId: 'nope', active: true, totalMonths: null })).rejects.toThrow(code('payment_method_not_found'))
+    await expect(templates.create({ description: '', amount: null, paymentMethodId: null, active: true, totalMonths: null, paymentDay: null })).rejects.toThrow(code('expense_description_invalid'))
+    await expect(templates.create({ description: 'x', amount: null, paymentMethodId: 'nope', active: true, totalMonths: null, paymentDay: null })).rejects.toThrow(code('payment_method_not_found'))
   })
 
   it('cannot shorten below months already added', async () => {
-    const template = await templates.create({ description: 'Loan', amount: 5, paymentMethodId: null, active: true, totalMonths: 3 })
+    const template = await templates.create({ description: 'Loan', amount: 5, paymentMethodId: null, active: true, totalMonths: 3, paymentDay: null })
     await expenses.generateFixed('2026-05')
     await expenses.generateFixed('2026-06')
     const [current] = await templates.list()

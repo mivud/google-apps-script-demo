@@ -8,6 +8,8 @@ export interface DataColumn<T> {
   primary?: boolean
   // 'end' right-aligns header and cells (logical, so it flips in RTL); meant for the actions column.
   align?: 'end'
+  // Plain value written to the CSV export; columns without it (e.g. actions) are not exported.
+  exportValue?: (row: T) => string | number | null
 }
 
 export interface DataTableViewProps<T> {

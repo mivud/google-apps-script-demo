@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { ActionConfig } from './components/action-group'
 import { matchSearch } from './search-text'
 
 // Value of the "no filtering" option; every filter definition starts with it.
@@ -47,14 +48,16 @@ export interface DataTableToolbar<T> {
   filters?: FilterDefinition<T>[]
   // Caption of the checkbox group that holds the toggle filters, e.g. "Needs attention".
   toggleGroupLabel?: string
-  // Slot next to the search box, e.g. a ReloadButton.
-  actions?: ReactNode
+  // Icon buttons joined into one group above the table, e.g. useReloadAction(); Export CSV is appended to it.
+  actions?: readonly ActionConfig[]
   // Plural name of the rows for the count line, e.g. "expenses".
   itemsName: string
   // Rendered between the toolbar and the table with exactly the rows the table shows, e.g. a chart.
   renderAbove?: (visibleRows: T[]) => ReactNode
   // Keep search and filters in the URL so navigation and reloads do not lose them.
   urlSync?: boolean
+  // Base file name that enables the Export CSV button, e.g. "expenses".
+  exportFileName?: string
 }
 
 export function emptyFilterValues<T>(definitions: readonly FilterDefinition<T>[]): Record<string, string> {

@@ -25,6 +25,10 @@ export class ExpenseService {
     return this.repository.update(id, validateExpensePatch(patch), expectedLastModified)
   }
 
+  setPaid(id: string, paid: boolean): Promise<Expense> {
+    return this.repository.setPaid(id, paid)
+  }
+
   remove(id: string): Promise<void> {
     return this.repository.remove(id)
   }

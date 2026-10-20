@@ -17,6 +17,8 @@ export interface Expense extends Audit {
   isFixed: boolean
   // Set for expenses generated from a fixed template.
   templateId: string | null
+  // ISO timestamp when a fixed expense was marked paid; always null for non-fixed expenses.
+  paidAt: string | null
 }
 
 export interface ExpenseInput {
@@ -48,6 +50,30 @@ export function validateExpenseInput(input: ExpenseInput): ExpenseInput {
 const BEFORE = -1
 const AFTER = 1
 const DATE_PATTERN = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/
+const DUE_SOON_DAYS = 3
+const MS_PER_DAY = 86_400_000
+
+export type PaymentAlert = 'none' | 'overdue' | 'due-soon'
+
+export function isPaid(expense: Pick<Expense, 'paidAt'>): boolean {
+  return expense.paidAt !== null
+}
+
+function shiftDate(date: string, days: number): string {
+  return new Date(Date.parse(`${date}T00:00:00Z`) + days * MS_PER_DAY).toISOString().slice(0, 10)
+}
+
+// Dates are 'YYYY-MM-DD' strings, so text comparison is chronological.
+export function getPaymentAlert(
+  expense: Pick<Expense, 'isFixed' | 'paidAt' | 'spentOn'>,
+  template: { paymentDay: number | null } | null,
+  today: string,
+): PaymentAlert {
+  if (isPaid(expense) || !expense.isFixed || template === null || template.paymentDay === null) return 'none'
+  if (!DATE_PATTERN.test(expense.spentOn) || !DATE_PATTERN.test(today)) return 'none'
+  if (today > expense.spentOn) return 'overdue'
+  return today >= shiftDate(expense.spentOn, -DUE_SOON_DAYS) ? 'due-soon' : 'none'
+}
 
 function compareText(a: string, b: string): number {
   return a < b ? BEFORE : a > b ? AFTER : 0

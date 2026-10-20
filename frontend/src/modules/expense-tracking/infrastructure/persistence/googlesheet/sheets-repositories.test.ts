@@ -47,6 +47,17 @@ describe('ExpenseSheetsRepository', () => {
     expect(call).toHaveBeenLastCalledWith(EXPENSE_ACTIONS.create, { description: 'Coffee', amount: 5, payment_method_id: 'cash', spent_on: '2026-05-10' })
   })
 
+  it('calls markPaid or markUnpaid by the paid flag', async () => {
+    const { call, caller } = mockCaller({ ...expenseRow, is_fixed: true, paid_at: '2026-05-11T00:00:00Z' })
+    const repository = new ExpenseSheetsRepository(caller)
+    const paid = await repository.setPaid('e1', true)
+    expect(call).toHaveBeenLastCalledWith(EXPENSE_ACTIONS.markPaid, { id: 'e1' })
+    expect(paid.paidAt).toBe('2026-05-11T00:00:00Z')
+    call.mockResolvedValueOnce({ ...expenseRow, is_fixed: true, paid_at: null })
+    expect((await repository.setPaid('e1', false)).paidAt).toBeNull()
+    expect(call).toHaveBeenLastCalledWith(EXPENSE_ACTIONS.markUnpaid, { id: 'e1' })
+  })
+
   it('propagates caller failures', async () => {
     const call = vi.fn().mockRejectedValue(new Error('boom'))
     await expect(new ExpenseSheetsRepository({ call } as unknown as SheetsCaller).remove('x')).rejects.toThrow('boom')
@@ -76,8 +87,8 @@ describe('FixedExpenseTemplateSheetsRepository', () => {
   it('creates and updates with snake_case payloads', async () => {
     const { call, caller } = mockCaller(row)
     const repository = new FixedExpenseTemplateSheetsRepository(caller)
-    await repository.create({ description: 'Rent', amount: null, paymentMethodId: null, active: true, totalMonths: null })
-    expect(call).toHaveBeenLastCalledWith(FIXED_TEMPLATE_ACTIONS.create, { description: 'Rent', amount: null, payment_method_id: null, active: true, total_months: null })
+    await repository.create({ description: 'Rent', amount: null, paymentMethodId: null, active: true, totalMonths: null, paymentDay: null })
+    expect(call).toHaveBeenLastCalledWith(FIXED_TEMPLATE_ACTIONS.create, { description: 'Rent', amount: null, payment_method_id: null, active: true, total_months: null, payment_day: null })
     await repository.update('t1', { active: false }, 'tok')
     expect(call).toHaveBeenLastCalledWith(FIXED_TEMPLATE_ACTIONS.update, { id: 't1', active: false, expected_last_modified: 'tok' })
   })

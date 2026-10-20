@@ -21,6 +21,7 @@ export interface FixedExpenseTemplateRow extends AuditRow {
   active: boolean
   total_months: number | null
   months_added: number
+  payment_day?: number | null
 }
 
 export interface ExpenseRow extends AuditRow {
@@ -32,6 +33,7 @@ export interface ExpenseRow extends AuditRow {
   statement_month: string
   is_fixed: boolean
   template_id: string | null
+  paid_at?: string | null
 }
 
 // Rejects malformed backend data instead of letting `undefined` leak into the UI.
@@ -61,6 +63,7 @@ export function rowToTemplate(row: FixedExpenseTemplateRow): FixedExpenseTemplat
     active: row.active,
     totalMonths: row.total_months ?? null,
     monthsAdded: row.months_added,
+    paymentDay: row.payment_day ?? null,
     ...rowToAudit(row),
   }
 }
@@ -76,6 +79,7 @@ export function rowToExpense(row: ExpenseRow): Expense {
     statementMonth: row.statement_month,
     isFixed: row.is_fixed,
     templateId: row.template_id,
+    paidAt: row.paid_at ?? null,
     ...rowToAudit(row),
   }
 }
@@ -101,6 +105,7 @@ export function templateToRow(input: FixedExpenseTemplatePatch): Record<string, 
     payment_method_id: input.paymentMethodId,
     active: input.active,
     total_months: input.totalMonths,
+    payment_day: input.paymentDay,
   })
 }
 

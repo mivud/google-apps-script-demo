@@ -11,6 +11,7 @@ export interface FixedExpenseTemplateRow extends AuditRow {
   active: boolean
   total_months: number | string | null
   months_added: number | string
+  payment_day?: number | string | null
 }
 
 export function rowToTemplate(row: FixedExpenseTemplateRow): FixedExpenseTemplate {
@@ -24,6 +25,7 @@ export function rowToTemplate(row: FixedExpenseTemplateRow): FixedExpenseTemplat
     active: row.active === true,
     totalMonths: toNullableInteger(row.total_months) || null,
     monthsAdded: toNonNegativeInteger(row.months_added),
+    paymentDay: toNullableInteger(row.payment_day) || null,
     ...rowToAudit(row),
   }
 }
@@ -41,5 +43,6 @@ export function templatePatchToRow(patch: FixedExpenseTemplatePatch): Record<str
   if (patch.paymentMethodId !== undefined) row.payment_method_id = patch.paymentMethodId
   if (patch.active !== undefined) row.active = patch.active
   if (patch.totalMonths !== undefined) row.total_months = patch.totalMonths
+  if (patch.paymentDay !== undefined) row.payment_day = patch.paymentDay
   return row
 }

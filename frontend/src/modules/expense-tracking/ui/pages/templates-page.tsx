@@ -11,7 +11,7 @@ import { PageHeader } from '../../../../shared/components/page-header'
 import { RefreshIndicator } from '../../../../shared/components/refresh-indicator'
 import { RowActions } from '../../../../shared/components/row-actions'
 import { ListSkeleton } from '../../../../shared/components/skeleton'
-import { ReloadButton } from '../../../../shared/components/reload-button'
+import { useReloadAction } from '../../../../shared/hooks/use-reload-action'
 import { ALL_VALUE, type DataTableToolbar, type FilterDefinition } from '../../../../shared/table-filters'
 import { isTemplateCompleted, type FixedExpenseTemplate } from '../../domain/fixed-expense-template'
 import { PaymentMethodBadgeById } from '../components/payment-method-badge'
@@ -33,6 +33,7 @@ export function TemplatesPage() {
   const format = useMoneyFormat()
   const list = useAsyncData(() => templates.list(), [templates])
   const methods = useAsyncData(() => paymentMethods.list(), [paymentMethods])
+  const reloadAction = useReloadAction(list, { onReload: () => { list.reload(); methods.reload() }, loading: list.loading || methods.loading })
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<FixedExpenseTemplate | undefined>(undefined)
   const remove = useDeleteAction({
@@ -43,16 +44,17 @@ export function TemplatesPage() {
 
 
   const columns: DataColumn<FixedExpenseTemplate>[] = [
-    { key: 'description', header: t('expense.description'), primary: true, cell: (x) => x.description },
-    { key: 'amount', header: t('expense.amount'), cell: (x) => (x.amount === null ? t('expense.templates.noFixedAmount') : format(x.amount)) },
-    { key: 'method', header: t('expense.paymentMethod'), cell: (x) => (x.paymentMethodId === null ? t('expense.templates.noFixedMethod') : <PaymentMethodBadgeById id={x.paymentMethodId} methods={methods.data ?? []} />) },
+    { key: 'description', header: t('expense.description'), primary: true, cell: (x) => x.description, exportValue: (x) => x.description },
+    { key: 'amount', header: t('expense.amount'), cell: (x) => (x.amount === null ? t('expense.templates.noFixedAmount') : format(x.amount)), exportValue: (x) => x.amount },
+    { key: 'method', header: t('expense.paymentMethod'), cell: (x) => (x.paymentMethodId === null ? t('expense.templates.noFixedMethod') : <PaymentMethodBadgeById id={x.paymentMethodId} methods={methods.data ?? []} />), exportValue: (x) => (methods.data ?? []).find((m) => m.id === x.paymentMethodId)?.name ?? '' },
+    { key: 'paymentDay', header: t('expense.paymentDay'), cell: (x) => x.paymentDay ?? '—', exportValue: (x) => x.paymentDay },
     { key: 'progress', header: t('expense.templates.progress'), cell: (x) => (
       <span className="button-group">
         {x.totalMonths === null ? t('expense.templates.unlimitedProgress', { added: x.monthsAdded }) : t('expense.templates.progressValue', { added: x.monthsAdded, total: x.totalMonths })}
         {isTemplateCompleted(x) && <> <Badge tone="success">{t('expense.templates.completed')}</Badge></>}
       </span>
-    ) },
-    { key: 'status', header: t('expense.status'), cell: (x) => <Badge tone={x.active ? 'success' : 'neutral'}>{x.active ? t('expense.active') : t('expense.inactive')}</Badge> },
+    ), exportValue: (x) => (x.totalMonths === null ? `${x.monthsAdded}` : `${x.monthsAdded}/${x.totalMonths}`) },
+    { key: 'status', header: t('expense.status'), cell: (x) => <Badge tone={x.active ? 'success' : 'neutral'}>{x.active ? t('expense.active') : t('expense.inactive')}</Badge>, exportValue: (x) => (x.active ? t('expense.active') : t('expense.inactive')) },
     ...(canWrite ? [{ key: 'actions', header: t('common.actions'), align: 'end' as const, cell: (x: FixedExpenseTemplate) => <RowActions itemName={x.description} disabled={remove.pending} onEdit={() => setEditing(x)} onDelete={() => remove.ask(x)} /> }] : []),
   ]
 
@@ -63,7 +65,7 @@ export function TemplatesPage() {
     { key: 'noAmount', label: t('expense.filter.missingAmount'), kind: 'toggle', predicate: (x) => x.amount === null },
     { key: 'noMethod', label: t('expense.filter.missingMethod'), kind: 'toggle', predicate: (x) => x.paymentMethodId === null },
   ]
-  const toolbar: DataTableToolbar<FixedExpenseTemplate> = { searchLabel: t('expense.templates.search'), searchFields: (x) => [x.description], filters, itemsName: t('expense.templates.items'), toggleGroupLabel: t('expense.filter.attention'), urlSync: true, actions: <ReloadButton source={list} onReload={() => { list.reload(); methods.reload() }} loading={list.loading || methods.loading} /> }
+  const toolbar: DataTableToolbar<FixedExpenseTemplate> = { searchLabel: t('expense.templates.search'), searchFields: (x) => [x.description], filters, itemsName: t('expense.templates.items'), toggleGroupLabel: t('expense.filter.attention'), urlSync: true, exportFileName: 'fixed-expense-templates', actions: [reloadAction] }
 
   return (
     <section>

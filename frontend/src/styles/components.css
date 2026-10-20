@@ -254,3 +254,8 @@
 .launcher-card-title { margin: 0; font-size: 1.1rem; }
 .launcher-card-description { margin: 4px 0 0; color: var(--muted-foreground); }
 .app-loading { display: flex; justify-content: center; padding: 48px 16px; }
+
+/* Payment status: badge plus toggle wrap on narrow cards; the icon keeps alerts readable without colour. */
+.payment-status { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.payment-status .badge { gap: 4px; }
+.payment-status .badge .icon { width: 14px; height: 14px; }

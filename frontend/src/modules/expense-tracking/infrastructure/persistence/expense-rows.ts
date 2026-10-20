@@ -14,6 +14,7 @@ export interface ExpenseRow extends AuditRow {
   statement_month: string
   is_fixed: boolean
   template_id: string | null
+  paid_at?: string | null
 }
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
@@ -43,6 +44,7 @@ export function rowToExpense(row: ExpenseRow): Expense {
     statementMonth: row.statement_month,
     isFixed: row.is_fixed === true,
     templateId: row.template_id ? row.template_id : null,
+    paidAt: row.paid_at ? row.paid_at : null,
     ...rowToAudit(row),
   }
 }

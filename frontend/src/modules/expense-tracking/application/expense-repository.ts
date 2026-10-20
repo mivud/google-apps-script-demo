@@ -11,6 +11,8 @@ export interface ExpenseRepository {
   create(input: ExpenseInput): Promise<Expense>
   // A stale expectedLastModified fails with ValidationError code 'conflict'.
   update(id: string, patch: ExpensePatch, expectedLastModified: string): Promise<Expense>
+  // Marks a fixed expense paid (paidAt = now) or unpaid (null); a non-fixed one fails with 'expense_not_fixed'.
+  setPaid(id: string, paid: boolean): Promise<Expense>
   remove(id: string): Promise<void>
   // Idempotent per month: running it again for the same month creates nothing.
   generateFixed(month: string): Promise<GenerateFixedResult>

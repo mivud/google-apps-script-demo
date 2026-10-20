@@ -5,6 +5,8 @@ export const EXPENSE_ACTIONS = {
   update: 'expense-tracking.expense.update',
   remove: 'expense-tracking.expense.delete',
   generateFixed: 'expense-tracking.expense.generateFixed',
+  markPaid: 'expense-tracking.expense.markPaid',
+  markUnpaid: 'expense-tracking.expense.markUnpaid',
 } as const
 
 export const PAYMENT_METHOD_ACTIONS = {

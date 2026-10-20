@@ -45,6 +45,8 @@ const VALIDATION_CODE_KEYS: Record<ValidationCode, MessageKey> = {
   payment_method_color_invalid: 'error.validation.paymentMethodColorInvalid',
   payment_method_closing_day_invalid: 'error.validation.paymentMethodClosingDayInvalid',
   payment_method_in_use: 'error.validation.paymentMethodInUse',
+  payment_day_invalid: 'error.validation.paymentDayInvalid',
+  expense_not_fixed: 'error.validation.expenseNotFixed',
   total_months_invalid: 'error.validation.totalMonthsInvalid',
   total_months_below_added: 'error.validation.totalMonthsBelowAdded',
   unknown: 'error.unknown',

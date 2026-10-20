@@ -7,7 +7,7 @@ import { LoadingButton } from '../../../../shared/components/loading-button'
 import { Modal } from '../../../../shared/components/modal'
 import { AmountInput } from '../../../../shared/components/amount-input'
 import { TextInput } from '../../../../shared/components/text-input'
-import type { Expense, ExpenseInput } from '../../domain/expense'
+import { isPaid, type Expense, type ExpenseInput } from '../../domain/expense'
 import type { PaymentMethod } from '../../domain/payment-method'
 import { resolveStatementMonth } from '../../domain/statement-month'
 import { PaymentMethodSelect } from './payment-method-select'
@@ -21,7 +21,8 @@ interface ExpenseFormDialogProps {
   today: string
   // Field to focus on open, for pending rows that only miss one value.
   focusField?: 'amount' | 'paymentMethod'
-  onSubmit: (input: ExpenseInput) => Promise<unknown>
+  // `paid` is meaningful only when editing a fixed expense.
+  onSubmit: (input: ExpenseInput, paid: boolean) => Promise<unknown>
   onClose: () => void
   // Offered on a concurrency conflict; the page reloads and closes the dialog.
   onRefresh?: () => void
@@ -36,8 +37,9 @@ export function ExpenseFormDialog({ initial, methods, defaultMonth, today, focus
   const [statementMonth, setStatementMonth] = useState(initial?.statementMonth ?? defaultMonth)
   // Once the user types a month, date and method changes stop recomputing it.
   const [overridden, setOverridden] = useState(false)
+  const [paid, setPaid] = useState(initial ? isPaid(initial) : false)
   const submit = useAsyncAction(async (input: ExpenseInput) => {
-    await onSubmit(input)
+    await onSubmit(input, paid)
     return true
   })
 
@@ -76,6 +78,12 @@ export function ExpenseFormDialog({ initial, methods, defaultMonth, today, focus
           <TextInput label={t('expense.statementMonth')} type="month" required value={statementMonth} disabled={submit.pending} onChange={(e) => { setOverridden(true); setStatementMonth(e.target.value) }} />
         </FieldRow>
         {!overridden && <p className="muted" aria-live="polite">{t('expense.statementMonthAuto', { month: statementMonth })}</p>}
+        {initial?.isFixed && (
+          <label className="checkbox-item">
+            <input type="checkbox" checked={paid} disabled={submit.pending} onChange={(e) => setPaid(e.target.checked)} />
+            {t('expense.payment.paid')}
+          </label>
+        )}
         <ActionError error={submit.error} onRefresh={onRefresh} />
         <DialogActions>
           <LoadingButton type="button" variant="outline" disabled={submit.pending} onClick={onClose}>{t('common.cancel')}</LoadingButton>

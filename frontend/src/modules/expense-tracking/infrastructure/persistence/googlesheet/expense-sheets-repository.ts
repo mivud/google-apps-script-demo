@@ -24,6 +24,11 @@ export class ExpenseSheetsRepository implements ExpenseRepository {
     return rowToExpense(await this.caller.call<ExpenseRow>(EXPENSE_ACTIONS.update, payload))
   }
 
+  async setPaid(id: string, paid: boolean): Promise<Expense> {
+    const action = paid ? EXPENSE_ACTIONS.markPaid : EXPENSE_ACTIONS.markUnpaid
+    return rowToExpense(await this.caller.call<ExpenseRow>(action, { id }))
+  }
+
   async remove(id: string): Promise<void> {
     await this.caller.call<unknown>(EXPENSE_ACTIONS.remove, { id })
   }

@@ -15,6 +15,8 @@ export interface FixedExpenseTemplate extends Audit {
   // null means no end: the template recurs every month.
   totalMonths: number | null
   monthsAdded: number
+  // Day of the month (1..31) the payment is due; null means no fixed day (the 1st is used).
+  paymentDay: number | null
 }
 
 export interface FixedExpenseTemplateInput {
@@ -23,6 +25,7 @@ export interface FixedExpenseTemplateInput {
   paymentMethodId: string | null
   active: boolean
   totalMonths: number | null
+  paymentDay: number | null
 }
 
 export type FixedExpenseTemplatePatch = Partial<FixedExpenseTemplateInput>
@@ -39,6 +42,14 @@ export function validateTotalMonths(totalMonths: number | null): number | null {
   return totalMonths
 }
 
+export function validatePaymentDay(paymentDay: number | null): number | null {
+  if (paymentDay === null) return null
+  if (!Number.isInteger(paymentDay) || paymentDay < 1 || paymentDay > 31) {
+    throw new ValidationError('Invalid payment day', 'payment_day_invalid')
+  }
+  return paymentDay
+}
+
 // A template cannot be shortened below the months it already produced.
 export function assertTotalMonthsCoverAdded(totalMonths: number | null, monthsAdded: number): void {
   if (totalMonths !== null && totalMonths < monthsAdded) throw new ValidationError('Total months below added', 'total_months_below_added')
@@ -51,6 +62,7 @@ export function validateTemplatePatch(patch: FixedExpenseTemplatePatch): FixedEx
   if (patch.paymentMethodId !== undefined) checked.paymentMethodId = patch.paymentMethodId === null ? null : validatePaymentMethodId(patch.paymentMethodId)
   if (patch.active !== undefined) checked.active = patch.active
   if (patch.totalMonths !== undefined) checked.totalMonths = validateTotalMonths(patch.totalMonths)
+  if (patch.paymentDay !== undefined) checked.paymentDay = validatePaymentDay(patch.paymentDay)
   return checked
 }
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Expense } from './expense'
 import { summarizeExpenses } from './expense-summary'
 
-const make = (over: Partial<Expense>): Expense => ({ id: 'x', description: 'd', amount: 100, paymentMethodId: 'cash', spentOn: '2026-05-10', statementMonth: '2026-05', isFixed: false, templateId: null, created: '', createdBy: '', lastModified: '', lastModifiedBy: '', ...over })
+const make = (over: Partial<Expense>): Expense => ({ id: 'x', description: 'd', amount: 100, paymentMethodId: 'cash', spentOn: '2026-05-10', statementMonth: '2026-05', isFixed: false, templateId: null, paidAt: null, created: '', createdBy: '', lastModified: '', lastModifiedBy: '', ...over })
 
 describe('summarizeExpenses', () => {
   it('returns zeros for no expenses', () => {

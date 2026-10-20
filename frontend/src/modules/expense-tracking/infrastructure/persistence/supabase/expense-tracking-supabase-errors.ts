@@ -2,8 +2,8 @@ import type { PostgrestError } from '@supabase/supabase-js'
 import { toSupabaseIdentityError } from '../../../../../shared/api/identity-errors'
 import { ValidationError, type ValidationCode } from '../../../../../shared/errors'
 
-// Stable codes raised by 008_expense_tracking.sql as the exception message.
-const EXPENSE_TRACKING_CODES = ['payment_method_in_use', 'payment_method_id_invalid', 'expense_amount_required', 'expense_payment_method_required', 'payment_method_closing_day_invalid', 'payment_method_color_invalid', 'total_months_below_added', 'statement_month_invalid'] as const
+// Stable codes raised by 004_expense_tracking.sql and 005_fixed_expense_payment_day.sql as the exception message.
+const EXPENSE_TRACKING_CODES = ['payment_method_in_use', 'payment_method_id_invalid', 'expense_amount_required', 'expense_payment_method_required', 'payment_method_closing_day_invalid', 'payment_method_color_invalid', 'total_months_below_added', 'statement_month_invalid', 'payment_day_invalid', 'expense_not_fixed'] as const
 
 const FOREIGN_KEY_VIOLATION = '23503'
 const UNIQUE_VIOLATION = '23505'

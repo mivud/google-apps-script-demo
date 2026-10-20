@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { compareExpensesForDisplay, validateExpenseInput, validateExpensePatch, type Expense } from './expense'
+import { compareExpensesForDisplay, getPaymentAlert, isPaid, validateExpenseInput, validateExpensePatch, type Expense } from './expense'
 import { MAX_AMOUNT, validateAmount, validateRequiredAmount } from './amount'
 
-const base: Expense = { id: 'a', description: 'd', amount: 1, paymentMethodId: 'cash', spentOn: '2026-05-10', statementMonth: '2026-05', isFixed: false, templateId: null, created: '2026-05-10T00:00:00.000+00:00', createdBy: 'u', lastModified: '', lastModifiedBy: '' }
+const base: Expense = { id: 'a', description: 'd', amount: 1, paymentMethodId: 'cash', spentOn: '2026-05-10', statementMonth: '2026-05', isFixed: false, templateId: null, paidAt: null, created: '2026-05-10T00:00:00.000+00:00', createdBy: 'u', lastModified: '', lastModifiedBy: '' }
 const make = (over: Partial<Expense>): Expense => ({ ...base, ...over })
 const order = (list: Expense[]) => [...list].sort(compareExpensesForDisplay).map((e) => e.id)
 const code = (value: string) => expect.objectContaining({ code: value })
@@ -33,6 +33,38 @@ describe('expense validation', () => {
   it('checks only the fields present in a patch', () => {
     expect(validateExpensePatch({})).toEqual({})
     expect(validateExpensePatch({ amount: 5 })).toEqual({ amount: 5 })
+  })
+})
+
+describe('payment alert', () => {
+  const fixed = make({ isFixed: true, spentOn: '2026-05-10' })
+  const template = { paymentDay: 10 }
+
+  it('knows whether an expense is paid', () => {
+    expect(isPaid({ paidAt: null })).toBe(false)
+    expect(isPaid({ paidAt: '2026-05-01T00:00:00Z' })).toBe(true)
+  })
+
+  it('has no alert when paid, not fixed, or without a template or payment day', () => {
+    expect(getPaymentAlert({ ...fixed, paidAt: '2026-05-01T00:00:00Z' }, template, '2026-06-01')).toBe('none')
+    expect(getPaymentAlert(make({ spentOn: '2026-05-10' }), template, '2026-06-01')).toBe('none')
+    expect(getPaymentAlert(fixed, null, '2026-06-01')).toBe('none')
+    expect(getPaymentAlert(fixed, { paymentDay: null }, '2026-06-01')).toBe('none')
+  })
+
+  it('is due soon from exactly 3 days before through the due day', () => {
+    expect(getPaymentAlert(fixed, template, '2026-05-06')).toBe('none')
+    expect(getPaymentAlert(fixed, template, '2026-05-07')).toBe('due-soon')
+    expect(getPaymentAlert(fixed, template, '2026-05-10')).toBe('due-soon')
+  })
+
+  it('is overdue after the due day', () => {
+    expect(getPaymentAlert(fixed, template, '2026-05-11')).toBe('overdue')
+  })
+
+  it('has no alert for malformed dates', () => {
+    expect(getPaymentAlert({ ...fixed, spentOn: 'x' }, template, '2026-05-10')).toBe('none')
+    expect(getPaymentAlert(fixed, template, '10/05/2026')).toBe('none')
   })
 })
 

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Expense, ExpenseInput, ExpensePatch } from '../../../domain/expense'
+import { NotFoundError, ValidationError } from '../../../../../shared/errors'
+import type { Expense,ExpenseInput, ExpensePatch } from '../../../domain/expense'
 import type { ExpenseRepository, GenerateFixedResult } from '../../../application/expense-repository'
 import { toExpenseTrackingError } from './expense-tracking-supabase-errors'
 import { expenseToRow, rowToExpense, type ExpenseRow } from './expense-tracking-supabase-rows'
@@ -36,6 +37,23 @@ export class ExpenseSupabaseRepository implements ExpenseRepository {
 
   update(id: string, patch: ExpensePatch, expectedLastModified: string): Promise<Expense> {
     return this.table.update(id, expenseToRow(patch), expectedLastModified)
+  }
+
+  // Checks is_fixed first so unpaid on a non-fixed row fails like paid does (the DB trigger covers paid only).
+  async setPaid(id: string, paid: boolean): Promise<Expense> {
+    const found = await this.client.from(TABLE).select('is_fixed').eq('id', id).maybeSingle()
+    if (found.error) throw toExpenseTrackingError(found.error)
+    if (!found.data) throw new NotFoundError()
+    if (found.data.is_fixed !== true) throw new ValidationError(undefined, 'expense_not_fixed')
+    const { data, error } = await this.client
+      .from(TABLE)
+      .update({ paid_at: paid ? new Date().toISOString() : null })
+      .eq('id', id)
+      .select('*')
+      .maybeSingle()
+    if (error) throw toExpenseTrackingError(error)
+    if (!data) throw new NotFoundError()
+    return rowToExpense(data as ExpenseRow)
   }
 
   remove(id: string): Promise<void> {

@@ -17,6 +17,8 @@ const EXPENSE_TRACKING_CODES: readonly ValidationCode[] = [
   'payment_method_color_invalid',
   'payment_method_closing_day_invalid',
   'payment_method_in_use',
+  'payment_day_invalid',
+  'expense_not_fixed',
   'total_months_invalid',
   'total_months_below_added',
   'conflict',

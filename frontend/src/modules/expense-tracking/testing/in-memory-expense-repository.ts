@@ -5,6 +5,13 @@ import { resolveStatementMonth } from '../domain/statement-month'
 import { isTemplateCompleted } from '../domain/fixed-expense-template'
 import { findOrThrow, type InMemoryExpenseTrackingStore } from './in-memory-store'
 
+// Payment day capped to the month length; the 1st when the template has none (mirrors generate_fixed_expenses).
+function dueDate(month: string, paymentDay: number | null): string {
+  const [year, monthNumber] = month.split('-').map(Number)
+  const lastDay = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate()
+  return `${month}-${String(Math.min(paymentDay ?? 1, lastDay)).padStart(2, '0')}`
+}
+
 // Test double mirroring the backend rules, including generateFixed: one expense per eligible template, once per month.
 export class InMemoryExpenseRepository implements ExpenseRepository {
   private readonly store: InMemoryExpenseTrackingStore
@@ -21,7 +28,7 @@ export class InMemoryExpenseRepository implements ExpenseRepository {
     const method = this.store.paymentMethods.find((candidate) => candidate.id === input.paymentMethodId)
     if (!method) throw new ValidationError(undefined, 'payment_method_not_found')
     const statementMonth = input.statementMonth ?? resolveStatementMonth(input.spentOn, method.statementClosingDay)
-    return this.add({ ...input, statementMonth, isFixed: false, templateId: null })
+    return this.add({ ...input, statementMonth, isFixed: false, templateId: null, paidAt: null })
   }
 
   async update(id: string, patch: ExpensePatch, expectedLastModified: string): Promise<Expense> {
@@ -29,6 +36,14 @@ export class InMemoryExpenseRepository implements ExpenseRepository {
     if (expense.lastModified !== expectedLastModified) throw new ValidationError(undefined, 'conflict')
     if (patch.paymentMethodId !== undefined) this.assertMethodExists(patch.paymentMethodId)
     Object.assign(expense, patch)
+    this.store.touch(expense)
+    return { ...expense }
+  }
+
+  async setPaid(id: string, paid: boolean): Promise<Expense> {
+    const expense = findOrThrow(this.store.expenses, id)
+    if (!expense.isFixed) throw new ValidationError(undefined, 'expense_not_fixed')
+    expense.paidAt = paid ? new Date().toISOString() : null
     this.store.touch(expense)
     return { ...expense }
   }
@@ -51,10 +66,11 @@ export class InMemoryExpenseRepository implements ExpenseRepository {
         description: template.description,
         amount: template.amount,
         paymentMethodId: template.paymentMethodId,
-        spentOn: `${month}-01`,
+        spentOn: dueDate(month, template.paymentDay),
         statementMonth: month,
         isFixed: true,
         templateId: template.id,
+        paidAt: null,
       }))
       template.monthsAdded += 1
       this.store.touch(template)
