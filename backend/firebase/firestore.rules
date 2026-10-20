@@ -1,0 +1,59 @@
+rules_version = '2';
+
+// Reads: Google sign-in (verified email), an active user and the matching permission claim.
+// Writes: always denied here; only the `api` Cloud Function (Admin SDK) writes.
+// Access is read from `access_index/{email}`, a server-maintained projection of users, roles and claims.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedInWithGoogle() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.firebase.sign_in_provider == 'google.com'
+        && request.auth.token.email != null;
+    }
+
+    // A missing document makes get() fail, which denies the request.
+    function access() {
+      return get(/databases/$(database)/documents/access_index/$(request.auth.token.email.lower())).data;
+    }
+
+    function hasPermission(permission) {
+      return signedInWithGoogle()
+        && access().active == true
+        && (access().is_super == true || permission in access().permissions);
+    }
+
+    function isOwnUser(userId) {
+      return signedInWithGoogle() && access().active == true && access().user_id == userId;
+    }
+
+    match /access_index/{email} {
+      allow read: if signedInWithGoogle() && email == request.auth.token.email.lower();
+      allow write: if false;
+    }
+
+    match /users/{id} {
+      allow read: if hasPermission('identity.read') || isOwnUser(id);
+      allow write: if false;
+    }
+
+    match /{identityCollection}/{id} {
+      allow read: if identityCollection in ['roles', 'claims', 'user_roles', 'role_claims', 'user_claims']
+        && hasPermission('identity.read');
+      allow write: if false;
+    }
+
+    match /{deviceCollection}/{id} {
+      allow read: if deviceCollection in ['categories', 'equipment', 'maintenance_logs']
+        && hasPermission('device.mgt.read');
+      allow write: if false;
+    }
+
+    match /{expenseCollection}/{id} {
+      allow read: if expenseCollection in ['payment_methods', 'fixed_expense_templates', 'expenses']
+        && hasPermission('expense.read');
+      allow write: if false;
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    { "collectionGroup": "equipment", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" }, { "fieldPath": "modified_at", "order": "DESCENDING" } ] },
+    { "collectionGroup": "equipment", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "category_id", "order": "ASCENDING" }, { "fieldPath": "modified_at", "order": "DESCENDING" } ] },
+    { "collectionGroup": "maintenance_logs", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "equipment_id", "order": "ASCENDING" }, { "fieldPath": "performed_at", "order": "DESCENDING" } ] },
+    { "collectionGroup": "expenses", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "statement_month", "order": "ASCENDING" }, { "fieldPath": "spent_on", "order": "DESCENDING" } ] }
+  ],
+  "fieldOverrides": []
+}
