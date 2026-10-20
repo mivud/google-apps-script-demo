@@ -9,6 +9,7 @@ import './styles/controls.css'
 import './styles/components.css'
 import { buildAuth } from './app/build-auth'
 import { buildSupabaseClient } from './app/build-supabase-client'
+import { buildFirebaseApp } from './app/build-firebase-app'
 import { AuthCallbackLoading } from './app/auth-callback-loading'
 import { consumeAuthCallback, isAuthCallbackPath } from './app/consume-auth-callback'
 import { readEnv } from './app/env'
@@ -27,7 +28,8 @@ async function start() {
     // Built once; both throw ConfigError on missing env so the startup error page shows.
     const env = readEnv(import.meta.env)
     const supabase = buildSupabaseClient(env)
-    const runtime = buildAuth(env, supabase)
+    const firebase = buildFirebaseApp(env)
+    const runtime = buildAuth(env, supabase, firebase)
     const { auth, renderSignInButton, redirectLogin } = runtime
     // Before the router and the gate exist, so a redirect result is exchanged before any silent restore starts.
     if (isAuthCallbackPath(window)) {
@@ -41,7 +43,7 @@ async function start() {
       )
     }
     await consumeAuthCallback(runtime, window)
-    const router = buildRouter({ auth, env, supabase })
+    const router = buildRouter({ auth, env, supabase, firebase })
     resetRouteOnSignOut(auth, router)
     root.render(
       <StrictMode>

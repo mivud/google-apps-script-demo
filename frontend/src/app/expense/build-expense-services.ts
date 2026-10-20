@@ -4,7 +4,7 @@ import type { AppDeps } from '../app-deps'
 import { requireValue } from '../data-service-factory'
 
 // Expense data lives behind its own Apps Script web app, so the sheets provider uses VITE_EXPENSE_API_URL.
-function buildProviderConfig({ auth, env, supabase }: AppDeps): ProviderConfig {
+function buildProviderConfig({ auth, env, supabase, firebase }: AppDeps): ProviderConfig {
   if (env.provider === 'sheets') {
     return {
       provider: 'sheets',
@@ -13,6 +13,10 @@ function buildProviderConfig({ auth, env, supabase }: AppDeps): ProviderConfig {
       // refreshIdToken ends the session itself when no token comes back, so the gate returns to the login page.
       refreshIdToken: () => auth.refreshIdToken(),
     }
+  }
+  if (env.provider === 'firebase') {
+    if (!firebase) throw new Error('Firebase handle is required for this provider')
+    return { provider: 'firebase', handle: firebase }
   }
   if (!supabase) throw new Error('Supabase client is required for this provider')
   return { provider: 'supabase', client: supabase }

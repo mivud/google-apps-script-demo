@@ -55,7 +55,7 @@ function DeviceManagementScreens() {
 
 // Services and categories are scoped to this app, so other apps never pay for them.
 export default function DeviceManagementApp({ deps }: { deps: AppDeps }) {
-  const services = useMemo(() => buildServices(deps.auth, deps.env, deps.supabase), [deps])
+  const services = useMemo(() => buildServices(deps.auth, deps.env, deps.supabase, deps.firebase), [deps])
   return (
     <ServicesProvider services={services}>
       <CategoriesProvider>

@@ -8,7 +8,7 @@ import { requireValue } from '../data-service-factory'
 import type { IdentityServices } from './identity-services'
 
 // Identity data lives behind identity-api (not the device-management API), so the sheets provider uses its URL.
-function buildProviderConfig({ auth, env, supabase }: AppDeps): ProviderConfig {
+function buildProviderConfig({ auth, env, supabase, firebase }: AppDeps): ProviderConfig {
   if (env.provider === 'sheets') {
     return {
       provider: 'sheets',
@@ -17,6 +17,10 @@ function buildProviderConfig({ auth, env, supabase }: AppDeps): ProviderConfig {
       // refreshIdToken ends the session itself when no token comes back, so the gate returns to the login page.
       refreshIdToken: () => auth.refreshIdToken(),
     }
+  }
+  if (env.provider === 'firebase') {
+    if (!firebase) throw new Error('Firebase handle is required for this provider')
+    return { provider: 'firebase', handle: firebase }
   }
   if (!supabase) throw new Error('Supabase client is required for this provider')
   return { provider: 'supabase', client: supabase }

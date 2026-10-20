@@ -9,6 +9,7 @@ import { ExpenseSheetsRepository } from './persistence/googlesheet/expense-sheet
 import { FixedExpenseTemplateSheetsRepository } from './persistence/googlesheet/fixed-expense-template-sheets-repository'
 import { PaymentMethodSheetsRepository } from './persistence/googlesheet/payment-method-sheets-repository'
 import { createExpenseTrackingSupabaseRepositories } from './persistence/supabase'
+import { createExpenseTrackingFirebaseRepositories } from './persistence/firebase'
 
 export interface ExpenseTrackingServices {
   expenses: ExpenseService
@@ -28,6 +29,8 @@ function createRepositories(config: ProviderConfig): ExpenseTrackingRepositories
     }
     case 'supabase':
       return createExpenseTrackingSupabaseRepositories(config.client)
+    case 'firebase':
+      return createExpenseTrackingFirebaseRepositories(config.handle)
   }
 }
 

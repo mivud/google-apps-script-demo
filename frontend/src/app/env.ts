@@ -1,4 +1,4 @@
-export const DB_PROVIDERS = ['sheets', 'supabase'] as const
+export const DB_PROVIDERS = ['sheets', 'supabase', 'firebase'] as const
 export type DbProvider = (typeof DB_PROVIDERS)[number]
 
 export interface AppEnv {
@@ -11,6 +11,11 @@ export interface AppEnv {
   googleClientId: string
   supabaseUrl: string
   supabaseAnonKey: string
+  firebaseApiKey: string
+  firebaseAuthDomain: string
+  firebaseProjectId: string
+  firebaseAppId: string
+  firebaseFunctionsRegion: string
 }
 
 export class ConfigError extends Error {
@@ -34,5 +39,10 @@ export function readEnv(raw: Record<string, string | undefined>): AppEnv {
     googleClientId: raw.VITE_GOOGLE_CLIENT_ID ?? '',
     supabaseUrl: raw.VITE_SUPABASE_URL ?? '',
     supabaseAnonKey: raw.VITE_SUPABASE_ANON_KEY ?? '',
+    firebaseApiKey: raw.VITE_FIREBASE_API_KEY ?? '',
+    firebaseAuthDomain: raw.VITE_FIREBASE_AUTH_DOMAIN ?? '',
+    firebaseProjectId: raw.VITE_FIREBASE_PROJECT_ID ?? '',
+    firebaseAppId: raw.VITE_FIREBASE_APP_ID ?? '',
+    firebaseFunctionsRegion: raw.VITE_FIREBASE_FUNCTIONS_REGION ?? '',
   }
 }

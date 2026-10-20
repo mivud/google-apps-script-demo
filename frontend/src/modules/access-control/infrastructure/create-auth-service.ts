@@ -9,10 +9,13 @@ import { GoogleRedirectClient } from './google-redirect-client'
 import { createSignInButtonRenderer } from './google-sign-in-button'
 import { SheetsSessionAdapter } from './persistence/googlesheet/sheets-session-adapter'
 import { SupabaseSessionAdapter } from './persistence/supabase/supabase-session-adapter'
+import { FirebaseSessionAdapter } from './persistence/firebase/firebase-session-adapter'
+import type { FirebaseHandle } from '../../../shared/firebase/firebase-client'
 
 export type AuthConfig = { googleClientId: string } & (
   | { provider: 'sheets'; identityApiUrl: string }
   | { provider: 'supabase'; client: SupabaseClient }
+  | { provider: 'firebase'; handle: FirebaseHandle }
 )
 
 export interface AuthRuntime {
@@ -27,6 +30,8 @@ function createSessionProvider(config: AuthConfig): SessionProvider {
       return new SheetsSessionAdapter(config.identityApiUrl)
     case 'supabase':
       return new SupabaseSessionAdapter(config.client)
+    case 'firebase':
+      return new FirebaseSessionAdapter(config.handle)
   }
 }
 

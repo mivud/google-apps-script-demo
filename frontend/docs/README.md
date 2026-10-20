@@ -20,7 +20,7 @@ Static Vite + React + TypeScript app (responsive, English and Vietnamese). Data 
 
 ## Architecture
 
-- Code in [frontend/src](../src): `app/` (composition root: env, factory, App), `shared/` (errors, i18n, async hooks, `api/` Apps Script client and warmup gate, common components), `modules/{access-control,claims,roles,users}/` (see their docs; the Identity app is wired in `app/identity/`), `modules/device-management/` (`domain`, `application` ports and services, `infrastructure/persistence/{googlesheet,supabase}`, `ui`, public `index.ts`). Dependencies point inward; `shared` never imports modules.
+- Code in [frontend/src](../src): `app/` (composition root: env, factory, App), `shared/` (errors, i18n, async hooks, `api/` Apps Script client and warmup gate, common components), `modules/{access-control,claims,roles,users}/` (see their docs; the Identity app is wired in `app/identity/`), `modules/device-management/` (`domain`, `application` ports and services, `infrastructure/persistence/{googlesheet,supabase,firebase}`, `ui`, public `index.ts`). Dependencies point inward; `shared` never imports modules.
 - UI calls services only; services depend on `DataService`; adapters are the only code that does network access.
 - [app](../src/app) reads `VITE_*` env vars and the factory injects the chosen adapter.
 - Routes (clean URLs): `/` (launcher), `/devices/...`, `/identity/...`, see [launcher.md](launcher.md).

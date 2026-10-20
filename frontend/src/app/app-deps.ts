@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { FirebaseHandle } from '../shared/firebase/firebase-client'
 import type { AuthService } from '../modules/access-control'
 import type { AppEnv } from './env'
 
@@ -7,4 +8,5 @@ export interface AppDeps {
   auth: AuthService
   env: AppEnv
   supabase: SupabaseClient | null
+  firebase: FirebaseHandle | null
 }
