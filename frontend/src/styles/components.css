@@ -255,7 +255,9 @@
 .launcher-card-description { margin: 4px 0 0; color: var(--muted-foreground); }
 .app-loading { display: flex; justify-content: center; padding: 48px 16px; }
 
-/* Payment status: badge plus toggle wrap on narrow cards; the icon keeps alerts readable without colour. */
-.payment-status { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.payment-status .badge { gap: 4px; }
-.payment-status .badge .icon { width: 14px; height: 14px; }
+/* Payment status lives in the description: unpaid reads red, the icon keeps it readable without colour. */
+.description-status { display: inline-flex; align-items: center; gap: 8px; }
+.status-icon { display: inline-flex; flex: none; }
+.status-icon .icon { width: 16px; height: 16px; }
+.status-icon-paid { color: var(--success); }
+.status-icon-unpaid { color: var(--destructive); }

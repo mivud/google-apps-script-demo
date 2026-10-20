@@ -20,7 +20,7 @@ import { currentStatementMonth } from '../../domain/statement-month'
 import { ExpenseFormDialog } from '../components/expense-form-dialog'
 import { PaymentMethodBadgeById } from '../components/payment-method-badge'
 import { ExpenseStatistics } from '../components/expense-statistics'
-import { PaymentStatusCell } from '../components/payment-status-cell'
+import { DescriptionWithStatus } from '../components/description-with-status'
 import { PAYMENT_STATUS_MESSAGE, paymentStatusKey } from '../payment-status'
 import { PendingField } from '../components/pending-field'
 import { MonthPicker } from '../components/month-picker'
@@ -89,13 +89,13 @@ export function ExpensesPage() {
   }
 
   const columns: DataColumn<Expense>[] = [
-    { key: 'description', header: t('expense.description'), primary: true, cell: (e) => e.description, exportValue: (e) => e.description },
+    { key: 'description', header: t('expense.description'), primary: true, cell: (e) => (e.isFixed ? <DescriptionWithStatus expense={e} alert={alertOf(e)} /> : e.description), exportValue: (e) => e.description },
     { key: 'amount', header: t('expense.amount'), cell: (e) => (e.amount === null ? <PendingField label={t('expense.amountNeeded')} canWrite={canWrite} onFill={() => openEditor(e, 'amount')} /> : format(e.amount)), exportValue: (e) => e.amount },
     { key: 'method', header: t('expense.paymentMethod'), cell: (e) => (e.paymentMethodId === null ? <PendingField label={t('expense.methodNeeded')} canWrite={canWrite} onFill={() => openEditor(e, 'paymentMethod')} /> : <PaymentMethodBadgeById id={e.paymentMethodId} methods={methods.data ?? []} />), exportValue: (e) => (methods.data ?? []).find((m) => m.id === e.paymentMethodId)?.name ?? '' },
     { key: 'spentOn', header: t('expense.spentOn'), cell: (e) => e.spentOn, exportValue: (e) => e.spentOn },
     { key: 'type', header: t('expense.type'), cell: (e) => <Badge tone={e.isFixed ? 'warning' : 'neutral'}>{e.isFixed ? t('expense.fixedBadge') : t('expense.variableBadge')}</Badge>, exportValue: (e) => (e.isFixed ? t('expense.fixedBadge') : t('expense.variableBadge')) },
     { key: 'createdBy', header: t('expense.createdBy'), cell: (e) => creatorLabel(creatorKey(e)), exportValue: (e) => creatorLabel(creatorKey(e)) },
-    { key: 'payment', header: t('expense.payment.title'), cell: (e) => <PaymentStatusCell expense={e} alert={alertOf(e)} />, exportValue: (e) => (e.isFixed ? t(PAYMENT_STATUS_MESSAGE[paymentStatusKey(e, alertOf(e))]) : '') },
+    { key: 'payment', header: t('expense.payment.title'), exportOnly: true, cell: () => null, exportValue: (e) => (e.isFixed ? t(PAYMENT_STATUS_MESSAGE[paymentStatusKey(e, alertOf(e))]) : '') },
     ...(canWrite ? [{ key: 'actions', header: t('common.actions'), align: 'end' as const, cell: (e: Expense) => <RowActions itemName={e.description} disabled={remove.pending} onEdit={() => openEditor(e, undefined)} onDelete={() => remove.ask(e)} /> }] : []),
   ]
 

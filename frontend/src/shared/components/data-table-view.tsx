@@ -10,6 +10,8 @@ export interface DataColumn<T> {
   align?: 'end'
   // Plain value written to the CSV export; columns without it (e.g. actions) are not exported.
   exportValue?: (row: T) => string | number | null
+  // Written to the CSV only; the value is already shown inside another cell on screen.
+  exportOnly?: boolean
 }
 
 export interface DataTableViewProps<T> {
@@ -30,7 +32,8 @@ function cellClass(column: Pick<DataColumn<never>, 'align' | 'primary'>): string
 
 // A real table from 768px up; below that CSS stacks each row into a card using data-label,
 // so the page never scrolls horizontally.
-export function DataTableView<T>({ caption, columns, rows, getRowKey, refreshing = false }: DataTableViewProps<T>) {
+export function DataTableView<T>({ caption, columns: allColumns, rows, getRowKey, refreshing = false }: DataTableViewProps<T>) {
+  const columns = allColumns.filter((column) => !column.exportOnly)
   return (
     <table className={refreshing ? 'data-table surface is-refreshing' : 'data-table surface'}>
       <caption className="visually-hidden">{caption}</caption>
