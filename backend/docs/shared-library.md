@@ -6,7 +6,7 @@
 
 **Using it in an app**
 - Declare the library in the app's `appsscript.json` (`dependencies.libraries`: `userSymbol` `SharedKernelLibrary`, `libraryId` = the library script id, `version` = a pinned number, not HEAD).
-- Add an alias file that loads first (see [SharedLibrary.gs](../apps-script/src/SharedLibrary.gs)): `var ApiError = SharedKernelLibrary.ApiError;` and so on, only for what the app uses. App code then keeps plain names.
+- Add an alias file that loads first (see [SharedLibrary.gs](../apps-script-device-api/src/SharedLibrary.gs)): `var ApiError = SharedKernelLibrary.ApiError;` and so on, only for what the app uses. App code then keeps plain names.
 - Only top-level `function` and `var` declarations are visible through a library. Do not use `const`, `let` or `class` at the top level of the library.
 
 **Behavior to know**
@@ -25,4 +25,4 @@
 
 **Versioning:** the library has its own version in [package.json](../apps-script-shared-kernel-library/package.json), format `1.0.x-beta.N` (same beta rules as the backend, see [README](README.md)), mirrored by `KERNEL_VERSION` in [KernelVersion.gs](../apps-script-shared-kernel-library/src/infrastructure/KernelVersion.gs) (a test keeps them equal). Each release runs `clasp create-version "v<version>"`, so the Apps Script version integer (what apps pin) carries this version in its description. Bump the beta number once per release.
 
-**Tests:** the app's harness loads the library into its own vm context and exposes it as `SharedKernelLibrary`, like the real boundary (see [loadAppsScript.js](../apps-script/tests/harness/loadAppsScript.js)).
+**Tests:** the app's harness loads the library into its own vm context and exposes it as `SharedKernelLibrary`, like the real boundary (see [loadAppsScript.js](../apps-script-device-api/tests/harness/loadAppsScript.js)).

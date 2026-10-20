@@ -6,7 +6,7 @@
 - `POST` with `Content-Type: text/plain` (avoids a CORS preflight). Body: `{ idToken, action, payload }`. Users and roles come from [identity-api](identity-api.md).
 - Response: `{ ok: true, data }` or `{ ok: false, error: { code, message } }`. Codes: `NOT_FOUND`, `VALIDATION`, `UNAUTHORIZED`, `FORBIDDEN`, `INTERNAL`.
 - Actions are `<module>.<entity>.<action>` (e.g. `device-management.equipment.list`); see [device-management](device-management.md).
-- `system.version.get` (cross-cutting, no module) returns `{ version }`; `doGet` reports the same version. Source: [SystemEndpoints.gs](../apps-script/src/composition/SystemEndpoints.gs), see Versioning in the [README](README.md).
+- `system.version.get` (cross-cutting, no module) returns `{ version }`; `doGet` reports the same version. Source: [SystemEndpoints.gs](../apps-script-device-api/src/composition/SystemEndpoints.gs), see Versioning in the [README](README.md).
 - Payloads use snake_case rows (as in `row-mappers.ts`). A bad or missing body, bad JSON, an unknown action or wrong field types return `VALIDATION`.
 - `UNAUTHORIZED` maps to `AuthError` in the Sheets adapter (message `error.unauthorized`).
 - Write actions take the script lock (20 s wait), so writes are serialized. Read actions (listed per endpoint in `readActions()`, passed to the `Router`) skip the lock.
@@ -34,11 +34,11 @@ flowchart LR
 - **endpoints:** classes that turn payloads into use-case input; `RequestParser`, `Router` and `ResponseWriter`.
 - **infrastructure:** generic port implementations (`ScriptSettings`, `ScriptLockGuard`, `ScriptRowCache`, `SystemClock`, `UuidIdGenerator`, `RequestCurrentUser`) plus `IdentityClient` (the access resolver that calls identity-api). `GoogleIdTokenVerifier` and `CacheVerifiedTokens` live in the shared library and are used by identity-api only.
 - **persistence/googlesheet:** everything that touches the spreadsheet: shared `SpreadsheetSource`, `SheetLayout`, `SpreadsheetTable`, `SheetUpgrade`, `SheetInstaller`, and per-module `*Service` classes in `modules/<m>/persistence/googlesheet`. A future Supabase backend would add a sibling `persistence/<provider>` folder.
-- **composition:** [Composition.gs](../apps-script/src/composition/Composition.gs) is the only place that wires adapters to ports and builds the handler registry, all inside functions at request time.
+- **composition:** [Composition.gs](../apps-script-device-api/src/composition/Composition.gs) is the only place that wires adapters to ports and builds the handler registry, all inside functions at request time.
 - Modules talk only through ports implemented in persistence (for example category removal asks `EquipmentCategoryUsage`). No code reads another entity's sheet directly.
-- Apps Script has one global scope and no imports: each module exposes one namespace root (`DeviceManagement.<Layer>.<Name>`), and file order is fixed by `filePushOrder` in [.clasp.json](../apps-script/.clasp.json).
+- Apps Script has one global scope and no imports: each module exposes one namespace root (`DeviceManagement.<Layer>.<Name>`), and file order is fixed by `filePushOrder` in [.clasp.json](../apps-script-device-api/.clasp.json).
 
-**Folder map** (`backend/apps-script`, clasp `rootDir` is `src`)
+**Folder map** (`backend/apps-script-device-api`, clasp `rootDir` is `src`)
 
 ```
 .clasp.json
@@ -80,17 +80,17 @@ Shared code stays one file per class. Modules: [device-management](device-manage
 
 **Setup and clasp workflow**
 1. Create a Google Sheet (empty; the tabs are created on the first call).
-2. Set up the shared library first: see [shared-library](shared-library.md) (create it, push it, create a version, put its script id and version in `backend/apps-script/src/appsscript.json`).
+2. Set up the shared library first: see [shared-library](shared-library.md) (create it, push it, create a version, put its script id and version in `backend/apps-script-device-api/src/appsscript.json`).
 2b. Install and log in yourself (the login is interactive and never scripted): `npm i -g @google/clasp`, then `clasp login`.
-3. `cd backend/apps-script`, then `clasp push` (uploads `src/` in `filePushOrder`; the script id is in `.clasp.json`).
+3. `cd backend/apps-script-device-api`, then `clasp push` (uploads `src/` in `filePushOrder`; the script id is in `.clasp.json`).
 4. In the Apps Script editor: Project Settings > Script properties: set `GOOGLE_CLIENT_ID` (the Google OAuth web client id the frontend signs in with) `IDENTITY_API_URL` (the identity-api `/exec` URL, see [identity-api](identity-api.md)) and `SPREADSHEET_ID` (the id from the sheet URL; optional when the script is bound to the sheet).
 5. Deploy > Manage deployments > New version (first time: Deploy > New deployment > Web app, execute as `Me`, access `Anyone`; authorize when prompted). `clasp push` alone does not change the live Web App; a new version is required after each change.
 6. Copy the Web App URL into `VITE_SHEETS_API_URL` (see the frontend config docs). Users are managed in the identity-api spreadsheet (see [identity-api](identity-api.md)).
 
 **Testing**
-- Zero dependencies: `node:test` and `node:vm`. Run `npm test` (runs `node --test tests/`) in `backend/apps-script` (about 111 cases; the number changes as tests are added).
-- [loadAppsScript.js](../apps-script/tests/harness/loadAppsScript.js) loads the files listed in `filePushOrder` into one vm context (like Apps Script's global scope) and checks that the files on disk equal `filePushOrder`.
-- [fakes.js](../apps-script/tests/harness/fakes.js) provides in-memory tables, a settable clock, sequential ids and the real `AuditStamper`.
+- Zero dependencies: `node:test` and `node:vm`. Run `npm test` (runs `node --test tests/`) in `backend/apps-script-device-api` (about 111 cases; the number changes as tests are added).
+- [loadAppsScript.js](../apps-script-device-api/tests/harness/loadAppsScript.js) loads the files listed in `filePushOrder` into one vm context (like Apps Script's global scope) and checks that the files on disk equal `filePushOrder`.
+- [fakes.js](../apps-script-device-api/tests/harness/fakes.js) provides in-memory tables, a settable clock, sequential ids and the real `AuditStamper`.
 - Suites: `tests/domain`, `tests/application` (use cases with fakes), `tests/endpoints`, `tests/composition` (`IdentityClient`, system), `tests/identity` (identity-api domain, use cases, `UserRepository`), `tests/library` (`GoogleIdTokenVerifier`, `ResponseWriter`, kernel version).
 - Not covered (verify with a real `clasp push` and a run on Google): `doGet`/`doPost`, `RequestParser`, lock guards, `SpreadsheetTable`, `SheetInstaller`/`SheetUpgrade`, legacy migration.
 - `tests/` is outside the clasp `rootDir` (`src`), so it is never pushed.

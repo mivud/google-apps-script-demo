@@ -20,7 +20,7 @@ flowchart LR
 ```
 frontend/              Vite + React + TypeScript app (src, docs)
 backend/
-  apps-script/         Apps Script API (clasp project, src/)
+  apps-script-device-api/ Apps Script API (clasp project, src/)
   supabase/migrations/ SQL per area: api, users, device management, expense tracking
   docs/                backend docs
 .github/workflows/     GitHub Pages deploy
@@ -49,8 +49,8 @@ Other scripts: `npm run build`, `npm run lint`, `npm test`.
 
 **Google Sheets (Apps Script)**
 1. `npm i -g @google/clasp`, then `clasp login`.
-2. In `backend/apps-script`, run `clasp push`.
-3. Set up [identity-api](backend/docs/identity-api.md) first (own spreadsheet, `GOOGLE_CLIENT_ID`, `SPREADSHEET_ID`, first `super` user by hand). Then in the Apps Script editor of `backend/apps-script` set script properties `GOOGLE_CLIENT_ID`, `IDENTITY_API_URL` and `SPREADSHEET_ID`.
+2. In `backend/apps-script-device-api`, run `clasp push`.
+3. Set up [identity-api](backend/docs/identity-api.md) first (own spreadsheet, `GOOGLE_CLIENT_ID`, `SPREADSHEET_ID`, first `super` user by hand). Then in the Apps Script editor of `backend/apps-script-device-api` set script properties `GOOGLE_CLIENT_ID`, `IDENTITY_API_URL` and `SPREADSHEET_ID`.
 4. Deploy as a Web App: execute as `Me`, access `Anyone`. Create a new version after each push.
 5. Put the Web App URL in the frontend `.env`.
 

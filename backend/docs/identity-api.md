@@ -36,10 +36,10 @@ Each step says who does it and whether it is already done. Values below are real
 |---|------|--------|
 | 1 | Google Cloud OAuth client created | Done, see [google-oauth-setup](google-oauth-setup.md) |
 | 2 | Shared library pushed and published as **version 6** (`backend/apps-script-shared-kernel-library`: `clasp push -f`, then `clasp create-version "<text>"`) | Done |
-| 3 | Version 6 pinned in `backend/apps-script/src/appsscript.json` and `backend/apps-script-identity-api/src/appsscript.json` (`dependencies.libraries[0].version`) | Done |
+| 3 | Version 6 pinned in `backend/apps-script-device-api/src/appsscript.json` and `backend/apps-script-identity-api/src/appsscript.json` (`dependencies.libraries[0].version`) | Done |
 | 4 | identity-api pushed (`backend/apps-script-identity-api`: `clasp push -f`) | Done |
 | 5 | identity-api deployed as Web App (`clasp create-deployment -d "<text>"`). Deployment id `AKfycbx4py-e2k_7QqT1fo1kZvO1Q6ErIqsKyUtMUTaaPhde-HzPqIbme_44eoei2Lvd6JEl`, URL `https://script.google.com/macros/s/AKfycbx4py-e2k_7QqT1fo1kZvO1Q6ErIqsKyUtMUTaaPhde-HzPqIbme_44eoei2Lvd6JEl/exec` | Done |
-| 6 | device-management app pushed and version 14 created (`backend/apps-script`: `clasp push -f`, `clasp create-version "<text>"`) | Done |
+| 6 | device-management app pushed and version 14 created (`backend/apps-script-device-api`: `clasp push -f`, `clasp create-version "<text>"`) | Done |
 | 7 | Create the identity spreadsheet `nexus-identity-users`, id `1yPoSbfgJ-y_OJgO3yNwy8b5R-wTPaeA5jAhPKNGJ5Nw` (https://docs.google.com/spreadsheets/d/1yPoSbfgJ-y_OJgO3yNwy8b5R-wTPaeA5jAhPKNGJ5Nw/edit) | Done |
 | 8 | Set Script Properties of identity-api (`GOOGLE_CLIENT_ID`, `SPREADSHEET_ID`) | Done; **you still authorize once** (8.4) |
 | 9 | Create the `super` role and assign it to your account | **You** |
@@ -93,7 +93,7 @@ Permissions: `identity.read` allows the list/get/preview actions, `identity.writ
 Redeploy **after** step 10, because the new code refuses requests without these properties and without an `idToken`, so the currently deployed frontend (which sends the old token) stops working until the new frontend is live too.
 
 ```
-cd backend/apps-script
+cd backend/apps-script-device-api
 clasp redeploy AKfycbzekbyuHppNOQaTRrsjt3Q5_HQP7HE_vgUe9EI5mLHbZXAVRkWuO-TuILiCcuJxQkX_OA -V 14 -d "v<version> (library v6, Google login)"
 ```
 The URL stays the same. Check with `clasp deployments`.

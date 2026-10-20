@@ -17,7 +17,7 @@ Snapshot of what is unfinished. Branch: `feature/devices-management`. Done items
 
 ## Verification still to do
 
-- [ ] Real calls with the token on the deployed Apps Script (sheet tabs auto-creation, `SpreadsheetApp`, `LockService`, legacy migration). The Node test suite (`npm test` in `backend/apps-script`) covers domain, use cases and endpoint routing only.
+- [ ] Real calls with the token on the deployed Apps Script (sheet tabs auto-creation, `SpreadsheetApp`, `LockService`, legacy migration). The Node test suite (`npm test` in `backend/apps-script-device-api`) covers domain, use cases and endpoint routing only.
 - [ ] Backend test gaps: `RequestParser`, `ResponseWriter`, token and lock guards, `SpreadsheetTable`, `SheetInstaller` / `SheetUpgrade`, legacy equipment migration.
 - [ ] Old versus new behavior on real sheet data (legacy `category` text column migration was never run on data).
 - [ ] Physical phone check (`dvh` / safe areas), dialogs and forms in dark mode, and contrast of the accent presets measured with a tool (current values are estimates).

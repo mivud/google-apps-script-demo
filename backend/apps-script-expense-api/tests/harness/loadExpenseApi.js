@@ -1,5 +1,5 @@
 'use strict';
-// Loads the expense-api Apps Script files into ONE vm context in clasp push order (same approach as backend/apps-script/tests).
+// Loads the expense-api Apps Script files into ONE vm context in clasp push order (same approach as backend/apps-script-device-api/tests).
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');

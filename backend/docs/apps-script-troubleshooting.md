@@ -2,7 +2,7 @@
 
 **Purpose:** a log of the problems hit while configuring the Apps Script projects (login, permissions, library, deploy), each with the symptom, cause and fix, in the order they were met. Setup steps themselves live in [apps-script](apps-script.md) and [shared-kernel-library](shared-library.md).
 
-**Projects:** app `apps-script-demo` (clasp root [apps-script](../apps-script)) and library `shared-kernel-library` (clasp root [apps-script-shared-kernel-library](../apps-script-shared-kernel-library)), imported by the app as `SharedKernelLibrary`.
+**Projects:** app `apps-script-demo` (clasp root [apps-script](../apps-script-device-api)) and library `shared-kernel-library` (clasp root [apps-script-shared-kernel-library](../apps-script-shared-kernel-library)), imported by the app as `SharedKernelLibrary`.
 
 ## 1. Login and permissions
 
@@ -59,7 +59,7 @@
 **4.2 `Invalid token` although the token is correct.**
 - Symptom: every action returns `UNAUTHORIZED`; `GOOGLE_CLIENT_ID` is the same in both projects and in the frontend.
 - Cause: inside a library the global `PropertiesService`, `CacheService` and `LockService` use the library project's own stores, not the app's. The verifier read the library's empty properties.
-- Fix: the app passes its own handles in [Composition.gs](../apps-script/src/composition/Composition.gs): `ScriptSettings.fromProperties(PropertiesService.getScriptProperties())`, `new ScriptRowCache(CacheService.getScriptCache())`, `new ScriptLockGuard(LockService.getScriptLock())`. Library code must never call those three services itself.
+- Fix: the app passes its own handles in [Composition.gs](../apps-script-device-api/src/composition/Composition.gs): `ScriptSettings.fromProperties(PropertiesService.getScriptProperties())`, `new ScriptRowCache(CacheService.getScriptCache())`, `new ScriptLockGuard(LockService.getScriptLock())`. Library code must never call those three services itself.
 
 **4.3 `Sheets API has not been enabled for the Cloud project managed by Apps Script`.**
 - Symptom: `INTERNAL` error on every read (message in the account language).
@@ -67,13 +67,13 @@
 - Fix: declare `Sheets` v4 in `enabledAdvancedServices` of the **app** manifest too, push and deploy, then wait a few minutes. With a standard Cloud project, also enable "Google Sheets API" there.
 - Safety net: `SpreadsheetSource` logs a warning and falls back to `SpreadsheetApp` when the API call fails, so the API keeps working while the API is still being enabled. Check Executions logs for "Sheets API read failed" to see whether the fast path is active.
 
-**4.4 Library exposes only top-level `function` and `var`.** `const`, `let` and `class` at the top level are invisible to the app. The app reaches library names through the aliases in [SharedLibrary.gs](../apps-script/src/SharedLibrary.gs), which must load first in `filePushOrder`.
+**4.4 Library exposes only top-level `function` and `var`.** `const`, `let` and `class` at the top level are invisible to the app. The app reaches library names through the aliases in [SharedLibrary.gs](../apps-script-device-api/src/SharedLibrary.gs), which must load first in `filePushOrder`.
 
 ## 5. Quick checklist from scratch
 
 1. `clasp login` with `script.projects` and `script.deployments` ticked; Apps Script API on.
 2. Create the library project `shared-kernel-library`; put its Script ID in its `.clasp.json` and in the app manifest `libraryId`.
 3. In `backend/apps-script-shared-kernel-library`: `clasp push --force`, `clasp create-version "..."`.
-4. Put the version in the app manifest; in `backend/apps-script`: `clasp push --force`.
+4. Put the version in the app manifest; in `backend/apps-script-device-api`: `clasp push --force`.
 5. In the app project set `GOOGLE_CLIENT_ID`, `IDENTITY_API_URL` and `SPREADSHEET_ID` (identity-api must be set up first, see [identity-api](identity-api.md)); authorize the scopes once.
 6. `clasp deploy -i <deploymentId> -d "..."`, smoke test, then call `device-management.equipment.list` with a Google ID token of an allowlisted user.
