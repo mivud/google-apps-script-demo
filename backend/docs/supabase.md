@@ -10,7 +10,7 @@
 3. [003_device_management.sql](../supabase/migrations/003_device_management.sql): `categories`, `equipment`, `maintenance_logs` (`device.mgt.read` / `device.mgt.write`). Equipment also holds nullable `purchase_date`, `warranty_months` (0..600), `warranty_expiry_date` (set by a trigger from purchase date + months, month end clamped), `note`, `vendor`; `maintenance_logs.vendor`; blank strings are normalized to null. Codes: `purchase_date_invalid`, `warranty_months_invalid`, `warranty_requires_purchase_date`, `note_too_long`, `vendor_too_long`.
 4. [004_expense_tracking.sql](../supabase/migrations/004_expense_tracking.sql): `payment_methods`, `fixed_expense_templates`, `expenses`, `generate_fixed_expenses` (`expense.read` / `expense.write`). Templates have `payment_day` (smallint 1..31 or null, code `payment_day_invalid`); expenses have `paid_at` (only for fixed expenses, else `expense_not_fixed`). `generate_fixed_expenses` sets `spent_on` to the payment day (capped to the month length, the 1st when null) while `statement_month` stays the requested month.
 
-The previous incremental scripts (001-009 and phase 2) are kept in [legacy](../supabase/legacy) for reference; an existing database that already ran them does not need the new scripts.
+The previous incremental scripts (001-009 and phase 2) were removed from the repo (see git history before commit 334dc3b); an existing database that already ran them does not need the new scripts.
 
 **Schema**
 - `categories`: id, parent_id (nullable self FK, `on delete restrict`; NULL = root), name (non-blank), plus audit columns.

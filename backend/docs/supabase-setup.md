@@ -39,7 +39,7 @@ Open **SQL Editor > New query**, paste one file at a time from [backend/supabase
 
 - Every script is idempotent: running it again is safe.
 - If the editor warns about a "destructive operation" it is only the `drop trigger/policy if exists` lines; confirm.
-- A project that already ran the old scripts in [legacy](../supabase/legacy) does not need these; do not mix both sets on one database.
+- A project that already ran the old scripts (removed from the repo, see git history) does not need these; do not mix both sets on one database.
 - Check **Table Editor**: all tables show an **RLS enabled** badge. A table without it is a bug, report it.
 
 ## 3. Enable Google sign-in only
