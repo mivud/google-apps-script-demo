@@ -16,7 +16,7 @@ CLAUDE.md and the memory index are already loaded: do not re-read them. Load onl
 3. **Docs index**: list `frontend/docs/*.md` and/or `backend/docs/*.md` for the scope; read only the first heading and purpose line of each.
 4. **Entry points** (read only if they exist; skip silently otherwise):
    - frontend: `frontend/src/core` `DataService` interface, `frontend/src/config` provider factory, `ServicesProvider`, app routes.
-   - backend: `backend/apps-script/.clasp.json` (`filePushOrder`), `src/composition/Composition.gs`, `backend/supabase` migration file names.
+   - backend: `backend/apps-script-device-api/.clasp.json` (`filePushOrder`), `src/composition/Composition.gs`, `backend/supabase` migration file names.
    - full: both lists above, plus the API contract between frontend and backend.
 5. **Report in at most 12 lines**: branch and dirty files, modules found, docs found, entry points read, and any mismatch (e.g. module without doc). Then ask what to work on.
 
