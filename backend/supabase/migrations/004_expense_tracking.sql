@@ -1,7 +1,8 @@
 -- Module "expense-tracking": payment methods, fixed expense templates and expenses.
 -- Access: permission=expense.read (select) and expense.write (insert/update/delete); the super role passes both.
 -- Audit columns come from the JWT by trigger (set_audit_columns, 001).
--- Domain violations raise the stable code as the exception message (payment_method_in_use, ...).
+-- Domain violations raise the stable code as the exception message (payment_method_in_use, payment_day_invalid,
+-- expense_not_fixed, ...).
 -- Depends on 001_api.sql (has_claim, set_audit_columns). Idempotent.
 
 create table if not exists public.payment_methods (
@@ -28,6 +29,7 @@ create table if not exists public.fixed_expense_templates (
   active boolean not null default true,
   total_months integer check (total_months is null or total_months >= 1),
   months_added integer not null default 0 check (months_added >= 0),
+  payment_day smallint check (payment_day is null or payment_day between 1 and 31),
   created timestamptz not null default now(),
   created_by text not null default 'system',
   last_modified timestamptz not null default now(),
@@ -72,6 +74,7 @@ create table if not exists public.expenses (
   statement_month text not null,
   is_fixed boolean not null default false,
   template_id uuid references public.fixed_expense_templates (id) on delete set null,
+  paid_at timestamptz,
   created timestamptz not null default now(),
   created_by text not null default 'system',
   last_modified timestamptz not null default now(),
@@ -152,7 +155,9 @@ create trigger payment_methods_guard_delete before delete on public.payment_meth
   for each row execute function public.payment_methods_guard_delete();
 
 -- Creates the missing fixed expenses of a month from the active templates that still have months left
--- (spent on the 1st), bumps months_added in the same statement and returns only the rows it created.
+-- (spent_on follows the template payment day, capped to the month length; the 1st when null), bumps
+-- months_added in the same statement and returns only the rows it created. statement_month stays p_month:
+-- the default trigger below only fills it when it is null.
 -- A repeated run inserts nothing and increments nothing. Security invoker: RLS applies (expense.write).
 create or replace function public.generate_fixed_expenses(p_month text)
 returns setof public.expenses
@@ -173,7 +178,9 @@ begin
 
   return query
   with due as (
-    select t.id, t.description, t.amount, t.payment_method_id
+    select t.id, t.description, t.amount, t.payment_method_id,
+           least((p_month || '-01')::date + (coalesce(t.payment_day, 1) - 1),
+                 ((p_month || '-01')::date + interval '1 month - 1 day')::date) as due_on
       from public.fixed_expense_templates t
      where t.active
        and (t.total_months is null or t.months_added < t.total_months)
@@ -183,7 +190,7 @@ begin
   created as (
     insert into public.expenses
       (description, amount, payment_method_id, spent_on, statement_month, is_fixed, template_id)
-    select d.description, d.amount, d.payment_method_id, (p_month || '-01')::date, p_month, true, d.id
+    select d.description, d.amount, d.payment_method_id, d.due_on, p_month, true, d.id
       from due d
     on conflict (template_id, statement_month) where template_id is not null do nothing
     returning *
@@ -320,3 +327,41 @@ $$;
 drop trigger if exists expenses_guard_payment_method on public.expenses;
 create trigger expenses_guard_payment_method before insert or update on public.expenses
   for each row execute function public.expenses_guard_payment_method();
+
+-- Runs before the check constraint, so clients get the stable code instead of a raw constraint error.
+create or replace function public.fixed_templates_guard_payment_day()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $$
+begin
+  if new.payment_day is not null and new.payment_day not between 1 and 31 then
+    raise exception 'payment_day_invalid';
+  end if;
+  return new;
+end
+$$;
+
+drop trigger if exists fixed_expense_templates_guard_payment_day on public.fixed_expense_templates;
+create trigger fixed_expense_templates_guard_payment_day before insert or update on public.fixed_expense_templates
+  for each row execute function public.fixed_templates_guard_payment_day();
+
+-- Only fixed expenses can be marked as paid.
+create or replace function public.expenses_guard_paid_at()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $$
+begin
+  if new.paid_at is not null and not new.is_fixed then
+    raise exception 'expense_not_fixed';
+  end if;
+  return new;
+end
+$$;
+
+drop trigger if exists expenses_guard_paid_at on public.expenses;
+create trigger expenses_guard_paid_at before insert or update on public.expenses
+  for each row execute function public.expenses_guard_paid_at();

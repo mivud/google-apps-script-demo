@@ -21,7 +21,7 @@ Still open: Firestore region (default proposal `asia-southeast1`).
 
 ## Key design decision
 
-Firestore has no triggers, foreign keys or unique constraints. Supabase enforces its rules with about 1000 lines of SQL (`backend/supabase/migrations/001-007`).
+Firestore has no triggers, foreign keys or unique constraints. Supabase enforces its rules with about 1000 lines of SQL (`backend/supabase/migrations/001-004`).
 
 | Supabase mechanism | Firebase replacement |
 |---|---|

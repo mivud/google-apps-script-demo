@@ -34,10 +34,8 @@ Open **SQL Editor > New query**, paste one file at a time from [backend/supabase
 |-------|------|---------|
 | 1 | [001_api.sql](../supabase/migrations/001_api.sql) | Shared helpers, access resolution, RPCs `current_identity` and `preview_access` |
 | 2 | [002_users.sql](../supabase/migrations/002_users.sql) | Identity tables, lockout rules, RLS, the `super` role and the six permission claims |
-| 3 | [003_device_management.sql](../supabase/migrations/003_device_management.sql) | `categories`, `equipment`, `maintenance_logs` |
-| 4 | [004_expense_tracking.sql](../supabase/migrations/004_expense_tracking.sql) | `payment_methods`, `fixed_expense_templates`, `expenses`, `generate_fixed_expenses` |
-| 5 | [005_fixed_expense_payment_day.sql](../supabase/migrations/005_fixed_expense_payment_day.sql) | `payment_day` on templates, `paid_at` on expenses, `generate_fixed_expenses` uses the payment day |
-| 6 | [006_device_vendor_warranty.sql](../supabase/migrations/006_device_vendor_warranty.sql) | `equipment`: `purchase_date`, `warranty_months`, `warranty_expiry_date` (trigger-derived), `note`, `vendor`; `maintenance_logs.vendor` |
+| 3 | [003_device_management.sql](../supabase/migrations/003_device_management.sql) | `categories`, `equipment` (with purchase, warranty, note, vendor), `maintenance_logs` (with vendor) |
+| 4 | [004_expense_tracking.sql](../supabase/migrations/004_expense_tracking.sql) | `payment_methods`, `fixed_expense_templates` (with `payment_day`), `expenses` (with `paid_at`), `generate_fixed_expenses` |
 
 - Every script is idempotent: running it again is safe.
 - If the editor warns about a "destructive operation" it is only the `drop trigger/policy if exists` lines; confirm.

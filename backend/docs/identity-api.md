@@ -128,4 +128,4 @@ Run only after the new code is live everywhere. The legacy `users.role` column n
 
 **Supabase**
 1. Do the same copy: insert `user_roles` rows from `users.role` for every user.
-2. Only then run [phase2_drop_legacy_user_role.sql](../supabase/legacy/phase2_drop_legacy_user_role.sql). **Do not run it before the legacy role migration is done.** It is not applied now; migrations [004-007](../supabase/migrations) are also not yet applied to the live project.
+2. Only then run [phase2_drop_legacy_user_role.sql](../supabase/legacy/phase2_drop_legacy_user_role.sql). **Do not run it before the legacy role migration is done.** It is not applied now; migrations [003-004](../supabase/migrations) are also not yet applied to the live project.
