@@ -16,13 +16,14 @@ Two interchangeable storage backends behind one API contract: a Google Apps Scri
 | [auth.md](auth.md) | Token verification and how apps-script uses identity-api |
 | [google-oauth-setup.md](google-oauth-setup.md) | Google Cloud project and OAuth Web client for Sign in with Google, where the Client ID goes |
 | [device-management.md](device-management.md) | Device-management module: equipment, category and maintenance log actions, rules, ports |
-| [supabase.md](supabase.md) | Postgres schema, audit triggers, category rules, RLS policies |
+| [supabase.md](supabase.md) | Postgres scripts per area (api, users, device management, expense tracking), audit triggers, RLS policies |
+| [supabase-setup.md](supabase-setup.md) | Step-by-step Supabase project setup: scripts, Google sign-in, first super user, permissions, frontend config, verification |
 
 ## Architecture
 
 - Apps Script code lives in [backend/apps-script/src](../apps-script/src): `Main.gs` entry points, `composition/` wiring, `modules/device-management`. The identity modules (`claims`, `roles`, `users`, `access-control`) live in [backend/apps-script-identity-api](../apps-script-identity-api) (a separate Web App). The `shared/` building blocks (one file per class) are a separate library project in [backend/apps-script-shared-kernel-library](../apps-script-shared-kernel-library), see [shared-library](shared-library.md).
 - Each module has `domain`, `application`, `endpoints` and `persistence/googlesheet` layers; dependencies point inward and parts talk only through ports.
-- Supabase SQL lives in [backend/supabase/migrations](../supabase/migrations): `001_init.sql` (schema, triggers), `002_rls_policies.sql` and `003_auth.sql` (Google login, roles), `004`-`007` (claims, roles, users/roles/claims, access control; not yet applied) and [phase2/008](../supabase/phase2/008_drop_legacy_user_role.sql) (do not run yet).
+- Supabase SQL lives in [backend/supabase/migrations](../supabase/migrations), one script per area, run in order: `001_api.sql` (shared helpers, access resolution, RPCs), `002_users.sql` (users, roles, claims), `003_device_management.sql`, `004_expense_tracking.sql`, `005_fixed_expense_payment_day.sql`. The old incremental scripts are kept in [legacy](../supabase/legacy) for reference only.
 - Both backends give the same ordering, pagination, validation codes and server-filled audit fields.
 
 Frontend side: see [frontend docs](../../frontend/docs/README.md).

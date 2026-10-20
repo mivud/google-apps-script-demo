@@ -23,6 +23,6 @@
 - Lockout rules (`last_super`, `self_lockout`) are checked through the access-control port, see [access-control](access-control.md).
 - Update is optimistic (`conflict`). Updating keeps the legacy `users.role` value as read; it no longer grants anything. Legacy rows have an empty `last_modified`; clients send `''`.
 
-**Data:** sheets `users` (`id,email,role,active` + audit), `user_roles` (`user_id,role_id` + audit), `user_claims` (`user_id,key,value` + audit); Postgres [006_users_roles_claims.sql](../supabase/migrations/006_users_roles_claims.sql). `role` is LEGACY (phase 1 fallback), written empty for new users; phase 2 drops it, see the runbook in [identity-api](identity-api.md).
+**Data:** sheets `users` (`id,email,role,active` + audit), `user_roles` (`user_id,role_id` + audit), `user_claims` (`user_id,key,value` + audit); Postgres [002_users.sql](../supabase/migrations/002_users.sql). `role` is LEGACY (phase 1 fallback), written empty for new users; phase 2 drops it, see the runbook in [identity-api](identity-api.md).
 
 **Limits:** no paging; each read joins three sheets in memory.

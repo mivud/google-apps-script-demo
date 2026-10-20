@@ -21,6 +21,6 @@
 - A role assigned to a user cannot be deleted (`role_in_use`). Deleting a role removes its claim rows. Adding a claim needs it in the catalog (`claim_unknown`), duplicates are `claim_duplicate`.
 - Update is optimistic: send the `last_modified` the client saw; a mismatch is `conflict`. Rows created before the audit columns have an empty `last_modified`, so clients send `''`.
 
-**Data:** sheets `roles` (`id,name,description` + audit) and `role_claims` (`role_id,key,value` + audit); Postgres [005_roles.sql](../supabase/migrations/005_roles.sql). Writes clear the row cache of the sheets they change.
+**Data:** sheets `roles` (`id,name,description` + audit) and `role_claims` (`role_id,key,value` + audit); Postgres [002_users.sql](../supabase/migrations/002_users.sql). Writes clear the row cache of the sheets they change.
 
 **Limits:** no paging; the role list is loaded whole for every access check (small data, cached about 60 s).

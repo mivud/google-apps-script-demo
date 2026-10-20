@@ -26,6 +26,6 @@
 3. Effective claims = role claims plus own claims, additive, distinct and sorted by key, then value. A role claim is dropped only when the user owns the exact same (key, value). Example: r1{a=1,b=2}, r2{a=3}: user{} gives a=1,a=3,b=2; user{a=9} gives a=1,a=3,a=9,b=2; user{b=2} gives a=1,a=3,b=2.
 4. Lockout ([SuperLockoutRule](../apps-script-identity-api/src/modules/access-control/domain/SuperLockoutRule.gs)): the last active super cannot be deactivated, deleted or lose the `super` role (`last_super`); the caller cannot do that to themself, nor change their own email (`self_lockout`).
 
-**Data:** no tables of its own; it reads `users`, `roles` and their link sheets. Postgres: [007_access_control.sql](../supabase/migrations/007_access_control.sql) redefines `current_app_role()` and adds RPCs `current_identity()` and `preview_access(uuid)` (Supabase side is not changed by the permission refactor). Domain violations raise exceptions whose message is the stable code.
+**Data:** no tables of its own; it reads `users`, `roles` and their link sheets. Postgres: [001_api.sql](../supabase/migrations/001_api.sql) defines `current_app_role()` and the RPCs `current_identity()` and `preview_access(uuid)` (Supabase side is not changed by the permission refactor). Domain violations raise exceptions whose message is the stable code.
 
-**Limits:** an empty `role` means the user has no roles. Revocation delay is about 2 to 3 minutes (caches), see [identity-api](identity-api.md). Migrations 004-007 are not yet applied to the live Supabase project.
+**Limits:** an empty `role` means the user has no roles. Revocation delay is about 2 to 3 minutes (caches), see [identity-api](identity-api.md).

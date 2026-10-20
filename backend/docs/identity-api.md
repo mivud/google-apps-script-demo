@@ -103,7 +103,7 @@ The URL stays the same. Check with `clasp deployments`.
 - GitHub: repository Settings > Secrets and variables > Actions > Variables: add `VITE_GOOGLE_CLIENT_ID` and `VITE_IDENTITY_API_URL`, and delete the old `VITE_SHEETS_API_TOKEN` secret or variable if it exists. Then run the Pages workflow again.
 
 ### 13. Supabase (only for `VITE_DB_PROVIDER=supabase`)
-Run `backend/supabase/migrations/003_auth.sql` in the SQL editor; Authentication > Providers: enable Google with the client id above, keep the nonce check on, disable every other provider and email signup. Add the first super account to the `public.users` table (the Supabase side is not changed by the permission refactor).
+Run `backend/supabase/migrations/002_users.sql` in the SQL editor; Authentication > Providers: enable Google with the client id above, keep the nonce check on, disable every other provider and email signup. Add the first super account to the `public.users` table (the Supabase side is not changed by the permission refactor).
 
 ### Check it works
 1. Open the app, press Sign in with Google with your `super` account: the app should load. A Google account that is not in the `users` sheet must see "Access denied".
@@ -128,4 +128,4 @@ Run only after the new code is live everywhere. The legacy `users.role` column n
 
 **Supabase**
 1. Do the same copy: insert `user_roles` rows from `users.role` for every user.
-2. Only then run [008_drop_legacy_user_role.sql](../supabase/phase2/008_drop_legacy_user_role.sql). **Do not run it before the legacy role migration is done.** It is not applied now; migrations [004-007](../supabase/migrations) are also not yet applied to the live project.
+2. Only then run [phase2_drop_legacy_user_role.sql](../supabase/legacy/phase2_drop_legacy_user_role.sql). **Do not run it before the legacy role migration is done.** It is not applied now; migrations [004-007](../supabase/migrations) are also not yet applied to the live project.
