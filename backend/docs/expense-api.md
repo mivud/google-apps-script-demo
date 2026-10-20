@@ -88,6 +88,7 @@ After step 7, `GET` on the URL returns `{service, version}` (before the consent 
 Run [cicd-expense-api.ps1](../../scripts/cicd-expense-api.ps1) (needs `clasp login` done once, and the environment variable `EXPENSE_API_DEPLOYMENT_ID` set to the deployment id above):
 
 - `./scripts/cicd-expense-api.ps1` (default `PushDeploy`), or `-Action Push|Deploy|Config`; `-Description "<text>"` names the version.
+- With `Deploy` or `PushDeploy` it checks `EXPENSE_API_DEPLOYMENT_ID` first and stops before pushing when it is missing.
 - It runs `clasp push --force`, `clasp create-version`, then `clasp redeploy <id> -V <version>` so the URL stays the same.
 - To reuse it for another API, copy it as `cicd-<api>.ps1` and change only the Config block at the top.
 
