@@ -34,7 +34,7 @@ Monthly expense tracking: expenses per statement month, payment methods and fixe
 
 ## UI
 
-Routes: `/expense` (month list: month picker, summary cards, expense table with fixed/variable badge, add/edit dialog, generate button), `/expense/payment-methods`, `/expense/fixed-expenses`. Layouts stack as cards below 768px; targets are 44px. Cards use `.summary-grid` in [layout.css](../src/styles/layout.css).
+Routes: `/expense` (month list: month picker, summary cards, expense table with the fixed/variable badge as its first column, add/edit dialog, generate button). Each row has View / Edit / Delete icon buttons: View opens a read-only [details dialog](../src/modules/expense-tracking/ui/components/expense-details-dialog.tsx) with every field plus the audit info (Edit and Delete only show with write access), `/expense/payment-methods`, `/expense/fixed-expenses`. Layouts stack as cards below 768px; targets are 44px. Cards use `.summary-grid` in [layout.css](../src/styles/layout.css).
 
 ## Payment status and CSV export
 
@@ -42,7 +42,7 @@ Templates have an optional payment day (1-31, empty = none; validated by `valida
 
 ## Search, filters and reload
 
-The three tables use the shared DataTable toolbar ([design-system](design-system.md)): search plus filters (expenses: payment method incl. "No payment method", type, needs amount/payment method; payment methods: status, statement cycle; templates: status, progress, missing amount/payment method), URL-synced, with Reload and Export CSV icon buttons in one toolbar action group (Export appears when the toolbar sets `exportFileName`). Filtering is client-side over the loaded rows; the month totals stay for the whole month and say so. The actions column is right-aligned (`align: 'end'`).
+The three tables use the shared DataTable toolbar ([design-system](design-system.md)): search plus filters (expenses: payment method incl. "No payment method", type, needs amount/payment method; payment methods: status, statement cycle; templates: status, progress, missing amount/payment method), URL-synced, with Reload and Export CSV icon buttons in one toolbar action group (Export appears when the toolbar sets `exportFileName`). Filtering is client-side over the loaded rows; the month totals stay for the whole month and say so. The actions column (View, Edit, Delete) is right-aligned (`align: 'end'`).
 
 ## Payment method color
 
@@ -52,7 +52,7 @@ The three tables use the shared DataTable toolbar ([design-system](design-system
 
 The expenses page has one "Statistics" card with two tabs ([expense-statistics.tsx](../src/modules/expense-tracking/ui/components/expense-statistics.tsx)): "Summary" (month total, fixed and variable cards plus the pending and unassigned notices, whole month, ignores filters) and "By payment method" (the donut, follows the table filters). Each tab shows its scope caption inside the panel. The card is rendered through the toolbar `renderAbove` slot, so it sits between the toolbar and the table.
 
-The expenses table has a "Created by" column and select filter (URL key `createdBy`): options are the distinct `createdBy` values of the loaded rows, sorted; `import` or an empty value shows as "Unknown". The chart "Spending by payment method" ([spending-chart.tsx](../src/modules/expense-tracking/ui/components/spending-chart.tsx)) is a donut between the toolbar and the table, driven by the same filtered rows (search and every filter), unlike the month summary cards above, which keep the whole-month totals. The centre shows the total (or the hovered slice). Buckets come from `summarizeExpenses`; each payment method keeps a fixed color slot by its position in the payment methods list (first four methods), other methods fold into a gray "Other" slice whose tooltip lists them, and "No payment method" is gray too. Pending-amount rows are excluded and mentioned in a note. It uses the shared [DonutChart](../src/shared/components/donut-chart.tsx) through the toolbar `renderAbove` slot.
+The expenses table has no "Created by" column (it stays in the CSV export and in the details dialog) but keeps the select filter (URL key `createdBy`): options are the distinct `createdBy` values of the loaded rows, sorted; `import` or an empty value shows as "Unknown". The chart "Spending by payment method" ([spending-chart.tsx](../src/modules/expense-tracking/ui/components/spending-chart.tsx)) is a donut between the toolbar and the table, driven by the same filtered rows (search and every filter), unlike the month summary cards above, which keep the whole-month totals. The centre shows the total (or the hovered slice). Buckets come from `summarizeExpenses`; each payment method keeps a fixed color slot by its position in the payment methods list (first four methods), other methods fold into a gray "Other" slice whose tooltip lists them, and "No payment method" is gray too. Pending-amount rows are excluded and mentioned in a note. It uses the shared [DonutChart](../src/shared/components/donut-chart.tsx) through the toolbar `renderAbove` slot.
 
 ## Limits
 

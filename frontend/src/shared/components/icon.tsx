@@ -13,6 +13,7 @@ const ICONS = {
   folderOpen: <path d="M3 18V6a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v2M3 18l2.5-7.5A2 2 0 0 1 7.4 9H21a1 1 0 0 1 .95 1.3L19.5 18a2 2 0 0 1-1.9 1.4H5a2 2 0 0 1-2-1.4z" />,
   file: <><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5" /></>,
   edit: <><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z" /><path d="m13.5 6.5 4 4" /></>,
+  view: <><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></>,
   trash: <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />,
   expandAll: <path d="m7 7 5 5 5-5M7 13l5 5 5-5" />,
   collapseAll: <path d="m7 11 5-5 5 5M7 17l5-5 5 5" />,

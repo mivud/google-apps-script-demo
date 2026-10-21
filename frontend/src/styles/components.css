@@ -142,8 +142,7 @@
 .data-table tbody tr:hover { background: color-mix(in oklch, var(--muted) 50%, transparent); }
 .data-table td { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; min-width: 0; overflow-wrap: anywhere; }
 .data-table td[data-label]::before { content: attr(data-label); flex: 0 0 40%; color: var(--muted-foreground); font-size: 0.875rem; }
-.data-table-primary { font-weight: 600; }
-.data-table a { display: inline-flex; align-items: center; min-height: var(--tap); }
+.data-table-primary { font-weight: 600; }.data-table a { display: inline-flex; align-items: center; min-height: var(--tap); }
 .data-table.is-refreshing { opacity: 0.6; }
 .row-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .dialog-body { padding: 0 16px; }

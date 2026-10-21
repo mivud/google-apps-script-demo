@@ -17,6 +17,7 @@ import { RowActions } from '../../../../shared/components/row-actions'
 import { ListSkeleton } from '../../../../shared/components/skeleton'
 import { getPaymentAlert, isPaid, type Expense } from '../../domain/expense'
 import { currentStatementMonth } from '../../domain/statement-month'
+import { ExpenseDetailsDialog } from '../components/expense-details-dialog'
 import { ExpenseFormDialog } from '../components/expense-form-dialog'
 import { PaymentMethodBadgeById } from '../components/payment-method-badge'
 import { ExpenseStatistics } from '../components/expense-statistics'
@@ -55,6 +56,7 @@ export function ExpensesPage() {
   const [focusField, setFocusField] = useState<'amount' | 'paymentMethod' | undefined>(undefined)
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<Expense | undefined>(undefined)
+  const [viewing, setViewing] = useState<Expense | undefined>(undefined)
   // The month travels with the data so a month switch shows the skeleton instead of the previous month.
   const list = useAsyncData(async () => ({ month, items: await expenses.listByStatementMonth(month) }), [expenses, month])
   const rows = list.data?.month === month ? list.data.items : undefined
@@ -89,14 +91,14 @@ export function ExpensesPage() {
   }
 
   const columns: DataColumn<Expense>[] = [
+    { key: 'type', header: t('expense.type'), cell: (e) => <Badge tone={e.isFixed ? 'warning' : 'neutral'}>{e.isFixed ? t('expense.fixedBadge') : t('expense.variableBadge')}</Badge>, exportValue: (e) => (e.isFixed ? t('expense.fixedBadge') : t('expense.variableBadge')) },
     { key: 'description', header: t('expense.description'), primary: true, cell: (e) => (e.isFixed ? <DescriptionWithStatus expense={e} alert={alertOf(e)} /> : e.description), exportValue: (e) => e.description },
     { key: 'amount', header: t('expense.amount'), cell: (e) => (e.amount === null ? <PendingField label={t('expense.amountNeeded')} canWrite={canWrite} onFill={() => openEditor(e, 'amount')} /> : format(e.amount)), exportValue: (e) => e.amount },
     { key: 'method', header: t('expense.paymentMethod'), cell: (e) => (e.paymentMethodId === null ? <PendingField label={t('expense.methodNeeded')} canWrite={canWrite} onFill={() => openEditor(e, 'paymentMethod')} /> : <PaymentMethodBadgeById id={e.paymentMethodId} methods={methods.data ?? []} />), exportValue: (e) => (methods.data ?? []).find((m) => m.id === e.paymentMethodId)?.name ?? '' },
     { key: 'spentOn', header: t('expense.spentOn'), cell: (e) => e.spentOn, exportValue: (e) => e.spentOn },
-    { key: 'type', header: t('expense.type'), cell: (e) => <Badge tone={e.isFixed ? 'warning' : 'neutral'}>{e.isFixed ? t('expense.fixedBadge') : t('expense.variableBadge')}</Badge>, exportValue: (e) => (e.isFixed ? t('expense.fixedBadge') : t('expense.variableBadge')) },
-    { key: 'createdBy', header: t('expense.createdBy'), cell: (e) => creatorLabel(creatorKey(e)), exportValue: (e) => creatorLabel(creatorKey(e)) },
+    { key: 'createdBy', header: t('expense.createdBy'), exportOnly: true, cell: () => null, exportValue: (e) => creatorLabel(creatorKey(e)) },
     { key: 'payment', header: t('expense.payment.title'), exportOnly: true, cell: () => null, exportValue: (e) => (e.isFixed ? t(PAYMENT_STATUS_MESSAGE[paymentStatusKey(e, alertOf(e))]) : '') },
-    ...(canWrite ? [{ key: 'actions', header: t('common.actions'), align: 'end' as const, cell: (e: Expense) => <RowActions itemName={e.description} disabled={remove.pending} onEdit={() => openEditor(e, undefined)} onDelete={() => remove.ask(e)} /> }] : []),
+    { key: 'actions', header: t('common.actions'), align: 'end' as const, cell: (e: Expense) => <RowActions itemName={e.description} disabled={remove.pending} onView={() => setViewing(e)} onEdit={canWrite ? () => openEditor(e, undefined) : undefined} onDelete={canWrite ? () => remove.ask(e) : undefined} /> },
   ]
 
   const creators = [...new Set((rows ?? []).map(creatorKey))].sort((a, b) => a.localeCompare(b))
@@ -142,6 +144,17 @@ export function ExpensesPage() {
         </>
       )}
       {remove.dialog}
+
+      {viewing && (
+        <ExpenseDetailsDialog
+          expense={viewing}
+          methods={methods.data ?? []}
+          alert={alertOf(viewing)}
+          formatAmount={format}
+          onEdit={canWrite ? () => { setViewing(undefined); openEditor(viewing, undefined) } : undefined}
+          onClose={() => setViewing(undefined)}
+        />
+      )}
 
       {editing && (
         <ExpenseFormDialog

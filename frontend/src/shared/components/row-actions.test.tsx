@@ -23,6 +23,16 @@ describe('RowActions', () => {
     expect(onDelete).toHaveBeenCalledOnce()
   })
 
+  it('shows a View button only when a view handler is given', () => {
+    const onView = vi.fn()
+    const { rerender } = renderApp(<RowActions itemName="x" onView={onView} />)
+    fireEvent.click(screen.getByRole('button', { name: 'View: x' }))
+    expect(onView).toHaveBeenCalledOnce()
+    expect(screen.queryByRole('button', { name: /^Edit/ })).toBeNull()
+    rerender(<RowActions itemName="x" onEdit={() => {}} />)
+    expect(screen.queryByRole('button', { name: /^View/ })).toBeNull()
+  })
+
   it('omits Delete for a protected item', () => {
     renderApp(<RowActions itemName="admin" onEdit={() => {}} />)
     expect(screen.queryByRole('button', { name: /^Delete/ })).toBeNull()
